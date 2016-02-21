@@ -42,9 +42,7 @@
   <ItemGroup>
     <Compile Include="Console.cs" />
     <Compile Include="Cpu.cs" />
-    <Compile Include="ICpu.cs" />
     <Compile Include="IMmu.cs" />
-    <Compile Include="OpDecoder.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Throw.cs" />
   </ItemGroup>
