@@ -41,10 +41,15 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Console.cs" />
-    <Compile Include="Cpu.cs" />
     <Compile Include="IMmu.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Throw.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Cpu.Operations.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Cpu.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

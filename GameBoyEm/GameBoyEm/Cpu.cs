@@ -4,32 +4,30 @@ using System.Collections.Generic;
 namespace GameBoyEm
 {
     /// <summary>
-    /// Emulates the modified Zilog Z80 (aka Sharp LR35902),
+    /// Emulates a modified Zilog Z80 (aka Sharp LR35902),
     /// 4.194304MHz, 8-bit processor used in the original GameBoy.
     /// Notes: IO is memory mapped. Memory is byte addressable with
-    /// 16 bit addresses (64KB total memory).
+    /// 16-bit addresses (64KB total memory).
     /// </summary>
-    public class Cpu
+    public partial class Cpu
     {
         // Registers
-        private byte A; // Accumulator
-        private byte B; // General Purpose
-        private byte C; // ..
-        private byte D;
-        private byte E;
-        private byte H;
-        private byte L;
-        private byte F; // Flags (bits 0-3: unused, 4: carry, 5: half-carry, 6: subtract, 7: zero)
-        private byte SP; // Stack pointer
-        private ushort PC; // Program counter
-        private bool IME; // Interrupt master enable
+        private byte _a; public byte A => _a; // Accumulator
+        private byte _b; public byte B => _b; // General Purpose
+        private byte _c; public byte C => _c; // ..
+        private byte _d; public byte D => _d;
+        private byte _e; public byte E => _e;
+        private byte _h; public byte H => _h;
+        private byte _l; public byte L => _l;
+        private byte _f; public byte F => _f; // Flags (bits 0-3: unused, 4: carry, 5: half-carry, 6: subtract, 7: zero)
+        private byte _sp; public byte SP => _sp; // Stack pointer
+        private ushort _pc; public ushort PC => _pc; // Program counter
+        private bool _ime; public bool IME => _ime; // Interrupt master enable
 
         // Pseudo Registers
-        private ushort BC
-        {
-            get { return (ushort)((B << 8) + C); }
-            set { B = (byte)(value >> 8); C = (byte)(value & 255); }
-        }
+        public ushort BC => (ushort)((_b << 8) + _c);
+        public ushort DE => (ushort)((_d << 8) + _e);
+        public ushort HL => (ushort)((_h << 8) + _l);
 
         // Timers (last instruction)
         private ulong M;
@@ -57,7 +55,7 @@ namespace GameBoyEm
             Init();
             while (true)
             {
-                var op = _mmu.ReadByte(PC++); // Fetch
+                var op = _mmu.ReadByte(_pc++); // Fetch
                 _ops[op](); // Decode, Execute
 
                 _totalM += M;
@@ -67,67 +65,10 @@ namespace GameBoyEm
 
         private void Init()
         {
-            A = B = C = D = E = H = L = F = SP = 0;
+            _a = _b = _c = _d = _e = _h = _l = _f = _sp = 0;
             M = T = _totalM = _totalT = 0;
-            PC = 0;
-            IME = false;
+            _pc = 0;
+            _ime = false;
         }
-
-        #region Operations
-        private void NOP() { M = 1; T = 4; }
-
-        // 8-bit Loads
-        private void LDBCA() { WB(BC, A); M = 2; T = 8; }
-        private void LDNB() { B = RB(PC++); M = 2; T = 8; }
-
-        // 8-bit Arithmetic
-        private void INCB() { B++; TrySetZ(B); M = 1; T = 4; }
-        private void DECB() { B--; TrySetZ(B); M = 1; T = 4; }
-
-        // 16-bit Loads
-        private void LDBCNN() { C = RB(PC++); B = RB(PC++); M = 3; T = 12; }
-
-        // 16-bit Arithmetic
-        private void INCBC() { Inc16(ref B, ref C); M = 1; T = 4; }
-        #endregion
-
-        #region Helpers
-        // MMU Helpers
-        private byte RB(ushort address)
-        {
-            return _mmu.ReadByte(address);
-        }
-        private void WB(ushort address, byte value)
-        {
-            _mmu.WriteByte(address, value);
-        }
-
-        // 16-bit Helpers
-        private void Inc16(ref byte high, ref byte low)
-        {
-            low++;
-            if (low == 0)
-            {
-                high++;
-            }
-        }
-
-        // Flag Helpers
-        private void TrySetZ(byte value, bool clearFlags = true)
-        {
-            TryClearFlags(clearFlags);
-            if (value == 0)
-            {
-                F |= 128;
-            }
-        }
-        private void TryClearFlags(bool clearFlags)
-        {
-            if (clearFlags)
-            {
-                F = 0;
-            }
-        }
-        #endregion
     }
 }
