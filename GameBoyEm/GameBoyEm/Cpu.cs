@@ -4,71 +4,163 @@ using System.Collections.Generic;
 namespace GameBoyEm
 {
     /// <summary>
-    /// Emulates a modified Zilog Z80 (aka Sharp LR35902),
+    /// Emulates a Sharp LR35902 (modified Zilog Z80),
     /// 4.194304MHz, 8-bit processor used in the original GameBoy.
     /// Notes: IO is memory mapped. Memory is byte addressable with
     /// 16-bit addresses (64KB total memory).
     /// </summary>
-    public partial class Cpu
+    public class Cpu : ICpu
     {
-        // Registers
-        private byte _a; public byte A => _a; // Accumulator
-        private byte _b; public byte B => _b; // General Purpose
-        private byte _c; public byte C => _c; // ..
-        private byte _d; public byte D => _d;
-        private byte _e; public byte E => _e;
-        private byte _h; public byte H => _h;
-        private byte _l; public byte L => _l;
-        private byte _f; public byte F => _f; // Flags (bits 0-3: unused, 4: carry, 5: half-carry, 6: subtract, 7: zero)
-        private byte _sp; public byte SP => _sp; // Stack pointer
-        private ushort _pc; public ushort PC => _pc; // Program counter
-        private bool _ime; public bool IME => _ime; // Interrupt master enable
+        public byte A => _cpu.A;
+        public byte B => _cpu.B;
+        public byte C => _cpu.C;
+        public byte D => _cpu.D;
+        public byte E => _cpu.E;
+        public byte H => _cpu.H;
+        public byte L => _cpu.L;
+        public byte F => _cpu.F;
+        public byte SP => _cpu.SP;
+        public ushort PC => _cpu.PC;
+        public ushort BC => _cpu.BC;
+        public ushort DE => _cpu.DE;
+        public ushort HL => _cpu.HL;
 
-        // Pseudo Registers
-        public ushort BC => (ushort)((_b << 8) + _c);
-        public ushort DE => (ushort)((_d << 8) + _e);
-        public ushort HL => (ushort)((_h << 8) + _l);
-
-        // Timers (last instruction)
-        private ulong M;
-        private ulong T;
-
-        // Cumulative instruction timers
-        private ulong _totalM;
-        private ulong _totalT;
-
-        private IMmu _mmu;
-        private List<Action> _ops;
+        private InternalCpu _cpu;
 
         public Cpu(IMmu mmu)
         {
-            _mmu = mmu;
-            _ops = new List<Action>
-            {
-                /* 00 */ NOP, LDBCNN, LDBCA, INCBC, INCB, DECB, LDNB
-                /* 10 */ // TODO
-            };
+            _cpu = new InternalCpu(mmu);
         }
 
         public void Run()
         {
-            Init();
-            while (true)
-            {
-                var op = _mmu.ReadByte(_pc++); // Fetch
-                _ops[op](); // Decode, Execute
-
-                _totalM += M;
-                _totalT += T;
-            }
+            _cpu.Run();
         }
 
-        private void Init()
+        /// <summary>
+        /// Private class allows the register fields to be named the same as the wrapper properties.
+        /// The operations are easier to read with standard register names, but still want to expose
+        /// them as properties.
+        /// </summary>
+        private class InternalCpu
         {
-            _a = _b = _c = _d = _e = _h = _l = _f = _sp = 0;
-            M = T = _totalM = _totalT = 0;
-            _pc = 0;
-            _ime = false;
+            // Registers
+            public byte A; // Accumulator
+            public byte B; // General Purpose
+            public byte C; // ..
+            public byte D;
+            public byte E;
+            public byte H;
+            public byte L;
+            public byte F; // Flags (bits 0-3: unused, 4: carry, 5: half-carry, 6: subtract, 7: zero)
+            public byte SP; // Stack pointer
+            public ushort PC; // Program counter
+            private bool IME; // Interrupt master enable
+
+            // Pseudo Registers
+            public ushort BC => (ushort)((B << 8) + C);
+            public ushort DE => (ushort)((D << 8) + E);
+            public ushort HL => (ushort)((H << 8) + L);
+
+            // Timers (last instruction)
+            private ulong M;
+            private ulong T;
+
+            // Cumulative instruction timers
+            private ulong _totalM;
+            private ulong _totalT;
+
+            private IMmu _mmu;
+            private List<Action> _ops;
+
+            public InternalCpu(IMmu mmu)
+            {
+                _mmu = mmu;
+                _ops = new List<Action>
+                {
+                    /* 00 */ NOP, LDBCNN, LDBCA, INCBC, INCB, DECB, LDNB
+                    /* 10 */ // TODO
+                };
+            }
+
+            public void Run()
+            {
+                Init();
+                while (true)
+                {
+                    var op = _mmu.ReadByte(PC++); // Fetch
+                    _ops[op](); // Decode, Execute
+
+                    _totalM += M;
+                    _totalT += T;
+                }
+            }
+
+            #region Operations
+            private void NOP() { M = 1; T = 4; }
+
+            // 8-bit Loads
+            private void LDBCA() { WB(BC, A); M = 2; T = 8; }
+            private void LDNB() { B = RB(PC++); M = 2; T = 8; }
+
+            // 8-bit Arithmetic
+            private void INCB() { B++; TrySetZ(B); M = 1; T = 4; }
+            private void DECB() { B--; TrySetZ(B); M = 1; T = 4; }
+
+            // 16-bit Loads
+            private void LDBCNN() { C = RB(PC++); B = RB(PC++); M = 3; T = 12; }
+
+            // 16-bit Arithmetic
+            private void INCBC() { Inc16(ref B, ref C); M = 1; T = 4; }
+            #endregion
+
+            #region Helpers
+            // MMU Helpers
+            private byte RB(ushort address)
+            {
+                return _mmu.ReadByte(address);
+            }
+            private void WB(ushort address, byte value)
+            {
+                _mmu.WriteByte(address, value);
+            }
+
+            // 16-bit Helpers
+            private void Inc16(ref byte high, ref byte low)
+            {
+                low++;
+                if (low == 0)
+                {
+                    high++;
+                }
+            }
+
+            // Flag Helpers
+            private void TrySetZ(byte value, bool clearFlags = true)
+            {
+                TryClearFlags(clearFlags);
+                if (value == 0)
+                {
+                    F |= 128;
+                }
+            }
+            private void TryClearFlags(bool clearFlags)
+            {
+                if (clearFlags)
+                {
+                    F = 0;
+                }
+            }
+
+            // Misc
+            private void Init()
+            {
+                A = B = C = D = E = H = L = F = SP = 0;
+                M = T = _totalM = _totalT = 0;
+                PC = 0;
+                IME = false;
+            }
+            #endregion
         }
     }
 }
