@@ -1,4 +1,6 @@
-﻿namespace GameBoyEm
+﻿using GameBoyEm.Interfaces;
+
+namespace GameBoyEm
 {
     public class Console
     {

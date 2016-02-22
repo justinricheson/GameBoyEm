@@ -1,4 +1,5 @@
-﻿using System;
+﻿using GameBoyEm.Interfaces;
+using System;
 using System.Collections.Generic;
 
 namespace GameBoyEm
@@ -37,9 +38,9 @@ namespace GameBoyEm
             };
         }
 
-        public void Run()
+        public void Step()
         {
-            _cpu.Run();
+            _cpu.Step();
         }
 
         /// <summary>
@@ -88,19 +89,13 @@ namespace GameBoyEm
                 };
             }
 
-            public void Run()
+            public void Step()
             {
-                var run = true;
-                while (run)
-                {
-                    var op = _mmu.ReadByte(PC++); // Fetch
-                    _ops[op](); // Decode, Execute
+                var op = _mmu.ReadByte(PC++); // Fetch
+                _ops[op](); // Decode, Execute
 
-                    _totalM += M;
-                    _totalT += T;
-
-                    run = false; // Temporary until HALT is implemented so we can start unit testing
-                }
+                _totalM += M;
+                _totalT += T;
             }
 
             #region Operations
