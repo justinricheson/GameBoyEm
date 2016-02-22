@@ -76,8 +76,8 @@ namespace GameBoyEm
             public ushort HL => (ushort)((H << 8) + L);
 
             // Timers (last instruction)
-            private ulong M;
-            private ulong T;
+            private ulong M; // 1/4 Instruction time
+            private ulong T; // Instruction time
 
             // Cumulative instruction timers
             private ulong _totalM;
@@ -91,7 +91,7 @@ namespace GameBoyEm
                 _mmu = mmu;
                 _ops = new List<Action>
                 {
-                    /* 00 */ NOP, LDBCNN, LDBCA, INCBC, INCB, DECB, LDNB, RLCA
+                    /* 00 */ NOP, LDBCN, LDBCA, INCBC, INCB, DECB, LDNB, RLCA, LDNSP
                     /* 10 */ // TODO
                 };
             }
@@ -106,24 +106,25 @@ namespace GameBoyEm
             }
 
             #region Operations
-            private void NOP() { M = 1; T = 4; }
+            private void NOP() { Tick1(); }
 
             // 8-bit Loads
-            private void LDBCA() { WB(BC, A); M = 2; T = 8; }
-            private void LDNB() { B = RB(PC++); M = 2; T = 8; }
+            private void LDBCA() { WB(BC, A); Tick2(); }
+            private void LDNB() { B = RB(PC++); Tick2(); }
 
             // 8-bit Arithmetic
-            private void INCB() { B++; F = 0; TrySetZ(B); M = 1; T = 4; }
-            private void DECB() { B--; F = 0; TrySetZ(B); M = 1; T = 4; }
+            private void INCB() { B++; F = 0; TrySetZ(B); Tick1(); }
+            private void DECB() { B--; F = 0; TrySetZ(B); Tick1(); }
 
             // 16-bit Loads
-            private void LDBCNN() { C = RB(PC++); B = RB(PC++); M = 3; T = 12; }
+            private void LDBCN() { C = RB(PC++); B = RB(PC++); Tick3(); }
+            private void LDNSP() { WB(RW(PC), SP); PC += 2; Tick5(); }
 
             // 16-bit Arithmetic
-            private void INCBC() { C++; if (C == 0) B++; M = 1; T = 4; }
+            private void INCBC() { C++; if (C == 0) B++; Tick1(); }
 
             // Rotates and Shifts
-            private void RLCA() { var hi = A.RS(7); A = hi.OR(A.LS(1)); F = 0; TrySetZ(A); TrySetC(hi); M = 1; }
+            private void RLCA() { var hi = A.RS(7); A = hi.OR(A.LS(1)); F = 0; TrySetZ(A); TrySetC(hi); Tick1(); }
             #endregion
 
             #region Helpers
@@ -135,6 +136,42 @@ namespace GameBoyEm
             private void WB(ushort address, byte value)
             {
                 _mmu.WriteByte(address, value);
+            }
+            private ushort RW(ushort address)
+            {
+                return _mmu.ReadWord(address);
+            }
+            private void WW(ushort address, ushort value)
+            {
+                _mmu.WriteWord(address, value);
+            }
+
+            // Clock Helpers (Note: hard coding the values avoids the division which
+            // is important because these happen at the end of every instruction)
+            private void Tick1()
+            {
+                T = 4;
+                M = 1;
+            }
+            private void Tick2()
+            {
+                T = 8;
+                M = 2;
+            }
+            private void Tick3()
+            {
+                T = 12;
+                M = 3;
+            }
+            private void Tick4()
+            {
+                T = 16;
+                M = 4;
+            }
+            private void Tick5()
+            {
+                T = 20;
+                M = 5;
             }
 
             // Flag Helpers
