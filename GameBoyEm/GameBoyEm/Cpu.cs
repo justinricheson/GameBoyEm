@@ -27,9 +27,14 @@ namespace GameBoyEm
 
         private InternalCpu _cpu;
 
-        public Cpu(IMmu mmu)
+        public Cpu(IMmu mmu, byte a = 0, byte b = 0, byte c = 0, byte d = 0, byte e = 0, byte h = 0, byte l = 0, byte f = 0, byte sp = 0, byte pc = 0)
         {
-            _cpu = new InternalCpu(mmu);
+            _cpu = new InternalCpu(mmu)
+            {
+                A = a, B = b, C = c, D = d,
+                E = e, H = h, L = l, F = f,
+                SP = sp, PC = pc
+            };
         }
 
         public void Run()
@@ -85,14 +90,16 @@ namespace GameBoyEm
 
             public void Run()
             {
-                Init();
-                while (true)
+                var run = true;
+                while (run)
                 {
                     var op = _mmu.ReadByte(PC++); // Fetch
                     _ops[op](); // Decode, Execute
 
                     _totalM += M;
                     _totalT += T;
+
+                    run = false; // Temporary until HALT is implemented so we can start unit testing
                 }
             }
 
@@ -150,15 +157,6 @@ namespace GameBoyEm
                 {
                     F = 0;
                 }
-            }
-
-            // Misc
-            private void Init()
-            {
-                A = B = C = D = E = H = L = F = SP = 0;
-                M = T = _totalM = _totalT = 0;
-                PC = 0;
-                IME = false;
             }
             #endregion
         }
