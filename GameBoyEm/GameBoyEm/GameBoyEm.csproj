@@ -41,6 +41,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Console.cs" />
+    <Compile Include="Extensions.cs" />
     <Compile Include="Interfaces\ICpu.cs" />
     <Compile Include="Interfaces\IMmu.cs" />
     <Compile Include="Mmu.cs" />

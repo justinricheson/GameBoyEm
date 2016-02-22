@@ -32,9 +32,16 @@ namespace GameBoyEm
         {
             _cpu = new InternalCpu(mmu)
             {
-                A = a, B = b, C = c, D = d,
-                E = e, H = h, L = l, F = f,
-                SP = sp, PC = pc
+                A = a,
+                B = b,
+                C = c,
+                D = d,
+                E = e,
+                H = h,
+                L = l,
+                F = f,
+                SP = sp,
+                PC = pc
             };
         }
 
@@ -84,7 +91,7 @@ namespace GameBoyEm
                 _mmu = mmu;
                 _ops = new List<Action>
                 {
-                    /* 00 */ NOP, LDBCNN, LDBCA, INCBC, INCB, DECB, LDNB
+                    /* 00 */ NOP, LDBCNN, LDBCA, INCBC, INCB, DECB, LDNB, RLCA
                     /* 10 */ // TODO
                 };
             }
@@ -106,14 +113,17 @@ namespace GameBoyEm
             private void LDNB() { B = RB(PC++); M = 2; T = 8; }
 
             // 8-bit Arithmetic
-            private void INCB() { B++; TrySetZ(B); M = 1; T = 4; }
-            private void DECB() { B--; TrySetZ(B); M = 1; T = 4; }
+            private void INCB() { B++; F = 0; TrySetZ(B); M = 1; T = 4; }
+            private void DECB() { B--; F = 0; TrySetZ(B); M = 1; T = 4; }
 
             // 16-bit Loads
             private void LDBCNN() { C = RB(PC++); B = RB(PC++); M = 3; T = 12; }
 
             // 16-bit Arithmetic
-            private void INCBC() { Inc16(ref B, ref C); M = 1; T = 4; }
+            private void INCBC() { C++; if (C == 0) B++; M = 1; T = 4; }
+
+            // Rotates and Shifts
+            private void RLCA() { var hi = A.RS(7); A = hi.OR(A.LS(1)); F = 0; TrySetZ(A); TrySetC(hi); M = 1; }
             #endregion
 
             #region Helpers
@@ -127,30 +137,33 @@ namespace GameBoyEm
                 _mmu.WriteByte(address, value);
             }
 
-            // 16-bit Helpers
-            private void Inc16(ref byte high, ref byte low)
+            // Flag Helpers
+            private void TrySetC(byte value)
             {
-                low++;
-                if (low == 0)
+                if (value == 1)
                 {
-                    high++;
+                    F |= 16;
                 }
             }
-
-            // Flag Helpers
-            private void TrySetZ(byte value, bool clearFlags = true)
+            private void TrySetH(byte value)
             {
-                TryClearFlags(clearFlags);
+                if (value == 1)
+                {
+                    F |= 32;
+                }
+            }
+            private void TrySetS(byte value)
+            {
+                if (value == 1)
+                {
+                    F |= 64;
+                }
+            }
+            private void TrySetZ(byte value)
+            {
                 if (value == 0)
                 {
                     F |= 128;
-                }
-            }
-            private void TryClearFlags(bool clearFlags)
-            {
-                if (clearFlags)
-                {
-                    F = 0;
                 }
             }
             #endregion
