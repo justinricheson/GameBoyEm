@@ -71,9 +71,15 @@ namespace GameBoyEm
             private bool IME; // Interrupt master enable
 
             // Pseudo Registers
-            public ushort BC => (ushort)((B << 8) + C);
-            public ushort DE => (ushort)((D << 8) + E);
-            public ushort HL => (ushort)((H << 8) + L);
+            public ushort BC { get { return (ushort)((B << 8) + C); } set { B = (byte)(value >> 8); C = (byte)(value & 255); } }
+            public ushort DE { get { return (ushort)((D << 8) + E); } set { D = (byte)(value >> 8); E = (byte)(value & 255); } }
+            public ushort HL { get { return (ushort)((H << 8) + L); } set { H = (byte)(value >> 8); L = (byte)(value & 255); } }
+
+            // Flag Accessors
+            public bool FC { get { return (F & 16) != 0; } set { if (value) F |= 16; else F &= 239; } }
+            public bool FH { get { return (F & 32) != 0; } set { if (value) F |= 32; else F &= 223; } }
+            public bool FS { get { return (F & 64) != 0; } set { if (value) F |= 64; else F &= 191; } }
+            public bool FZ { get { return (F & 128) != 0; } set { if (value) F |= 128; else F &= 127; } }
 
             // Timers (last instruction)
             private ulong M; // 1/4 Instruction time
@@ -91,7 +97,7 @@ namespace GameBoyEm
                 _mmu = mmu;
                 _ops = new List<Action>
                 {
-                    /* 00 */ NOP, LDBCN, LDBCA, INCBC, INCB, DECB, LDNB, RLCA, LDNSP
+                    /* 00 */ NOP, LDBCN, LDBCA, INCBC, INCB, DECB, LDNB, RLCA, LDNSP, ADDHLBC
                     /* 10 */ // TODO
                 };
             }
@@ -113,8 +119,8 @@ namespace GameBoyEm
             private void LDNB() { B = RB(PC++); Tick2(); }
 
             // 8-bit Arithmetic
-            private void INCB() { B++; F = 0; TrySetZ(B); Tick1(); }
-            private void DECB() { B--; F = 0; TrySetZ(B); Tick1(); }
+            private void INCB() { B++; F = 0; SetZ(B); Tick1(); }
+            private void DECB() { B--; F = 0; SetZ(B); Tick1(); }
 
             // 16-bit Loads
             private void LDBCN() { C = RB(PC++); B = RB(PC++); Tick3(); }
@@ -122,9 +128,10 @@ namespace GameBoyEm
 
             // 16-bit Arithmetic
             private void INCBC() { C++; if (C == 0) B++; Tick1(); }
+            private void ADDHLBC() { int hl = HL + BC; HL = (ushort)hl; FC = hl > 65535; Tick3(); } // TODO Implement half carry flag
 
             // Rotates and Shifts
-            private void RLCA() { var hi = A.RS(7); A = hi.OR(A.LS(1)); F = 0; TrySetZ(A); TrySetC(hi); Tick1(); }
+            private void RLCA() { var hi = A.RS(7); A = hi.OR(A.LS(1)); F = 0; SetZ(A); SetC(hi); Tick1(); }
             #endregion
 
             #region Helpers
@@ -175,28 +182,14 @@ namespace GameBoyEm
             }
 
             // Flag Helpers
-            private void TrySetC(byte value)
+            private void SetC(byte value)
             {
                 if (value == 1)
                 {
                     F |= 16;
                 }
             }
-            private void TrySetH(byte value)
-            {
-                if (value == 1)
-                {
-                    F |= 32;
-                }
-            }
-            private void TrySetS(byte value)
-            {
-                if (value == 1)
-                {
-                    F |= 64;
-                }
-            }
-            private void TrySetZ(byte value)
+            private void SetZ(byte value)
             {
                 if (value == 0)
                 {
