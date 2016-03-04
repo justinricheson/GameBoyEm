@@ -2,6 +2,8 @@
 {
     public static class ByteExtensions
     {
+        // These just hide the cast, we'll have to measure to see
+        // if the extra function call affects performance too much
         public static byte RS(this byte value, int places = 1)
         {
             return (byte)(value >> places);
@@ -13,6 +15,10 @@
         public static byte OR(this byte first, byte second)
         {
             return (byte)(first | second);
+        }
+        public static byte AND(this byte first, byte second)
+        {
+            return (byte)(first & second);
         }
     }
 
@@ -29,6 +35,10 @@
         public static ushort OR(this ushort first, ushort second)
         {
             return (ushort)(first | second);
+        }
+        public static ushort AND(this ushort first, ushort second)
+        {
+            return (ushort)(first & second);
         }
     }
 }
