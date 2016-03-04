@@ -15,5 +15,7 @@
         ushort BC { get; }
         ushort DE { get; }
         ushort HL { get; }
+
+        void Step();
     }
 }
