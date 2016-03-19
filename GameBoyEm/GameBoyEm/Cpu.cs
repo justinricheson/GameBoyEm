@@ -59,8 +59,8 @@ namespace GameBoyEm
             _mmu = mmu;
             _ops = new List<Action>
             {
-                /* 00 */ NOP, LDBCN, LDBCA, INCBC, INCB, DECB, LDBN, RLCA, LDNSP, ADDHLBC, LDABC, DECBC, INCC, DECC, LDCN, RRCA
-                /* 10 */ // TODO
+                /* 00 */ NOP, LDBCN, LDBCA, INCBC, INCB, DECB, LDBN, RLCA, LDNSP, ADDHLBC, LDABC, DECBC, INCC, DECC, LDCN, RRCA,
+                /* 10 */ STOP, LDDEN, LDDEA, INCDE, INCD, DECD, LDDN, RLA
             };
         }
 
@@ -74,29 +74,37 @@ namespace GameBoyEm
 
         #region Operations
         private void NOP() { M = 1; }
+        private void STOP() { M = 1; }
 
         // 8-bit Loads
         private void LDBCA() { WB(BC, A); M = 2; }
+        private void LDDEA() { WB(DE, A); M = 2; }
         private void LDBN() { B = RB(PC++); M = 2; }
+        private void LDDN() { D = RB(PC++); M = 2; }
         private void LDABC() { A = RB(BC); M = 2; }
         private void LDCN() { C = RB(PC++); M = 2; }
 
         // 8-bit Arithmetic
         private void INCB() { B++; FN = false; FZ = B == 0; M = 1; } // TODO FH
+        private void INCD() { D++; FN = false; FZ = D == 0; M = 1; } // TODO FH
         private void DECB() { B--; FN = true; FZ = B == 0; M = 1; } // TODO FH
+        private void DECD() { D--; FN = true; FZ = D == 0; M = 1; } // TODO FH
         private void INCC() { C++; FN = false; FZ = C == 0; M = 1; } // TODO FH
         private void DECC() { C--; FN = true; FZ = C == 0; M = 1; } // TODO FH
 
         // 16-bit Loads
         private void LDBCN() { C = RB(PC++); B = RB(PC++); M = 3; }
+        private void LDDEN() { E = RB(PC++); D = RB(PC++); M = 3; }
         private void LDNSP() { WB(RW(PC), SP); PC += 2; M = 5; }
 
         // 16-bit Arithmetic
         private void INCBC() { C++; if (C == 0) B++; M = 2; }
+        private void INCDE() { E++; if (E == 0) D++; M = 2; }
         private void ADDHLBC() { int hl = HL + BC; HL = (ushort)hl; FC = hl > 65535; FN = false; M = 2; } // TODO FH
         private void DECBC() { C--; if (C == 255) B--; M = 2; }
 
         // Rotates and Shifts
+        private void RLA() { var hi = A.RS(7); A = A.LS(1).OR(FC); F = 0; FC = hi == 1; FZ = A == 0; M = 1; }
         private void RLCA() { var hi = A.RS(7); A = hi.OR(A.LS(1)); F = 0; FC = hi == 1; FZ = A == 0; M = 1; }
         private void RRCA() { var lo = A.LS(7); A = lo.OR(A.RS(1)); F = 0; FC = lo == 1; FZ = A == 0; M = 1; }
         #endregion

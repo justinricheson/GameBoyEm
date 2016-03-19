@@ -16,6 +16,10 @@
         {
             return (byte)(first | second);
         }
+        public static byte OR(this byte first, bool second)
+        {
+            return (byte)(first | (second ? 1 : 0));
+        }
         public static byte AND(this byte first, byte second)
         {
             return (byte)(first & second);
@@ -35,6 +39,10 @@
         public static ushort OR(this ushort first, ushort second)
         {
             return (ushort)(first | second);
+        }
+        public static ushort OR(this ushort first, bool second)
+        {
+            return (ushort)(first | (second ? 1 : 0));
         }
         public static ushort AND(this ushort first, ushort second)
         {
