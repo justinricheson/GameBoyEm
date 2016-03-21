@@ -60,7 +60,7 @@ namespace GameBoyEm
             _ops = new List<Action>
             {
                 /* 00 */ NOP, LDBCN, LDBCA, INCBC, INCB, DECB, LDBN, RLCA, LDNSP, ADDHLBC, LDABC, DECBC, INCC, DECC, LDCN, RRCA,
-                /* 10 */ STOP, LDDEN, LDDEA, INCDE, INCD, DECD, LDDN, RLA
+                /* 10 */ STOP, LDDEN, LDDEA, INCDE, INCD, DECD, LDDN, RLA, JRN
             };
         }
 
@@ -107,6 +107,9 @@ namespace GameBoyEm
         private void RLA() { var hi = A.RS(7); A = A.LS(1).OR(FC); F = 0; FC = hi == 1; FZ = A == 0; M = 1; }
         private void RLCA() { var hi = A.RS(7); A = hi.OR(A.LS(1)); F = 0; FC = hi == 1; FZ = A == 0; M = 1; }
         private void RRCA() { var lo = A.LS(7); A = lo.OR(A.RS(1)); F = 0; FC = lo == 1; FZ = A == 0; M = 1; }
+
+        // Jumps
+        private void JRN() { var j = (sbyte)RB(PC++); var pc = (int)PC; pc += j; PC = (ushort)pc; M = 2; }
         #endregion
 
         #region Helpers
