@@ -41,6 +41,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Console.cs" />
+    <Compile Include="CpuCycles.cs" />
     <Compile Include="Extensions.cs" />
     <Compile Include="Interfaces\ICpu.cs" />
     <Compile Include="Interfaces\IMmu.cs" />
@@ -50,6 +51,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Cpu.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Cpu.Operations.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
