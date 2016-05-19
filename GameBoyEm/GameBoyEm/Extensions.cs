@@ -8,9 +8,17 @@
         {
             return (byte)(value >> places);
         }
+        public static byte RS(this bool value, int places = 1)
+        {
+            return ((byte)(value ? 1 : 0)).RS(places);
+        }
         public static byte LS(this byte value, int places = 1)
         {
             return (byte)(value << places);
+        }
+        public static byte LS(this bool value, int places = 1)
+        {
+            return ((byte)(value ? 1 : 0)).LS(places);
         }
         public static byte OR(this byte first, byte second)
         {
