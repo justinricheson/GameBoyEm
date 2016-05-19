@@ -39,10 +39,15 @@ namespace GameBoyEm
             A = (byte)a;
             FZ = A == 0;
         }
-        private void CPL() { A = A.XOR(_u8); FH = true; FN = true; }
         private void CB() { Step(_cbOps, CBCycles); }
 
+		// Complements and Flags
+        private void SCF() { FC = true; FH = FN = false; }
+        private void CPL() { A = A.XOR(_u8); FH = true; FN = true; }
+		private void CCF() { FC = !FC; FH = false; FN = false; }
+
         // 8-bit Loads
+		private void LDAN() { A = RB(PC++); }
         private void LDBN() { B = RB(PC++); }
         private void LDCN() { C = RB(PC++); }
         private void LDDN() { D = RB(PC++); }
@@ -53,29 +58,33 @@ namespace GameBoyEm
         private void LDADE() { A = RB(DE); }
         private void LDBCA() { WB(BC, A); }
         private void LDDEA() { WB(DE, A); }
+        private void LDHLMN() { WB(HL, RB(PC++)); }
         private void LDIHLA() { WB(HL++, A); }
         private void LDDHLA() { WB(HL--, A); }
         private void LDIAHL() { A = RB(HL++); }
+        private void LDDAHL() { A = RB(HL--); }
 
         // 8-bit Arithmetic
         // Carry set when carry from bit 7 => 8 for adds
         // Half carry set when carry from bit 3 => 4 for adds
         // Carry not affected for subtracts
         // Half carry set when no borrow from 4 => 3 for subtracts
+        private void INCA() { FH = (A & _u4) == _u4; A++; FN = false; FZ = A == 0; }
         private void INCB() { FH = (B & _u4) == _u4; B++; FN = false; FZ = B == 0; }
         private void INCC() { FH = (C & _u4) == _u4; C++; FN = false; FZ = C == 0; }
         private void INCD() { FH = (D & _u4) == _u4; D++; FN = false; FZ = D == 0; }
         private void INCE() { FH = (E & _u4) == _u4; E++; FN = false; FZ = E == 0; }
         private void INCH() { FH = (H & _u4) == _u4; H++; FN = false; FZ = H == 0; }
         private void INCL() { FH = (L & _u4) == _u4; L++; FN = false; FZ = L == 0; }
-        private void INCSP() { SP++; }
-        private void INCHLM() { var n = RB(HL); FH = (n & _u4) == _u4; WB(HL, ++n); FN = false; FZ = n == 0; }
+        private void DECA() { A--; FH = (A & _u4) != _u4; FN = true; FZ = A == 0; }
         private void DECB() { B--; FH = (B & _u4) != _u4; FN = true; FZ = B == 0; }
         private void DECC() { C--; FH = (C & _u4) != _u4; FN = true; FZ = C == 0; }
         private void DECD() { D--; FH = (D & _u4) != _u4; FN = true; FZ = D == 0; }
         private void DECE() { E--; FH = (E & _u4) != _u4; FN = true; FZ = E == 0; }
         private void DECH() { H--; FH = (H & _u4) != _u4; FN = true; FZ = H == 0; }
         private void DECL() { L--; FH = (L & _u4) != _u4; FN = true; FZ = L == 0; }
+        private void INCHLM() { var n = RB(HL); FH = (n & _u4) == _u4; WB(HL, ++n); FN = false; FZ = n == 0; }
+        private void DECHLM() { var n = RB(HL); WB(HL, --n); FH = (n & _u4) != _u4; FN = true; FZ = n == 0; }
 
         // 16-bit Loads
         private void LDBCN() { C = RB(PC++); B = RB(PC++); }
@@ -89,6 +98,8 @@ namespace GameBoyEm
         // Half carry set when carry from bit 11 => 12 for adds
         // Carry not affected for subtracts
         // Half carry not affected for subtracts
+        private void INCSP() { SP++; }
+        private void DECSP() { SP--; }
         private void INCBC() { C++; if (C == 0) B++; }
         private void INCDE() { E++; if (E == 0) D++; }
         private void INCHL() { L++; if (L == 0) H++; }
@@ -98,12 +109,14 @@ namespace GameBoyEm
         private void ADDHLBC() { var hl = HL; var bc = BC; FH = (hl & _u12) + (bc & _u12) > _u12; int add = hl + bc; HL = (ushort)add; FC = add > _u16; FN = false; }
         private void ADDHLDE() { var hl = HL; var de = DE; FH = (hl & _u12) + (de & _u12) > _u12; int add = hl + de; HL = (ushort)add; FC = add > _u16; FN = false; }
         private void ADDHLHL() { var hl = HL; var hl12 = hl & _u12; FH = hl12 + hl12 > _u12; int add = hl + hl; HL = (ushort)add; FC = add > _u16; FN = false; }
+        private void ADDHLSP() { var hl = HL; var sp = SP; FH = (hl & _u12) + (sp & _u12) > _u12; int add = hl + sp; HL = (ushort)add; FC = add > _u16; FN = false; }
 
         // Rotates and Shifts
         private void RRA() { var lo = A.AND(1); A = A.RS(1).OR(FC.LS(7)); F = 0; FC = lo == 1; FZ = A == 0; }
         private void RLA() { var hi = A.RS(7); A = A.LS(1).OR(FC); F = 0; FC = hi == 1; FZ = A == 0; }
-        private void RRCA() { var lo = A.LS(7); A = lo.OR(A.RS(1)); F = 0; FC = lo == 1; FZ = A == 0; }
-        private void RLCA() { var hi = A.RS(7); A = hi.OR(A.LS(1)); F = 0; FC = hi == 1; FZ = A == 0; }
+        private void RRCA() { var lo = A.LS(7); A = lo.OR(A.RS()); F = 0; FC = lo == 1; FZ = A == 0; }
+        private void RLCA() { var hi = A.RS(7); A = hi.OR(A.LS()); F = 0; FC = hi == 1; FZ = A == 0; }
+        private void SRLB() { var lo = B.AND(1); B = B.RS(); F = 0; FC = lo == 1; FZ = B == 0; }
 
         // Jumps
         private void JRN() { Jump(); }
