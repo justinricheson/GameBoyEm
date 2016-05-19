@@ -24,6 +24,10 @@
         {
             return (byte)(first & second);
         }
+        public static byte XOR(this byte first, byte second)
+        {
+            return (byte)(first ^ second);
+        }
     }
 
     public static class UShortExtensions
@@ -47,6 +51,10 @@
         public static ushort AND(this ushort first, ushort second)
         {
             return (ushort)(first & second);
+        }
+        public static ushort XOR(this ushort first, ushort second)
+        {
+            return (ushort)(first ^ second);
         }
     }
 }

@@ -65,8 +65,9 @@ namespace GameBoyEm
             _mmu = mmu;
             _ops = new List<Action>
             {
-                /* 00 */ NOP, LDBCN, LDBCA, INCBC, INCB, DECB, LDBN, RLCA, LDNSP, ADDHLBC, LDABC, DECBC, INCC, DECC, LDCN, RRCA,
-                /* 10 */ STOP, LDDEN, LDDEA, INCDE, INCD, DECD, LDDN, RLA, JRN, ADDHLDE, LDADE, DECDE, INCE, DECE, LDEN, RRA
+                /* 00 */ NOP,   LDBCN, LDBCA,  INCBC, INCB, DECB, LDBN, RLCA, LDNSP, ADDHLBC, LDABC,  DECBC, INCC, DECC, LDCN, RRCA,
+                /* 10 */ STOP,  LDDEN, LDDEA,  INCDE, INCD, DECD, LDDN, RLA,  JRN,   ADDHLDE, LDADE,  DECDE, INCE, DECE, LDEN, RRA,
+                /* 20 */ JRNZN, LDHLN, LDIHLA, INCHL, INCH, DECH, LDHN, DAA,  JRZN,  ADDHLHL, LDIAHL, DECHL, INCL, DECL, LDLN, CPL
             };
         }
 
@@ -81,6 +82,41 @@ namespace GameBoyEm
         #region Operations
         private void NOP() { M = 1; }
         private void STOP() { M = 1; }
+        private void DAA()
+        {
+            // Adjust A into binary coded decimal form
+            int a = A;
+            if (FN)
+            {
+                if (FH || (a & _u4) > 9) // 9 is max BCD digit
+                {
+                    a += 6; // Overflow lo nibble
+                }
+                if (FC || a > 159) // Check if hi nibble exceeds 9
+                {
+                    a += 96; // Overflow hi nibble
+                }
+            }
+            else
+            {
+                if (FH)
+                {
+                    a -= 6; // Underflow lo nibble
+                    a &= _u8;
+                }
+                if (FC)
+                {
+                    a -= 96; // Underflow hi nibble
+                }
+            }
+
+            FH = false;
+            FC = (a & 256) == 256;
+            A = (byte)a;
+            FZ = A == 0;
+            M = 1;
+        }
+        private void CPL() { A = A.XOR(_u8); FH = true; FN = true; }
 
         // 8-bit Loads
         private void LDBCA() { WB(BC, A); M = 2; }
@@ -91,6 +127,10 @@ namespace GameBoyEm
         private void LDCN() { C = RB(PC++); M = 2; }
         private void LDADE() { A = RB(DE); M = 2; }
         private void LDEN() { E = RB(PC++); M = 2; }
+        private void LDIHLA() { WB(HL++, A); M = 2; }
+        private void LDHN() { H = RB(PC++); M = 2; }
+        private void LDIAHL() { A = RB(HL++); M = 2; }
+        private void LDLN() { L = RB(PC++); M = 2; }
 
         // 8-bit Arithmetic
         // Carry set when carry from bit 7 => 8 for adds
@@ -105,11 +145,16 @@ namespace GameBoyEm
         private void DECC() { C--; FH = (C & _u4) != _u4; FN = true; FZ = C == 0; M = 1; }
         private void INCE() { FH = (E & _u4) == _u4; E++; FN = false; FZ = E == 0; M = 1; }
         private void DECE() { E--; FH = (E & _u4) != _u4; FN = true; FZ = E == 0; M = 1; }
+        private void INCH() { FH = (H & _u4) == _u4; H++; FN = false; FZ = H == 0; M = 1; }
+        private void DECH() { H--; FH = (H & _u4) != _u4; FN = true; FZ = H == 0; M = 1; }
+        private void INCL() { FH = (L & _u4) == _u4; L++; FN = false; FZ = L == 0; M = 1; }
+        private void DECL() { L--; FH = (L & _u4) != _u4; FN = true; FZ = L == 0; M = 1; }
 
         // 16-bit Loads
         private void LDBCN() { C = RB(PC++); B = RB(PC++); M = 3; }
         private void LDDEN() { E = RB(PC++); D = RB(PC++); M = 3; }
         private void LDNSP() { WB(RW(PC), SP); PC += 2; M = 5; }
+        private void LDHLN() { L = RB(PC++); H = RB(PC++); M = 3; }
 
         // 16-bit Arithmetic
         // Carry set when carry from bit 15 => 16 for adds
@@ -122,6 +167,9 @@ namespace GameBoyEm
         private void DECBC() { C--; if (C == _u8) B--; M = 2; }
         private void ADDHLDE() { var hl = HL; var de = DE; FH = (hl & _u12) + (de & _u12) > _u12; int add = hl + de; HL = (ushort)add; FC = add > _u16; FN = false; M = 2; }
         private void DECDE() { E--; if (E == _u8) D--; M = 2; }
+        private void INCHL() { L++; if (L == 0) H++; M = 2; }
+        private void ADDHLHL() { var hl = HL; var hl12 = hl & _u12; FH = hl12 + hl12 > _u12; int add = hl + hl; HL = (ushort)add; FC = add > _u16; FN = false; M = 2; }
+        private void DECHL() { L--; if (L == _u8) H--; M = 2; }
 
         // Rotates and Shifts
         private void RLA() { var hi = A.RS(7); A = A.LS(1).OR(FC); F = 0; FC = hi == 1; FZ = A == 0; M = 1; }
@@ -130,7 +178,9 @@ namespace GameBoyEm
         private void RRA() { var lo = A.AND(1); A = A.RS(1); F = 0; FC = lo == 1; FZ = A == 0; M = 1; }
 
         // Jumps
-        private void JRN() { var j = (sbyte)RB(PC++); var pc = (int)PC; pc += j; PC = (ushort)pc; M = 2; }
+        private void JRN() { Jump(); }
+        private void JRNZN() { Jump(!FZ); }
+        private void JRZN() { Jump(FZ); }
         #endregion
 
         #region Helpers
@@ -150,6 +200,19 @@ namespace GameBoyEm
         private void WW(ushort address, ushort value)
         {
             _mmu.WriteWord(address, value);
+        }
+
+        // Jump Helpers
+        private void Jump(bool predicate = true)
+        {
+            if (predicate)
+            {
+                var j = (sbyte)RB(PC++);
+                var pc = (int)PC;
+                pc += j;
+                PC = (ushort)pc;
+            }
+            M = 2;
         }
         #endregion
     }
