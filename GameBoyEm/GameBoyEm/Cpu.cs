@@ -46,6 +46,7 @@ namespace GameBoyEm
 
         private IMmu _mmu;
         private List<Action> _ops;
+        private List<Action> _cbOps;
 
         // Constants
         private static readonly byte _u4 = 15;
@@ -67,15 +68,46 @@ namespace GameBoyEm
             {
                 /* 00 */ NOP,   LDBCN, LDBCA,  INCBC, INCB, DECB, LDBN, RLCA, LDNSP, ADDHLBC, LDABC,  DECBC, INCC, DECC, LDCN, RRCA,
                 /* 10 */ STOP,  LDDEN, LDDEA,  INCDE, INCD, DECD, LDDN, RLA,  JRN,   ADDHLDE, LDADE,  DECDE, INCE, DECE, LDEN, RRA,
-                /* 20 */ JRNZN, LDHLN, LDIHLA, INCHL, INCH, DECH, LDHN, DAA,  JRZN,  ADDHLHL, LDIAHL, DECHL, INCL, DECL, LDLN, CPL
+                /* 20 */ JRNZN, LDHLN, LDIHLA, INCHL, INCH, DECH, LDHN, DAA,  JRZN,  ADDHLHL, LDIAHL, DECHL, INCL, DECL, LDLN, CPL,
+                /* 30 */
+                /* 40 */
+                /* 50 */
+                /* 60 */
+                /* 70 */
+                /* 80 */
+                /* 90 */
+                /* A0 */
+                /* B0 */
+                /* C0 */
+                /* D0 */
+                /* E0 */
+                /* F0 */
+            };
+
+            _cbOps = new List<Action>
+            {
+                /* 00 */
+                /* 10 */
+                /* 20 */
+                /* 30 */
+                /* 40 */
+                /* 50 */
+                /* 60 */
+                /* 70 */
+                /* 80 */
+                /* 90 */
+                /* A0 */
+                /* B0 */
+                /* C0 */
+                /* D0 */
+                /* E0 */
+                /* F0 */
             };
         }
 
         public void Step()
         {
-            var op = _mmu.ReadByte(PC++); // Fetch
-            _ops[op](); // Decode, Execute
-
+            Step(_ops);
             _totalM += M;
         }
 
@@ -117,6 +149,7 @@ namespace GameBoyEm
             M = 1;
         }
         private void CPL() { A = A.XOR(_u8); FH = true; FN = true; }
+        private void CB() { Step(_cbOps); }
 
         // 8-bit Loads
         private void LDBCA() { WB(BC, A); M = 2; }
@@ -184,6 +217,12 @@ namespace GameBoyEm
         #endregion
 
         #region Helpers
+        private void Step(List<Action> ops)
+        {
+            var op = _mmu.ReadByte(PC++); // Fetch
+            ops[op](); // Decode, Execute
+        }
+
         // MMU Helpers
         private byte RB(ushort address)
         {
