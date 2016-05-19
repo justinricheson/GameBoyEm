@@ -47,6 +47,12 @@ namespace GameBoyEm
         private IMmu _mmu;
         private List<Action> _ops;
 
+        // Constants
+        private static readonly byte _u4 = 15;
+        private static readonly byte _u8 = byte.MaxValue;
+        private static readonly ushort _u12 = 4095;
+        private static readonly ushort _u16 = ushort.MaxValue;
+
         public Cpu(IMmu mmu,
             byte a = 0, byte b = 0, byte c = 0, byte d = 0,
             byte e = 0, byte h = 0, byte l = 0, byte f = 0,
@@ -60,7 +66,7 @@ namespace GameBoyEm
             _ops = new List<Action>
             {
                 /* 00 */ NOP, LDBCN, LDBCA, INCBC, INCB, DECB, LDBN, RLCA, LDNSP, ADDHLBC, LDABC, DECBC, INCC, DECC, LDCN, RRCA,
-                /* 10 */ STOP, LDDEN, LDDEA, INCDE, INCD, DECD, LDDN, RLA, JRN
+                /* 10 */ STOP, LDDEN, LDDEA, INCDE, INCD, DECD, LDDN, RLA, JRN, ADDHLDE
             };
         }
 
@@ -85,12 +91,16 @@ namespace GameBoyEm
         private void LDCN() { C = RB(PC++); M = 2; }
 
         // 8-bit Arithmetic
-        private void INCB() { B++; FN = false; FZ = B == 0; M = 1; } // TODO FH
-        private void INCD() { D++; FN = false; FZ = D == 0; M = 1; } // TODO FH
-        private void DECB() { B--; FN = true; FZ = B == 0; M = 1; } // TODO FH
-        private void DECD() { D--; FN = true; FZ = D == 0; M = 1; } // TODO FH
-        private void INCC() { C++; FN = false; FZ = C == 0; M = 1; } // TODO FH
-        private void DECC() { C--; FN = true; FZ = C == 0; M = 1; } // TODO FH
+        // Carry set when carry from bit 7 => 8 for adds
+        // Half Carry set when carry from bit 3 => 4 for adds
+        // Carry not affected for subtracts
+        // Half Carry set when no borrow from 4 => 3 for subtracts
+        private void INCB() { FH = (B & _u4) == _u4; B++; FN = false; FZ = B == 0; M = 1; }
+        private void INCD() { FH = (D & _u4) == _u4; D++; FN = false; FZ = D == 0; M = 1; }
+        private void DECB() { B--; FH = (B & _u4) != _u4; FN = true; FZ = B == 0; M = 1; }
+        private void DECD() { D--; FH = (D & _u4) != _u4; FN = true; FZ = D == 0; M = 1; }
+        private void INCC() { FH = (C & _u4) == _u4; C++; FN = false; FZ = C == 0; M = 1; }
+        private void DECC() { C--; FH = (C & _u4) != _u4; FN = true; FZ = C == 0; M = 1; }
 
         // 16-bit Loads
         private void LDBCN() { C = RB(PC++); B = RB(PC++); M = 3; }
@@ -98,10 +108,13 @@ namespace GameBoyEm
         private void LDNSP() { WB(RW(PC), SP); PC += 2; M = 5; }
 
         // 16-bit Arithmetic
+        // Carry set when carry from bit 15 => 16 for adds
+        // Half Carry set when carry from bit 11 => 12 for adds
         private void INCBC() { C++; if (C == 0) B++; M = 2; }
         private void INCDE() { E++; if (E == 0) D++; M = 2; }
-        private void ADDHLBC() { int hl = HL + BC; HL = (ushort)hl; FC = hl > 65535; FN = false; M = 2; } // TODO FH
-        private void DECBC() { C--; if (C == 255) B--; M = 2; }
+        private void ADDHLBC() { FH = (HL & _u12) + (BC & _u12) > _u12; int hl = HL + BC; HL = (ushort)hl; FC = hl > _u16; FN = false; M = 2; }
+        private void DECBC() { C--; if (C == _u8) B--; M = 2; }
+        private void ADDHLDE() { FH = (HL & _u12) + (DE & _u12) > _u12; int hl = HL + DE; HL = (ushort)hl; FC = hl > _u16; FN = false; M = 2; }
 
         // Rotates and Shifts
         private void RLA() { var hi = A.RS(7); A = A.LS(1).OR(FC); F = 0; FC = hi == 1; FZ = A == 0; M = 1; }
