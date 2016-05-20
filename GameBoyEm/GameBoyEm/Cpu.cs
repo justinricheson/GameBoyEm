@@ -96,7 +96,7 @@ namespace GameBoyEm
                 /* 70 */ LDHLB, LDHLC, LDHLD,  LDHLE, LDHLH,  LDHLL,  HALT,   LDHLA, LDAB,  LDAC,    LDAD,   LDAE,  LDAH, LDAL, LDAHL, LDAA,
                 /* 80 */ ADDB,  ADDC,  ADDD,   ADDE,  ADDH,   ADDL,   ADDHL,  ADDA,  ADCB,  ADCC,    ADCD,   ADCE,  ADCH, ADCL, ADCHL, ADCA,
                 /* 90 */ SUBB,  SUBC,  SUBD,   SUBE,  SUBH,   SUBL,   SUBHL,  SUBA,  SBCB,  SBCC,    SBCD,   SBCE,  SBCH, SBCL, SBCHL, SBCA,
-                /* A0 */
+                /* A0 */ ANDB, ANDC, ANDD, ANDE, ANDH, ANDL, ANDHL, ANDA, XORB, XORC, XORD, XORE, XORH, XORL, XORHL,XORA,
                 /* B0 */
                 /* C0 */
                 /* D0 */

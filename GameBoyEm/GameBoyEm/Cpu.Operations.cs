@@ -176,6 +176,22 @@ namespace GameBoyEm
         private void SBCH() { SubC(H); }
         private void SBCL() { SubC(L); }
         private void SBCHL() { SubC(RB(HL)); }
+        private void ANDA() { And(A); }
+        private void ANDB() { And(B); }
+        private void ANDC() { And(C); }
+        private void ANDD() { And(D); }
+        private void ANDE() { And(E); }
+        private void ANDH() { And(H); }
+        private void ANDL() { And(L); }
+        private void ANDHL() { And(RB(HL)); }
+        private void XORA() { Xor(A); }
+        private void XORB() { Xor(B); }
+        private void XORC() { Xor(C); }
+        private void XORD() { Xor(D); }
+        private void XORE() { Xor(E); }
+        private void XORH() { Xor(H); }
+        private void XORL() { Xor(L); }
+        private void XORHL() { Xor(RB(HL)); }
 
         private void ADCHL() { AddC(RB(HL)); }
         private void INCHLM() { var n = RB(HL); FH = (n & _u4) == _u4; WB(HL, ++n); FN = false; FZ = n == 0; }
@@ -332,6 +348,22 @@ namespace GameBoyEm
             FH = ((a & _u4) - (register & _u4) - carry) < 0;
 
             FN = true;
+            FZ = A == 0;
+        }
+        private void And(byte register)
+        {
+            A &= register;
+            FC = false;
+            FH = true;
+            FN = false;
+            FZ = A == 0;
+        }
+        private void Xor(byte register)
+        {
+            A ^= register;
+            FC = false;
+            FH = false;
+            FN = false;
             FZ = A == 0;
         }
     }
