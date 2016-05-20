@@ -131,20 +131,20 @@ namespace GameBoyEm
         private void LDDAHL() { A = RB(HL--); }
 
         // 8-bit Arithmetic
-        private void INCA() { Inc(ref _a); }
-        private void INCB() { Inc(ref _b); }
-        private void INCC() { Inc(ref _c); }
-        private void INCD() { Inc(ref _d); }
-        private void INCE() { Inc(ref _e); }
-        private void INCH() { Inc(ref _h); }
-        private void INCL() { Inc(ref _l); }
-        private void DECA() { Dec(ref _a); }
-        private void DECB() { Dec(ref _b); }
-        private void DECC() { Dec(ref _c); }
-        private void DECD() { Dec(ref _d); }
-        private void DECE() { Dec(ref _e); }
-        private void DECH() { Dec(ref _h); }
-        private void DECL() { Dec(ref _l); }
+        private void INCA() { A = Inc(A); }
+        private void INCB() { B = Inc(B); }
+        private void INCC() { C = Inc(C); }
+        private void INCD() { D = Inc(D); }
+        private void INCE() { E = Inc(E); }
+        private void INCH() { H = Inc(H); }
+        private void INCL() { L = Inc(L); }
+        private void DECA() { A = Dec(A); }
+        private void DECB() { B = Dec(B); }
+        private void DECC() { C = Dec(C); }
+        private void DECD() { D = Dec(D); }
+        private void DECE() { E = Dec(E); }
+        private void DECH() { H = Dec(H); }
+        private void DECL() { L = Dec(L); }
         private void ADDA() { Add(A); }
         private void ADDB() { Add(B); }
         private void ADDC() { Add(C); }
@@ -153,6 +153,7 @@ namespace GameBoyEm
         private void ADDH() { Add(H); }
         private void ADDL() { Add(L); }
         private void ADDHL() { Add(RB(HL)); }
+        private void ADDN() { Add(RB(PC++)); }
         private void ADCA() { AddC(A); }
         private void ADCB() { AddC(B); }
         private void ADCC() { AddC(C); }
@@ -161,6 +162,7 @@ namespace GameBoyEm
         private void ADCH() { AddC(H); }
         private void ADCL() { AddC(L); }
         private void ADCHL() { AddC(RB(HL)); }
+        private void ADCN() { AddC(RB(PC++)); }
         private void SUBA() { Sub(A); }
         private void SUBB() { Sub(B); }
         private void SUBC() { Sub(C); }
@@ -240,11 +242,26 @@ namespace GameBoyEm
         private void RLCA() { var hi = A.AND(128).RS(7); A = A.LS().OR(hi); F = 0; FC = hi == 1; FZ = A == 0; }
         private void SRLB() { var lo = B.AND(1); B = B.RS(); F = 0; FC = lo == 1; FZ = B == 0; }
 
-        // Jumps
-        private void JRN() { Jump(); }
-        private void JRZN() { Jump(FZ); }
-        private void JRNZN() { Jump(!FZ); }
-        private void JRNCN() { Jump(!FC); }
+        // Jumps, Calls, Returns, and Resets
+        private void JR() { Jump(); }
+        private void JRZ() { Jump(FZ); }
+        private void JRNZ() { Jump(!FZ); }
+        private void JRNC() { Jump(!FC); }
+        private void JP() { JumpTo(); }
+        private void JPZ() { JumpTo(FZ); }
+        private void JPNZ() { JumpTo(!FZ); }
+        private void RET() { Return(); }
+        private void RETZ() { Return(FZ); }
+        private void RETNZ() { Return(!FZ); }
+        private void CALL() { Call(); }
+        private void CALLZ() { Call(FZ); }
+        private void CALLNZ() { Call(!FZ); }
+        private void RST00() { Reset(0); }
+        private void RST08() { Reset(8); }
+
+        // Push and Pop
+        private void POPBC() { BC = Pop(); }
+        private void PUSHBC() { Push(BC); }
 
         // Helpers
         private byte RB(ushort address)
@@ -265,89 +282,125 @@ namespace GameBoyEm
         }
         private void Jump(bool predicate = true)
         {
+            var j = (sbyte)RB(PC++); // Always read the argument
             if (predicate)
             {
-                var j = (sbyte)RB(PC++);
                 var pc = (int)PC;
                 pc += j;
                 PC = (ushort)pc;
             }
         }
-        private void Inc(ref byte register)
+        private void JumpTo(bool predicate = true)
         {
-            FH = (register & _u4) == _u4;
-            register++;
-            FN = false;
-            FZ = register == 0;
+            if (predicate)
+            {
+                PC = RW(PC);
+            }
+            else
+            {
+                PC += 2; // Jump over argument
+            }
         }
-        private void Dec(ref byte register)
+        private void Return(bool predicate = true)
         {
-            register--;
+            if (predicate)
+            {
+                PC = RW(SP);
+                SP += 2;
+            }
+        }
+        private void Call(bool predicate = true)
+        {
+            if (predicate)
+            {
+                SP -= 2;
+                WW(SP, (ushort)(PC + 2)); // Push return address onto stack
+                PC = RW(PC); // Jump to argument
+            }
+            else
+            {
+                PC += 2; // Jump over argument
+            }
+        }
+        private byte Inc(byte value)
+        {
+            FH = (value & _u4) == _u4;
+            value++;
+            FN = false;
+            FZ = value == 0;
+
+            return value;
+        }
+        private byte Dec(byte value)
+        {
+            value--;
 
             // CPU manual says half carry set on NO borrow
             //FH = (register & _u4) != _u4;
 
             // Ref impl says half carry set on borrow
-            FH = (register & _u4) == _u4;
+            FH = (value & _u4) == _u4;
 
             FN = true;
-            FZ = register == 0;
+            FZ = value == 0;
+
+            return value;
         }
-        private void Add(byte register)
+        private void Add(byte value)
         {
             var a = A;
-            var ar = a + register;
+            var ar = a + value;
             A = (byte)ar;
             F = 0;
             FC = ar > _u8;
-            FH = ((a & _u4) + (register & _u4) & 16) != 0;
+            FH = ((a & _u4) + (value & _u4) & 16) != 0;
             FZ = A == 0;
         }
-        private void AddC(byte register)
+        private void AddC(byte value)
         {
             var a = A;
             var carry = FC ? 1 : 0;
-            var ar = a + register + carry;
+            var ar = a + value + carry;
             A = (byte)(ar);
             F = 0;
             FC = ar > _u8;
-            FH = ((a & _u4) + (register & _u4) + carry & 16) != 0;
+            FH = ((a & _u4) + (value & _u4) + carry & 16) != 0;
             FZ = A == 0;
         }
-        private void Add16(ushort register)
+        private void Add16(ushort value)
         {
             var hl = HL;
-            FH = (hl & _u12) + (register & _u12) > _u12;
-            int add = hl + register;
+            FH = (hl & _u12) + (value & _u12) > _u12;
+            int add = hl + value;
             HL = (ushort)add;
             FC = add > _u16;
             FN = false;
         }
-        private void Sub(byte register)
+        private void Sub(byte value)
         {
             var a = A;
-            A -= register;
+            A -= value;
 
             // CPU manual says carry set on NO borrow
             //FC = a - register >= 0;
 
             // Ref impl says carry set on borrow
-            FC = a - register < 0;
+            FC = a - value < 0;
 
             // CPU manual says half carry set on NO borrow
             //FH = ((A ^ register ^ a) & 16) == 0;
 
             // Ref impl says half carry set on borrow
-            FH = ((A ^ register ^ a) & 16) > 0;
+            FH = ((A ^ value ^ a) & 16) > 0;
 
             FN = true;
             FZ = A == 0;
         }
-        private void SubC(byte register)
+        private void SubC(byte value)
         {
             var a = A;
             var carry = FC ? 1 : 0;
-            var ar = A - register - carry;
+            var ar = A - value - carry;
             A = (byte)ar;
 
             // CPU manual says carry set on NO borrow
@@ -360,43 +413,60 @@ namespace GameBoyEm
             //FH = ((a & _u4) - (register & _u4) - carry) >= 0;
 
             // Ref impl says half carry set on borrow
-            FH = ((a & _u4) - (register & _u4) - carry) < 0;
+            FH = ((a & _u4) - (value & _u4) - carry) < 0;
 
             FN = true;
             FZ = A == 0;
         }
-        private void And(byte register)
+        private void And(byte value)
         {
-            A &= register;
+            A &= value;
             F = 0;
             FH = true;
             FZ = A == 0;
         }
-        private void Xor(byte register)
+        private void Xor(byte value)
         {
-            A ^= register;
+            A ^= value;
             F = 0;
             FZ = A == 0;
         }
-        private void Or(byte register)
+        private void Or(byte value)
         {
-            A |= register;
+            A |= value;
             F = 0;
             FZ = A == 0;
         }
-        private void Compare(byte register)
+        private void Compare(byte value)
         {
-            var r = A - register;
-            FC = A < register;
+            var r = A - value;
+            FC = A < value;
 
             // CPU manual says half carry set on NO borrow
             //FH = ((r ^ register ^ A) & 16) == 0;
 
             // Ref impl says half carry set on borrow
-            FH = ((r ^ register ^ A) & 16) > 0;
+            FH = ((r ^ value ^ A) & 16) > 0;
 
             FN = true;
-            FZ = A == register;
+            FZ = A == value;
+        }
+        private ushort Pop()
+        {
+            var p = RW(SP);
+            SP += 2;
+            return p;
+        }
+        private void Push(ushort value)
+        {
+            SP -= 2;
+            WW(SP, value);
+        }
+        private void Reset(ushort pc)
+        {
+            SP -= 2;
+            WW(SP, PC);
+            PC = pc;
         }
     }
 }
