@@ -2,8 +2,8 @@
 {
     public static class ByteExtensions
     {
-        // These just hide the cast, we'll have to measure to see
-        // if the extra function call affects performance too much
+        // These just hide the cast, need to measure if
+        // the extra function call affects performance
         public static byte RS(this byte value, int places = 1)
         {
             return (byte)(value >> places);

@@ -1,4 +1,5 @@
-﻿using static GameBoyEm.CpuCycles;
+﻿using System;
+using static GameBoyEm.CpuCycles;
 
 namespace GameBoyEm
 {
@@ -159,6 +160,23 @@ namespace GameBoyEm
         private void ADCE() { AddC(E); }
         private void ADCH() { AddC(H); }
         private void ADCL() { AddC(L); }
+        private void SUBA() { Sub(A); }
+        private void SUBB() { Sub(B); }
+        private void SUBC() { Sub(C); }
+        private void SUBD() { Sub(D); }
+        private void SUBE() { Sub(E); }
+        private void SUBH() { Sub(H); }
+        private void SUBL() { Sub(L); }
+        private void SUBHL() { Sub(RB(HL)); }
+        private void SBCA() { SubC(A); }
+        private void SBCB() { SubC(B); }
+        private void SBCC() { SubC(C); }
+        private void SBCD() { SubC(D); }
+        private void SBCE() { SubC(E); }
+        private void SBCH() { SubC(H); }
+        private void SBCL() { SubC(L); }
+        private void SBCHL() { SubC(RB(HL)); }
+
         private void ADCHL() { AddC(RB(HL)); }
         private void INCHLM() { var n = RB(HL); FH = (n & _u4) == _u4; WB(HL, ++n); FN = false; FZ = n == 0; }
         private void DECHLM() { var n = RB(HL); WB(HL, --n); FH = (n & _u4) != _u4; FN = true; FZ = n == 0; }
@@ -234,7 +252,13 @@ namespace GameBoyEm
         private void Dec(ref byte register)
         {
             register--;
-            FH = (register & _u4) != _u4;
+
+            // CPU manual says half carry set on NO borrow
+            //FH = (register & _u4) != _u4;
+
+            // Ref impl says half carry set on borrow
+            FH = (register & _u4) == _u4;
+
             FN = true;
             FZ = register == 0;
         }
@@ -267,6 +291,48 @@ namespace GameBoyEm
             HL = (ushort)add;
             FC = add > _u16;
             FN = false;
+        }
+        private void Sub(byte register)
+        {
+            var a = A;
+            A -= register;
+
+            // CPU manual says carry set on NO borrow
+            //FC = a - register >= 0;
+
+            // Ref impl says carry set on borrow
+            FC = a - register < 0;
+
+            // CPU manual says half carry set on NO borrow
+            //FH = ((A ^ register ^ a) & 16) == 0;
+
+            // Ref impl says half carry set on borrow
+            FH = ((A ^ register ^ a) & 16) > 0;
+
+            FN = true;
+            FZ = A == 0;
+        }
+        private void SubC(byte register)
+        {
+            var a = A;
+            var carry = FC ? 1 : 0;
+            var ar = A - register - carry;
+            A = (byte)ar;
+
+            // CPU manual says carry set on NO borrow
+            //FC = ar >= 0;
+
+            // Ref impl says carry set on borrow
+            FC = ar < 0;
+
+            // CPU manual says half carry set on NO borrow
+            //FH = ((a & _u4) - (register & _u4) - carry) >= 0;
+
+            // Ref impl says half carry set on borrow
+            FH = ((a & _u4) - (register & _u4) - carry) < 0;
+
+            FN = true;
+            FZ = A == 0;
         }
     }
 }
