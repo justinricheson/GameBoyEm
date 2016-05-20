@@ -62,8 +62,40 @@ namespace GameBoyEm
         private void LDCE() { C = E; }
         private void LDCH() { C = H; }
         private void LDCL() { C = L; }
+        private void LDDA() { D = A; }
+        private void LDDB() { D = B; }
+        private void LDDC() { D = C; }
+        private void LDDD() { } // NOP
+        private void LDDE() { D = E; }
+        private void LDDH() { D = H; }
+        private void LDDL() { D = L; }
+        private void LDEA() { E = A; }
+        private void LDEB() { E = B; }
+        private void LDEC() { E = C; }
+        private void LDED() { E = D; }
+        private void LDEE() { } // NOP
+        private void LDEH() { E = H; }
+        private void LDEL() { E = L; }
+        private void LDHA() { H = A; }
+        private void LDHB() { H = B; }
+        private void LDHC() { H = C; }
+        private void LDHD() { H = D; }
+        private void LDHE() { H = E; }
+        private void LDHH() { } // NOP
+        private void LDHL() { H = L; }
+        private void LDLA() { L = A; }
+        private void LDLB() { L = B; }
+        private void LDLC() { L = C; }
+        private void LDLD() { L = D; }
+        private void LDLE() { L = E; }
+        private void LDLH() { L = H; }
+        private void LDLL() { } // NOP
         private void LDBHL() { B = RB(HL); }
         private void LDCHL() { C = RB(HL); }
+        private void LDDHL() { D = RB(HL); }
+        private void LDEHL() { E = RB(HL); }
+        private void LDHHL() { H = RB(HL); }
+        private void LDLHL() { L = RB(HL); }
 		private void LDAN() { A = RB(PC++); }
         private void LDBN() { B = RB(PC++); }
         private void LDCN() { C = RB(PC++); }
