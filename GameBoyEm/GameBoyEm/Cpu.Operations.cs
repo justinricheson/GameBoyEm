@@ -4,8 +4,10 @@ namespace GameBoyEm
 {
     public partial class Cpu
     {
+		// Misc
         private void NOP() { }
         private void STOP() { }
+        private void CB() { Step(_cbOps, CBCycles); }
         private void DAA()
         {
             // Adjust A into binary coded decimal form
@@ -39,7 +41,6 @@ namespace GameBoyEm
             A = (byte)a;
             FZ = A == 0;
         }
-        private void CB() { Step(_cbOps, CBCycles); }
 
 		// Complements and Flags
         private void SCF() { FC = true; FH = FN = false; }
@@ -47,6 +48,22 @@ namespace GameBoyEm
 		private void CCF() { FC = !FC; FH = false; FN = false; }
 
         // 8-bit Loads
+        private void LDBA() { B = A; }
+        private void LDBB() { } // NOP
+        private void LDBC() { B = C; }
+        private void LDBD() { B = D; }
+        private void LDBE() { B = E; }
+        private void LDBH() { B = H; }
+        private void LDBL() { B = L; }
+        private void LDCA() { C = A; }
+        private void LDCB() { C = B; }
+        private void LDCC() { } // NOP
+        private void LDCD() { C = D; }
+        private void LDCE() { C = E; }
+        private void LDCH() { C = H; }
+        private void LDCL() { C = L; }
+        private void LDBHL() { B = RB(HL); }
+        private void LDCHL() { C = RB(HL); }
 		private void LDAN() { A = RB(PC++); }
         private void LDBN() { B = RB(PC++); }
         private void LDCN() { C = RB(PC++); }
@@ -65,10 +82,6 @@ namespace GameBoyEm
         private void LDDAHL() { A = RB(HL--); }
 
         // 8-bit Arithmetic
-        // Carry set when carry from bit 7 => 8 for adds
-        // Half carry set when carry from bit 3 => 4 for adds
-        // Carry not affected for subtracts
-        // Half carry set when no borrow from 4 => 3 for subtracts
         private void INCA() { FH = (A & _u4) == _u4; A++; FN = false; FZ = A == 0; }
         private void INCB() { FH = (B & _u4) == _u4; B++; FN = false; FZ = B == 0; }
         private void INCC() { FH = (C & _u4) == _u4; C++; FN = false; FZ = C == 0; }
@@ -94,10 +107,6 @@ namespace GameBoyEm
         private void LDSPN() { SP = RW(PC); PC += 2; }
 
         // 16-bit Arithmetic
-        // Carry set when carry from bit 15 => 16 for adds
-        // Half carry set when carry from bit 11 => 12 for adds
-        // Carry not affected for subtracts
-        // Half carry not affected for subtracts
         private void INCSP() { SP++; }
         private void DECSP() { SP--; }
         private void INCBC() { C++; if (C == 0) B++; }
