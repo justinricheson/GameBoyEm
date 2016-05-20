@@ -46,8 +46,8 @@ namespace GameBoyEm
 
         // Complements and Flags
         private void SCF() { FC = true; FH = FN = false; }
-        private void CPL() { A = A.XOR(_u8); FH = true; FN = true; }
         private void CCF() { FC = !FC; FH = false; FN = false; }
+        private void CMPL() { A = A.XOR(_u8); FH = true; FN = true; }
 
         // 8-bit Loads
         private void LDAA() { } // NOP
@@ -160,6 +160,7 @@ namespace GameBoyEm
         private void ADCE() { AddC(E); }
         private void ADCH() { AddC(H); }
         private void ADCL() { AddC(L); }
+        private void ADCHL() { AddC(RB(HL)); }
         private void SUBA() { Sub(A); }
         private void SUBB() { Sub(B); }
         private void SUBC() { Sub(C); }
@@ -192,8 +193,22 @@ namespace GameBoyEm
         private void XORH() { Xor(H); }
         private void XORL() { Xor(L); }
         private void XORHL() { Xor(RB(HL)); }
-
-        private void ADCHL() { AddC(RB(HL)); }
+        private void ORA() { Or(A); }
+        private void ORB() { Or(B); }
+        private void ORC() { Or(C); }
+        private void ORD() { Or(D); }
+        private void ORE() { Or(E); }
+        private void ORH() { Or(H); }
+        private void ORL() { Or(L); }
+        private void ORHL() { Or(RB(HL)); }
+        private void CPA() { Compare(A); }
+        private void CPB() { Compare(B); }
+        private void CPC() { Compare(C); }
+        private void CPD() { Compare(D); }
+        private void CPE() { Compare(E); }
+        private void CPH() { Compare(H); }
+        private void CPL() { Compare(L); }
+        private void CPHL() { Compare(RB(HL)); }
         private void INCHLM() { var n = RB(HL); FH = (n & _u4) == _u4; WB(HL, ++n); FN = false; FZ = n == 0; }
         private void DECHLM() { var n = RB(HL); WB(HL, --n); FH = (n & _u4) != _u4; FN = true; FZ = n == 0; }
 
@@ -353,18 +368,35 @@ namespace GameBoyEm
         private void And(byte register)
         {
             A &= register;
-            FC = false;
+            F = 0;
             FH = true;
-            FN = false;
             FZ = A == 0;
         }
         private void Xor(byte register)
         {
             A ^= register;
-            FC = false;
-            FH = false;
-            FN = false;
+            F = 0;
             FZ = A == 0;
+        }
+        private void Or(byte register)
+        {
+            A |= register;
+            F = 0;
+            FZ = A == 0;
+        }
+        private void Compare(byte register)
+        {
+            var r = A - register;
+            FC = A < register;
+
+            // CPU manual says half carry set on NO borrow
+            //FH = ((r ^ register ^ A) & 16) == 0;
+
+            // Ref impl says half carry set on borrow
+            FH = ((r ^ register ^ A) & 16) > 0;
+
+            FN = true;
+            FZ = A == register;
         }
     }
 }

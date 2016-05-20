@@ -88,7 +88,7 @@ namespace GameBoyEm
             {
                 /* 00 */ NOP,   LDBCN, LDBCA,  INCBC, INCB,   DECB,   LDBN,   RLCA,  LDNSP, ADDHLBC, LDABC,  DECBC, INCC, DECC, LDCN,  RRCA,
                 /* 10 */ STOP,  LDDEN, LDDEA,  INCDE, INCD,   DECD,   LDDN,   RLA,   JRN,   ADDHLDE, LDADE,  DECDE, INCE, DECE, LDEN,  RRA,
-                /* 20 */ JRNZN, LDHLN, LDIHLA, INCHL, INCH,   DECH,   LDHN,   DAA,   JRZN,  ADDHLHL, LDIAHL, DECHL, INCL, DECL, LDLN,  CPL,
+                /* 20 */ JRNZN, LDHLN, LDIHLA, INCHL, INCH,   DECH,   LDHN,   DAA,   JRZN,  ADDHLHL, LDIAHL, DECHL, INCL, DECL, LDLN,  CMPL,
                 /* 30 */ JRNCN, LDSPN, LDDHLA, INCSP, INCHLM, DECHLM, LDHLMN, SCF,   SRLB,  ADDHLSP, LDDAHL, DECSP, INCA, DECA, LDAN,  CCF,
                 /* 40 */ LDBB,  LDBC,  LDBD,   LDBE,  LDBH,   LDBL,   LDBHL,  LDBA,  LDCB,  LDCC,    LDCD,   LDCE,  LDCH, LDCL, LDCHL, LDCA,
                 /* 50 */ LDDB,  LDDC,  LDDD,   LDDE,  LDDH,   LDDL,   LDDHL,  LDDA,  LDEB,  LDEC,    LDED,   LDEE,  LDEH, LDEL, LDEHL, LDEA,
@@ -96,8 +96,8 @@ namespace GameBoyEm
                 /* 70 */ LDHLB, LDHLC, LDHLD,  LDHLE, LDHLH,  LDHLL,  HALT,   LDHLA, LDAB,  LDAC,    LDAD,   LDAE,  LDAH, LDAL, LDAHL, LDAA,
                 /* 80 */ ADDB,  ADDC,  ADDD,   ADDE,  ADDH,   ADDL,   ADDHL,  ADDA,  ADCB,  ADCC,    ADCD,   ADCE,  ADCH, ADCL, ADCHL, ADCA,
                 /* 90 */ SUBB,  SUBC,  SUBD,   SUBE,  SUBH,   SUBL,   SUBHL,  SUBA,  SBCB,  SBCC,    SBCD,   SBCE,  SBCH, SBCL, SBCHL, SBCA,
-                /* A0 */ ANDB, ANDC, ANDD, ANDE, ANDH, ANDL, ANDHL, ANDA, XORB, XORC, XORD, XORE, XORH, XORL, XORHL,XORA,
-                /* B0 */
+                /* A0 */ ANDB,  ANDC,  ANDD,   ANDE,  ANDH,   ANDL,   ANDHL,  ANDA,  XORB,  XORC,    XORD,   XORE,  XORH, XORL, XORHL, XORA,
+                /* B0 */ ORB,   ORC,   ORD,    ORE,   ORH,    ORL,    ORHL,   ORA,   CPB,   CPC,     CPD,    CPE,   CPH,  CPL,  CPHL,  CPA,
                 /* C0 */
                 /* D0 */
                 /* E0 */
