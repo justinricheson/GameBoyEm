@@ -18,14 +18,23 @@ namespace GameBoyEm
         private List<Action> _ops;
         private List<Action> _cbOps;
 
+        // Allows the operations to pass by ref
+        private byte _a;
+        private byte _b;
+        private byte _c;
+        private byte _d;
+        private byte _e;
+        private byte _h;
+        private byte _l;
+
         // Registers
-        public byte A { get; private set; } // Accumulator
-        public byte B { get; private set; } // General Purpose
-        public byte C { get; private set; } // ..
-        public byte D { get; private set; }
-        public byte E { get; private set; }
-        public byte H { get; private set; }
-        public byte L { get; private set; }
+        public byte A { get { return _a; } private set { _a = value; } } // Accumulator
+        public byte B { get { return _b; } private set { _b = value; } } // General Purpose
+        public byte C { get { return _c; } private set { _c = value; } } // ..
+        public byte D { get { return _d; } private set { _d = value; } }
+        public byte E { get { return _e; } private set { _e = value; } }
+        public byte H { get { return _h; } private set { _h = value; } }
+        public byte L { get { return _l; } private set { _l = value; } }
         public byte F { get; private set; } // Flags (bits 0-3: unused, 4: carry, 5: half-carry, 6: subtract, 7: zero)
         public ushort SP { get; private set; } // Stack pointer
         public ushort PC { get; private set; } // Program counter
@@ -86,7 +95,7 @@ namespace GameBoyEm
                 /* 60 */ LDHB,  LDHC,  LDHD,   LDHE,  LDHH,   LDHL,   LDHHL,  LDHA,  LDLB,  LDLC,    LDLD,   LDLE,  LDLH, LDLL, LDLHL, LDLA,
                 /* 70 */ LDHLB, LDHLC, LDHLD,  LDHLE, LDHLH,  LDHLL,  HALT,   LDHLA, LDAB,  LDAC,    LDAD,   LDAE,  LDAH, LDAL, LDAHL, LDAA,
                 /* 80 */ ADDB,  ADDC,  ADDD,   ADDE,  ADDH,   ADDL,   ADDHL,  ADDA,  ADCB,  ADCC,    ADCD,   ADCE,  ADCH, ADCL, ADCHL, ADCA,
-                /* 90 */
+                /* 90 */ //SUBB,  SUBC,  SUBD,   SUBE,  SUBH,   SUBL,   SUBHL,  SUBA,  SBCB,  SBCC,    SBCD,   SBCE,  SBCH, SBCL, SBCHL, SBCA,
                 /* A0 */
                 /* B0 */
                 /* C0 */
