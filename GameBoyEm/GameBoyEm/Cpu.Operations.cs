@@ -144,8 +144,27 @@ namespace GameBoyEm
         private void DECE() { E--; FH = (E & _u4) != _u4; FN = true; FZ = E == 0; }
         private void DECH() { H--; FH = (H & _u4) != _u4; FN = true; FZ = H == 0; }
         private void DECL() { L--; FH = (L & _u4) != _u4; FN = true; FZ = L == 0; }
+        private void ADDA() { var a = A; var aa = a + a; A = (byte)aa; F = 0; FC = aa > _u8; var lo = a & _u4; FH = (lo + lo & 16) != 0; FZ = A == 0; }
+        private void ADDB() { var a = A; var b = B; var ab = a + b; A = (byte)ab; F = 0; FC = ab > _u8; FH = ((a & _u4) + (b & _u4) & 16) != 0; FZ = A == 0; }
+        private void ADDC() { var a = A; var c = C; var ac = a + c; A = (byte)ac; F = 0; FC = ac > _u8; FH = ((a & _u4) + (c & _u4) & 16) != 0; FZ = A == 0; }
+        private void ADDD() { var a = A; var d = D; var ad = a + d; A = (byte)ad; F = 0; FC = ad > _u8; FH = ((a & _u4) + (d & _u4) & 16) != 0; FZ = A == 0; }
+        private void ADDE() { var a = A; var e = E; var ae = a + e; A = (byte)ae; F = 0; FC = ae > _u8; FH = ((a & _u4) + (e & _u4) & 16) != 0; FZ = A == 0; }
+        private void ADDH() { var a = A; var h = H; var ah = a + h; A = (byte)ah; F = 0; FC = ah > _u8; FH = ((a & _u4) + (h & _u4) & 16) != 0; FZ = A == 0; }
+        private void ADDL() { var a = A; var l = L; var al = a + l; A = (byte)al; F = 0; FC = al > _u8; FH = ((a & _u4) + (l & _u4) & 16) != 0; FZ = A == 0; }
+        private void ADDHL() { var a = A; var hl = RB(HL); var ahl = a + hl; A = (byte)ahl; F = 0; FC = ahl > _u8; FH = ((a & _u4) + (hl & _u4) & 16) != 0; FZ = A == 0; }
+        private void ADCA() { var a = A; var cr = FC ? 1 : 0; var aa = a + a + cr; A = (byte)(aa); F = 0; FC = aa > _u8; var lo = a & _u4; FH = (lo + lo + cr & 16) != 0; FZ = A == 0; }
+        private void ADCB() { var a = A; var b = B; var cr = FC ? 1 : 0; var ab = a + b + cr; A = (byte)(ab); F = 0; FC = ab > _u8; FH = ((a & _u4) + (b & _u4) + cr & 16) != 0; FZ = A == 0; }
+        private void ADCC() { var a = A; var c = C; var cr = FC ? 1 : 0; var ac = a + c + cr; A = (byte)(ac); F = 0; FC = ac > _u8; FH = ((a & _u4) + (c & _u4) + cr & 16) != 0; FZ = A == 0; }
+        private void ADCD() { var a = A; var d = D; var cr = FC ? 1 : 0; var ad = a + d + cr; A = (byte)(ad); F = 0; FC = ad > _u8; FH = ((a & _u4) + (d & _u4) + cr & 16) != 0; FZ = A == 0; }
+        private void ADCE() { var a = A; var e = E; var cr = FC ? 1 : 0; var ae = a + e + cr; A = (byte)(ae); F = 0; FC = ae > _u8; FH = ((a & _u4) + (e & _u4) + cr & 16) != 0; FZ = A == 0; }
+        private void ADCH() { var a = A; var h = H; var cr = FC ? 1 : 0; var ah = a + h + cr; A = (byte)(ah); F = 0; FC = ah > _u8; FH = ((a & _u4) + (h & _u4) + cr & 16) != 0; FZ = A == 0; }
+        private void ADCL() { var a = A; var l = L; var cr = FC ? 1 : 0; var al = a + l + cr; A = (byte)(al); F = 0; FC = al > _u8; FH = ((a & _u4) + (l & _u4) + cr & 16) != 0; FZ = A == 0; }
+        private void ADCHL() { var a = A; var hl = RB(HL); var cr = FC ? 1 : 0; var ahl = a + hl + cr; A = (byte)(ahl); F = 0; FC = ahl > _u8; FH = ((a & _u4) + (hl & _u4) + cr & 16) != 0; FZ = A == 0; }
         private void INCHLM() { var n = RB(HL); FH = (n & _u4) == _u4; WB(HL, ++n); FN = false; FZ = n == 0; }
         private void DECHLM() { var n = RB(HL); WB(HL, --n); FH = (n & _u4) != _u4; FN = true; FZ = n == 0; }
+
+        //registers->setHalfCarryFlag(((registers->getA() & 0x0F) + (n & 0x0F) + carry) > 0x0F);
+
 
         // 16-bit Loads
         private void LDBCN() { C = RB(PC++); B = RB(PC++); }
