@@ -84,7 +84,7 @@ namespace GameBoyEm
                 /* 40 */ LDBB,  LDBC,  LDBD,   LDBE,  LDBH,   LDBL,   LDBHL,  LDBA, LDCB,  LDCC,    LDCD,   LDCE,  LDCH, LDCL, LDCHL, LDCA,
                 /* 50 */ LDDB,  LDDC,  LDDD,   LDDE,  LDDH,   LDDL,   LDDHL,  LDDA, LDEB,  LDEC,    LDED,   LDEE,  LDEH, LDEL, LDEHL, LDEA,
                 /* 60 */ LDHB,  LDHC,  LDHD,   LDHE,  LDHH,   LDHL,   LDHHL,  LDHA, LDLB,  LDLC,    LDLD,   LDLE,  LDLH, LDLL, LDLHL, LDLA,
-                /* 70 */ //LDHLB, LDHLC, LDHLD, LDHLE, LDHLH, LDHLL, HALT, LDHLA, LDAB,  LDAC, LDAD, LDAE, LDAH, LDAL, LDHLA, LDAA,
+                /* 70 */ LDHLB, LDHLC, LDHLD,  LDHLE, LDHLH,  LDHLL,  HALT,  LDHLA, LDAB,  LDAC,    LDAD,   LDAE,  LDAH, LDAL, LDAHL, LDAA,
                 /* 80 */
                 /* 90 */
                 /* A0 */

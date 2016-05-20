@@ -4,8 +4,9 @@ namespace GameBoyEm
 {
     public partial class Cpu
     {
-		// Misc
+        // Misc
         private void NOP() { }
+        private void HALT() { }
         private void STOP() { }
         private void CB() { Step(_cbOps, CBCycles); }
         private void DAA()
@@ -42,12 +43,19 @@ namespace GameBoyEm
             FZ = A == 0;
         }
 
-		// Complements and Flags
+        // Complements and Flags
         private void SCF() { FC = true; FH = FN = false; }
         private void CPL() { A = A.XOR(_u8); FH = true; FN = true; }
-		private void CCF() { FC = !FC; FH = false; FN = false; }
+        private void CCF() { FC = !FC; FH = false; FN = false; }
 
         // 8-bit Loads
+        private void LDAA() { } // NOP
+        private void LDAB() { A = B; }
+        private void LDAC() { A = C; }
+        private void LDAD() { A = D; }
+        private void LDAE() { A = E; }
+        private void LDAH() { A = H; }
+        private void LDAL() { A = L; }
         private void LDBA() { B = A; }
         private void LDBB() { } // NOP
         private void LDBC() { B = C; }
@@ -90,13 +98,14 @@ namespace GameBoyEm
         private void LDLE() { L = E; }
         private void LDLH() { L = H; }
         private void LDLL() { } // NOP
+        private void LDAHL() { A = RB(HL); }
         private void LDBHL() { B = RB(HL); }
         private void LDCHL() { C = RB(HL); }
         private void LDDHL() { D = RB(HL); }
         private void LDEHL() { E = RB(HL); }
         private void LDHHL() { H = RB(HL); }
         private void LDLHL() { L = RB(HL); }
-		private void LDAN() { A = RB(PC++); }
+        private void LDAN() { A = RB(PC++); }
         private void LDBN() { B = RB(PC++); }
         private void LDCN() { C = RB(PC++); }
         private void LDDN() { D = RB(PC++); }
@@ -107,6 +116,13 @@ namespace GameBoyEm
         private void LDADE() { A = RB(DE); }
         private void LDBCA() { WB(BC, A); }
         private void LDDEA() { WB(DE, A); }
+        private void LDHLA() { WB(HL, A); }
+        private void LDHLB() { WB(HL, B); }
+        private void LDHLC() { WB(HL, C); }
+        private void LDHLD() { WB(HL, D); }
+        private void LDHLE() { WB(HL, E); }
+        private void LDHLH() { WB(HL, H); }
+        private void LDHLL() { WB(HL, L); }
         private void LDHLMN() { WB(HL, RB(PC++)); }
         private void LDIHLA() { WB(HL++, A); }
         private void LDDHLA() { WB(HL--, A); }
