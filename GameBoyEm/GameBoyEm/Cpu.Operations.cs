@@ -124,11 +124,14 @@ namespace GameBoyEm
         private void LDHLE() { WB(HL, E); }
         private void LDHLH() { WB(HL, H); }
         private void LDHLL() { WB(HL, L); }
+        private void LDNA() { WB(RW(PC), A); PC += 2; }
         private void LDHLMN() { WB(HL, RB(PC++)); }
         private void LDIHLA() { WB(HL++, A); }
         private void LDDHLA() { WB(HL--, A); }
         private void LDIAHL() { A = RB(HL++); }
         private void LDDAHL() { A = RB(HL--); }
+        private void LDIOAN() { WB((ushort)(_io + PC++), A); }
+        private void LDIOAC() { A = RB((ushort)(_io + C)); }
 
         // 8-bit Arithmetic
         private void INCA() { A = Inc(A); }
@@ -189,6 +192,7 @@ namespace GameBoyEm
         private void ANDH() { And(H); }
         private void ANDL() { And(L); }
         private void ANDHL() { And(RB(HL)); }
+        private void ANDN() { And(RB(PC++)); }
         private void XORA() { Xor(A); }
         private void XORB() { Xor(B); }
         private void XORC() { Xor(C); }
@@ -197,6 +201,7 @@ namespace GameBoyEm
         private void XORH() { Xor(H); }
         private void XORL() { Xor(L); }
         private void XORHL() { Xor(RB(HL)); }
+        private void XORN() { Xor(RB(PC++)); }
         private void ORA() { Or(A); }
         private void ORB() { Or(B); }
         private void ORC() { Or(C); }
@@ -232,10 +237,11 @@ namespace GameBoyEm
         private void DECBC() { C--; if (C == _u8) B--; }
         private void DECDE() { E--; if (E == _u8) D--; }
         private void DECHL() { L--; if (L == _u8) H--; }
-        private void ADDHLBC() { Add16(BC); }
-        private void ADDHLDE() { Add16(DE); }
-        private void ADDHLHL() { Add16(HL); }
-        private void ADDHLSP() { Add16(SP); }
+        private void ADDHLBC() { HL = Add16(BC, HL); }
+        private void ADDHLDE() { HL = Add16(DE, HL); }
+        private void ADDHLHL() { HL = Add16(HL, HL); }
+        private void ADDHLSP() { HL = Add16(SP, HL); }
+        private void ADDSPN() { SP = Add16(RB(PC++), SP); }
 
         // Rotates and Shifts
         private void RRA() { var lo = A.AND(1); A = A.RS().OR(FC.LS(7)); F = 0; FC = lo == 1; FZ = A == 0; }
@@ -245,15 +251,16 @@ namespace GameBoyEm
         private void SRLB() { var lo = B.AND(1); B = B.RS(); F = 0; FC = lo == 1; FZ = B == 0; }
 
         // Jumps, Calls, Returns, and Resets
-        private void JR() { Jump(); }
-        private void JRZ() { Jump(FZ); }
-        private void JRNZ() { Jump(!FZ); }
-        private void JRNC() { Jump(!FC); }
-        private void JP() { JumpTo(); }
-        private void JPZ() { JumpTo(FZ); }
-        private void JPC() { JumpTo(FC); }
-        private void JPNZ() { JumpTo(!FZ); }
-        private void JPNC() { JumpTo(!FC); }
+        private void JR() { JumpRel(); }
+        private void JRZ() { JumpRel(FZ); }
+        private void JRNZ() { JumpRel(!FZ); }
+        private void JRNC() { JumpRel(!FC); }
+        private void JP() { JumpAbs(); }
+        private void JPZ() { JumpAbs(FZ); }
+        private void JPC() { JumpAbs(FC); }
+        private void JPNZ() { JumpAbs(!FZ); }
+        private void JPNC() { JumpAbs(!FC); }
+        private void JPHL() { PC = HL; }
         private void RET() { Return(); }
         private void RETZ() { Return(FZ); }
         private void RETC() { Return(FC); }
@@ -269,12 +276,16 @@ namespace GameBoyEm
         private void RST08() { Reset(8); }
         private void RST10() { Reset(16); }
         private void RST18() { Reset(24); }
+        private void RST20() { Reset(32); }
+        private void RST28() { Reset(40); }
 
         // Push and Pop
         private void POPBC() { BC = Pop(); }
         private void POPDE() { DE = Pop(); }
+        private void POPHL() { HL = Pop(); }
         private void PUSHBC() { Push(BC); }
         private void PUSHDE() { Push(DE); }
+        private void PUSHHL() { Push(HL); }
 
         // Helpers
         private byte RB(ushort address)
@@ -293,7 +304,7 @@ namespace GameBoyEm
         {
             _mmu.WriteWord(address, value);
         }
-        private void Jump(bool predicate = true)
+        private void JumpRel(bool predicate = true)
         {
             var j = (sbyte)RB(PC++); // Always read the argument
             if (predicate)
@@ -303,7 +314,7 @@ namespace GameBoyEm
                 PC = (ushort)pc;
             }
         }
-        private void JumpTo(bool predicate = true)
+        private void JumpAbs(bool predicate = true)
         {
             if (predicate)
             {
@@ -380,14 +391,15 @@ namespace GameBoyEm
             FH = ((a & _u4) + (value & _u4) + carry & 16) != 0;
             FZ = A == 0;
         }
-        private void Add16(ushort value)
+
+        private ushort Add16(ushort x, ushort y, bool resetFZ = false)
         {
-            var hl = HL;
-            FH = (hl & _u12) + (value & _u12) > _u12;
-            int add = hl + value;
-            HL = (ushort)add;
+            int add = x + y;
             FC = add > _u16;
+            FH = (x & _u12) + (y & _u12) > _u12;
             FN = false;
+            if (resetFZ) FZ = false;
+            return (ushort)add;
         }
         private void Sub(byte value)
         {
