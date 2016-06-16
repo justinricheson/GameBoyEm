@@ -253,11 +253,11 @@ namespace GameBoyEm
         private void ADDSPN() { SP = Add16(RBN(), SP, true); }
 
         // Rotates and Shifts
+        private void SRLB() { var lo = B.AND(1); B = B.RS(); F = 0; FC = lo == 1; FZ = B == 0; }
         private void RRA() { var lo = A.AND(1); A = A.RS().OR(FC.LS(7)); F = 0; FC = lo == 1; FZ = A == 0; }
         private void RLA() { var hi = A.AND(128); A = A.LS().OR(FC); F = 0; FC = hi == 128; FZ = A == 0; }
         private void RRCA() { A = RotateRight(A); }
         private void RLCA() { A = RotateLeft(A); }
-        private void SRLB() { var lo = B.AND(1); B = B.RS(); F = 0; FC = lo == 1; FZ = B == 0; }
         private void CBRRCA() { A = RotateRight(A); }
         private void CBRRCB() { B = RotateRight(B); }
         private void CBRRCC() { C = RotateRight(C); }
@@ -265,7 +265,7 @@ namespace GameBoyEm
         private void CBRRCE() { E = RotateRight(E); }
         private void CBRRCH() { H = RotateRight(H); }
         private void CBRRCL() { L = RotateRight(L); }
-        private void CBRRCHL() { }
+        private void CBRRCHL() { WB(HL, RotateRight(RB(HL))); }
         private void CBRLCA() { A = RotateLeft(A); }
         private void CBRLCB() { B = RotateLeft(B); }
         private void CBRLCC() { C = RotateLeft(C); }
@@ -273,7 +273,7 @@ namespace GameBoyEm
         private void CBRLCE() { E = RotateLeft(E); }
         private void CBRLCH() { H = RotateLeft(H); }
         private void CBRLCL() { L = RotateLeft(L); }
-        private void CBRLCHL() { }
+        private void CBRLCHL() { WB(HL, RotateLeft(RB(HL))); }
 
         // Jumps, Calls, Returns, and Resets
         private void JR() { JumpRel(); }
