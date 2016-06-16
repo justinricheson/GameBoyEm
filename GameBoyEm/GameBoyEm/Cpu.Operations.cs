@@ -256,24 +256,40 @@ namespace GameBoyEm
         private void SRLB() { var lo = B.AND(1); B = B.RS(); F = 0; FC = lo == 1; FZ = B == 0; }
         private void RRA() { var lo = A.AND(1); A = A.RS().OR(FC.LS(7)); F = 0; FC = lo == 1; FZ = A == 0; }
         private void RLA() { var hi = A.AND(128); A = A.LS().OR(FC); F = 0; FC = hi == 128; FZ = A == 0; }
-        private void RRCA() { A = RotateRight(A); }
-        private void RLCA() { A = RotateLeft(A); }
-        private void CBRRCA() { A = RotateRight(A); }
-        private void CBRRCB() { B = RotateRight(B); }
-        private void CBRRCC() { C = RotateRight(C); }
-        private void CBRRCD() { D = RotateRight(D); }
-        private void CBRRCE() { E = RotateRight(E); }
-        private void CBRRCH() { H = RotateRight(H); }
-        private void CBRRCL() { L = RotateRight(L); }
-        private void CBRRCHL() { WB(HL, RotateRight(RB(HL))); }
-        private void CBRLCA() { A = RotateLeft(A); }
-        private void CBRLCB() { B = RotateLeft(B); }
-        private void CBRLCC() { C = RotateLeft(C); }
-        private void CBRLCD() { D = RotateLeft(D); }
-        private void CBRLCE() { E = RotateLeft(E); }
-        private void CBRLCH() { H = RotateLeft(H); }
-        private void CBRLCL() { L = RotateLeft(L); }
-        private void CBRLCHL() { WB(HL, RotateLeft(RB(HL))); }
+        private void RRCA() { A = RotateRightC(A); }
+        private void RLCA() { A = RotateLeftC(A); }
+        private void CBRRCA() { A = RotateRightC(A); }
+        private void CBRRCB() { B = RotateRightC(B); }
+        private void CBRRCC() { C = RotateRightC(C); }
+        private void CBRRCD() { D = RotateRightC(D); }
+        private void CBRRCE() { E = RotateRightC(E); }
+        private void CBRRCH() { H = RotateRightC(H); }
+        private void CBRRCL() { L = RotateRightC(L); }
+        private void CBRRCHL() { WB(HL, RotateRightC(RB(HL))); }
+        private void CBRLCA() { A = RotateLeftC(A); }
+        private void CBRLCB() { B = RotateLeftC(B); }
+        private void CBRLCC() { C = RotateLeftC(C); }
+        private void CBRLCD() { D = RotateLeftC(D); }
+        private void CBRLCE() { E = RotateLeftC(E); }
+        private void CBRLCH() { H = RotateLeftC(H); }
+        private void CBRLCL() { L = RotateLeftC(L); }
+        private void CBRLCHL() { WB(HL, RotateLeftC(RB(HL))); }
+        private void CBRRA() { A = RotateRight(A); }
+        private void CBRRB() { B = RotateRight(B); }
+        private void CBRRC() { C = RotateRight(C); }
+        private void CBRRD() { D = RotateRight(D); }
+        private void CBRRE() { E = RotateRight(E); }
+        private void CBRRH() { H = RotateRight(H); }
+        private void CBRRL() { L = RotateRight(L); }
+        private void CBRRHL() { WB(HL, RotateRight(RB(HL))); }
+        private void CBRLA() { A = RotateLeft(A); }
+        private void CBRLB() { B = RotateLeft(B); }
+        private void CBRLC() { C = RotateLeft(C); }
+        private void CBRLD() { D = RotateLeft(D); }
+        private void CBRLE() { E = RotateLeft(E); }
+        private void CBRLH() { H = RotateLeft(H); }
+        private void CBRLL() { L = RotateLeft(L); }
+        private void CBRLHL() { WB(HL, RotateLeft(RB(HL))); }
 
         // Jumps, Calls, Returns, and Resets
         private void JR() { JumpRel(); }
@@ -528,7 +544,7 @@ namespace GameBoyEm
             WW(SP, PC);
             PC = pc;
         }
-        private byte RotateRight(byte value)
+        private byte RotateRightC(byte value)
         {
             var lo = value.AND(1);
             var r = value.RS().OR(lo.LS(7));
@@ -538,10 +554,30 @@ namespace GameBoyEm
             FZ = r == 0;
             return r;
         }
-        private byte RotateLeft(byte value)
+        private byte RotateLeftC(byte value)
         {
             var hi = value.AND(128).RS(7);
             var r = value.LS().OR(hi);
+            FC = hi == 1;
+            FH = false;
+            FN = false;
+            FZ = r == 0;
+            return r;
+        }
+        private byte RotateRight(byte value)
+        {
+            var lo = value.AND(1);
+            var r = value.RS().OR(FC.LS(7));
+            FC = lo == 1;
+            FH = false;
+            FN = false;
+            FZ = r == 0;
+            return r;
+        }
+        private byte RotateLeft(byte value)
+        {
+            var hi = value.AND(128).RS(7);
+            var r = value.LS().OR(FC);
             FC = hi == 1;
             FH = false;
             FN = false;
