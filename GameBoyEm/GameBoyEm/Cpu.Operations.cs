@@ -429,6 +429,134 @@ namespace GameBoyEm
         private void CBBIT7H() { GetBit(H, 128); }
         private void CBBIT7L() { GetBit(L, 128); }
         private void CBBIT7HL() { GetBit(RB(HL), 128); }
+        private void CBRES0A() { A &= 254; }
+        private void CBRES0B() { B &= 254; }
+        private void CBRES0C() { C &= 254; }
+        private void CBRES0D() { D &= 254; }
+        private void CBRES0E() { E &= 254; }
+        private void CBRES0H() { H &= 254; }
+        private void CBRES0L() { L &= 254; }
+        private void CBRES0HL() { WB(HL, RB(HL).AND(254)); }
+        private void CBRES1A() { A &= 253; }
+        private void CBRES1B() { B &= 253; }
+        private void CBRES1C() { C &= 253; }
+        private void CBRES1D() { D &= 253; }
+        private void CBRES1E() { E &= 253; }
+        private void CBRES1H() { H &= 253; }
+        private void CBRES1L() { L &= 253; }
+        private void CBRES1HL() { WB(HL, RB(HL).AND(253)); }
+        private void CBRES2A() { A &= 251; }
+        private void CBRES2B() { B &= 251; }
+        private void CBRES2C() { C &= 251; }
+        private void CBRES2D() { D &= 251; }
+        private void CBRES2E() { E &= 251; }
+        private void CBRES2H() { H &= 251; }
+        private void CBRES2L() { L &= 251; }
+        private void CBRES2HL() { WB(HL, RB(HL).AND(251)); }
+        private void CBRES3A() { A &= 247; }
+        private void CBRES3B() { B &= 247; }
+        private void CBRES3C() { C &= 247; }
+        private void CBRES3D() { D &= 247; }
+        private void CBRES3E() { E &= 247; }
+        private void CBRES3H() { H &= 247; }
+        private void CBRES3L() { L &= 247; }
+        private void CBRES3HL() { WB(HL, RB(HL).AND(247)); }
+        private void CBRES4A() { A &= 239; }
+        private void CBRES4B() { B &= 239; }
+        private void CBRES4C() { C &= 239; }
+        private void CBRES4D() { D &= 239; }
+        private void CBRES4E() { E &= 239; }
+        private void CBRES4H() { H &= 239; }
+        private void CBRES4L() { L &= 239; }
+        private void CBRES4HL() { WB(HL, RB(HL).AND(239)); }
+        private void CBRES5A() { A &= 223; }
+        private void CBRES5B() { B &= 223; }
+        private void CBRES5C() { C &= 223; }
+        private void CBRES5D() { D &= 223; }
+        private void CBRES5E() { E &= 223; }
+        private void CBRES5H() { H &= 223; }
+        private void CBRES5L() { L &= 223; }
+        private void CBRES5HL() { WB(HL, RB(HL).AND(223)); }
+        private void CBRES6A() { A &= 191; }
+        private void CBRES6B() { B &= 191; }
+        private void CBRES6C() { C &= 191; }
+        private void CBRES6D() { D &= 191; }
+        private void CBRES6E() { E &= 191; }
+        private void CBRES6H() { H &= 191; }
+        private void CBRES6L() { L &= 191; }
+        private void CBRES6HL() { WB(HL, RB(HL).AND(191)); }
+        private void CBRES7A() { A &= 127; }
+        private void CBRES7B() { B &= 127; }
+        private void CBRES7C() { C &= 127; }
+        private void CBRES7D() { D &= 127; }
+        private void CBRES7E() { E &= 127; }
+        private void CBRES7H() { H &= 127; }
+        private void CBRES7L() { L &= 127; }
+        private void CBRES7HL() { WB(HL, RB(HL).AND(127)); }
+        private void CBSET0A() { A |= 1; }
+        private void CBSET0B() { B |= 1; }
+        private void CBSET0C() { C |= 1; }
+        private void CBSET0D() { D |= 1; }
+        private void CBSET0E() { E |= 1; }
+        private void CBSET0H() { H |= 1; }
+        private void CBSET0L() { L |= 1; }
+        private void CBSET0HL() { WB(HL, RB(HL).OR(1)); }
+        private void CBSET1A() { A |= 2; }
+        private void CBSET1B() { B |= 2; }
+        private void CBSET1C() { C |= 2; }
+        private void CBSET1D() { D |= 2; }
+        private void CBSET1E() { E |= 2; }
+        private void CBSET1H() { H |= 2; }
+        private void CBSET1L() { L |= 2; }
+        private void CBSET1HL() { WB(HL, RB(HL).OR(2)); }
+        private void CBSET2A() { A |= 4; }
+        private void CBSET2B() { B |= 4; }
+        private void CBSET2C() { C |= 4; }
+        private void CBSET2D() { D |= 4; }
+        private void CBSET2E() { E |= 4; }
+        private void CBSET2H() { H |= 4; }
+        private void CBSET2L() { L |= 4; }
+        private void CBSET2HL() { WB(HL, RB(HL).OR(4)); }
+        private void CBSET3A() { A |= 8; }
+        private void CBSET3B() { B |= 8; }
+        private void CBSET3C() { C |= 8; }
+        private void CBSET3D() { D |= 8; }
+        private void CBSET3E() { E |= 8; }
+        private void CBSET3H() { H |= 8; }
+        private void CBSET3L() { L |= 8; }
+        private void CBSET3HL() { WB(HL, RB(HL).OR(8)); }
+        private void CBSET4A() { A |= 16; }
+        private void CBSET4B() { B |= 16; }
+        private void CBSET4C() { C |= 16; }
+        private void CBSET4D() { D |= 16; }
+        private void CBSET4E() { E |= 16; }
+        private void CBSET4H() { H |= 16; }
+        private void CBSET4L() { L |= 16; }
+        private void CBSET4HL() { WB(HL, RB(HL).OR(16)); }
+        private void CBSET5A() { A |= 32; }
+        private void CBSET5B() { B |= 32; }
+        private void CBSET5C() { C |= 32; }
+        private void CBSET5D() { D |= 32; }
+        private void CBSET5E() { E |= 32; }
+        private void CBSET5H() { H |= 32; }
+        private void CBSET5L() { L |= 32; }
+        private void CBSET5HL() { WB(HL, RB(HL).OR(32)); }
+        private void CBSET6A() { A |= 64; }
+        private void CBSET6B() { B |= 64; }
+        private void CBSET6C() { C |= 64; }
+        private void CBSET6D() { D |= 64; }
+        private void CBSET6E() { E |= 64; }
+        private void CBSET6H() { H |= 64; }
+        private void CBSET6L() { L |= 64; }
+        private void CBSET6HL() { WB(HL, RB(HL).OR(64)); }
+        private void CBSET7A() { A |= 128; }
+        private void CBSET7B() { B |= 128; }
+        private void CBSET7C() { C |= 128; }
+        private void CBSET7D() { D |= 128; }
+        private void CBSET7E() { E |= 128; }
+        private void CBSET7H() { H |= 128; }
+        private void CBSET7L() { L |= 128; }
+        private void CBSET7HL() { WB(HL, RB(HL).OR(128)); }
 
         // Helpers
         private byte RB(ushort address)
