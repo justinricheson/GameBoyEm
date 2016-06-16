@@ -90,7 +90,7 @@ namespace GameBoyEm
                 /* A0 */ ANDB,  ANDC,  ANDD,   ANDE,  ANDH,   ANDL,   ANDHL,  ANDA,  XORB,  XORC,    XORD,   XORE,  XORH,  XORL, XORHL, XORA,
                 /* B0 */ ORB,   ORC,   ORD,    ORE,   ORH,    ORL,    ORHL,   ORA,   CPB,   CPC,     CPD,    CPE,   CPH,   CPL,  CPHL,  CPA,
                 /* C0 */ RETNZ, POPBC, JPNZ,   JP,    CALLNZ, PUSHBC, ADDN,   RST00, RETZ,  RET,     JPZ,    CB,    CALLZ, CALL, ADCN,  RST08,
-                /* D0 */
+                /* D0 */ RETNC, POPDE, JPNC,   NA,    CALLNC, PUSHDE, SUBN,   RST10, RETC,  RETI,    JPC,    NA,    CALLC, NA,   SBCN,  RST18
                 /* E0 */
                 /* F0 */
             };

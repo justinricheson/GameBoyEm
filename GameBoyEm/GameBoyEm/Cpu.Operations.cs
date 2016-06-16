@@ -1,11 +1,11 @@
-﻿using System;
-using static GameBoyEm.CpuCycles;
+﻿using static GameBoyEm.CpuCycles;
 
 namespace GameBoyEm
 {
     public partial class Cpu
     {
         // Misc
+        private void NA() { } // Stub for invalid opcodes
         private void NOP() { }
         private void HALT() { }
         private void STOP() { }
@@ -171,6 +171,7 @@ namespace GameBoyEm
         private void SUBH() { Sub(H); }
         private void SUBL() { Sub(L); }
         private void SUBHL() { Sub(RB(HL)); }
+        private void SUBN() { Sub(RB(PC++)); }
         private void SBCA() { SubC(A); }
         private void SBCB() { SubC(B); }
         private void SBCC() { SubC(C); }
@@ -179,6 +180,7 @@ namespace GameBoyEm
         private void SBCH() { SubC(H); }
         private void SBCL() { SubC(L); }
         private void SBCHL() { SubC(RB(HL)); }
+        private void SBCN() { SubC(RB(PC++)); }
         private void ANDA() { And(A); }
         private void ANDB() { And(B); }
         private void ANDC() { And(C); }
@@ -249,19 +251,30 @@ namespace GameBoyEm
         private void JRNC() { Jump(!FC); }
         private void JP() { JumpTo(); }
         private void JPZ() { JumpTo(FZ); }
+        private void JPC() { JumpTo(FC); }
         private void JPNZ() { JumpTo(!FZ); }
+        private void JPNC() { JumpTo(!FC); }
         private void RET() { Return(); }
         private void RETZ() { Return(FZ); }
+        private void RETC() { Return(FC); }
         private void RETNZ() { Return(!FZ); }
+        private void RETNC() { Return(!FC); }
+        private void RETI() { Return(); IME = true; }
         private void CALL() { Call(); }
         private void CALLZ() { Call(FZ); }
+        private void CALLC() { Call(FC); }
         private void CALLNZ() { Call(!FZ); }
+        private void CALLNC() { Call(!FC); }
         private void RST00() { Reset(0); }
         private void RST08() { Reset(8); }
+        private void RST10() { Reset(16); }
+        private void RST18() { Reset(24); }
 
         // Push and Pop
         private void POPBC() { BC = Pop(); }
+        private void POPDE() { DE = Pop(); }
         private void PUSHBC() { Push(BC); }
+        private void PUSHDE() { Push(DE); }
 
         // Helpers
         private byte RB(ushort address)
