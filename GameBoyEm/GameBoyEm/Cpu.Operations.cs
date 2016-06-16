@@ -364,6 +364,72 @@ namespace GameBoyEm
         private void PUSHDE() { Push(DE); }
         private void PUSHHL() { Push(HL); }
 
+        // Bit Operations
+        private void CBBIT0A() { GetBit(A, 1); }
+        private void CBBIT0B() { GetBit(B, 1); }
+        private void CBBIT0C() { GetBit(C, 1); }
+        private void CBBIT0D() { GetBit(D, 1); }
+        private void CBBIT0E() { GetBit(E, 1); }
+        private void CBBIT0H() { GetBit(H, 1); }
+        private void CBBIT0L() { GetBit(L, 1); }
+        private void CBBIT0HL() { GetBit(RB(HL), 1); }
+        private void CBBIT1A() { GetBit(A, 2); }
+        private void CBBIT1B() { GetBit(B, 2); }
+        private void CBBIT1C() { GetBit(C, 2); }
+        private void CBBIT1D() { GetBit(D, 2); }
+        private void CBBIT1E() { GetBit(E, 2); }
+        private void CBBIT1H() { GetBit(H, 2); }
+        private void CBBIT1L() { GetBit(L, 2); }
+        private void CBBIT1HL() { GetBit(RB(HL), 2); }
+        private void CBBIT2A() { GetBit(A, 4); }
+        private void CBBIT2B() { GetBit(B, 4); }
+        private void CBBIT2C() { GetBit(C, 4); }
+        private void CBBIT2D() { GetBit(D, 4); }
+        private void CBBIT2E() { GetBit(E, 4); }
+        private void CBBIT2H() { GetBit(H, 4); }
+        private void CBBIT2L() { GetBit(L, 4); }
+        private void CBBIT2HL() { GetBit(RB(HL), 4); }
+        private void CBBIT3A() { GetBit(A, 8); }
+        private void CBBIT3B() { GetBit(B, 8); }
+        private void CBBIT3C() { GetBit(C, 8); }
+        private void CBBIT3D() { GetBit(D, 8); }
+        private void CBBIT3E() { GetBit(E, 8); }
+        private void CBBIT3H() { GetBit(H, 8); }
+        private void CBBIT3L() { GetBit(L, 8); }
+        private void CBBIT3HL() { GetBit(RB(HL), 8); }
+        private void CBBIT4A() { GetBit(A, 16); }
+        private void CBBIT4B() { GetBit(B, 16); }
+        private void CBBIT4C() { GetBit(C, 16); }
+        private void CBBIT4D() { GetBit(D, 16); }
+        private void CBBIT4E() { GetBit(E, 16); }
+        private void CBBIT4H() { GetBit(H, 16); }
+        private void CBBIT4L() { GetBit(L, 16); }
+        private void CBBIT4HL() { GetBit(RB(HL), 16); }
+        private void CBBIT5A() { GetBit(A, 32); }
+        private void CBBIT5B() { GetBit(B, 32); }
+        private void CBBIT5C() { GetBit(C, 32); }
+        private void CBBIT5D() { GetBit(D, 32); }
+        private void CBBIT5E() { GetBit(E, 32); }
+        private void CBBIT5H() { GetBit(H, 32); }
+        private void CBBIT5L() { GetBit(L, 32); }
+        private void CBBIT5HL() { GetBit(RB(HL), 32); }
+        private void CBBIT6A() { GetBit(A, 64); }
+        private void CBBIT6B() { GetBit(B, 64); }
+        private void CBBIT6C() { GetBit(C, 64); }
+        private void CBBIT6D() { GetBit(D, 64); }
+        private void CBBIT6E() { GetBit(E, 64); }
+        private void CBBIT6H() { GetBit(H, 64); }
+        private void CBBIT6L() { GetBit(L, 64); }
+        private void CBBIT6HL() { GetBit(RB(HL), 64); }
+        private void CBBIT7A() { GetBit(A, 128); }
+        private void CBBIT7B() { GetBit(B, 128); }
+        private void CBBIT7C() { GetBit(C, 128); }
+        private void CBBIT7D() { GetBit(D, 128); }
+        private void CBBIT7E() { GetBit(E, 128); }
+        private void CBBIT7H() { GetBit(H, 128); }
+        private void CBBIT7L() { GetBit(L, 128); }
+        private void CBBIT7HL() { GetBit(RB(HL), 128); }
+
         // Helpers
         private byte RB(ushort address)
         {
@@ -657,6 +723,12 @@ namespace GameBoyEm
             FN = false;
             FZ = r == 0;
             return r;
+        }
+        private void GetBit(byte value, byte bitMask)
+        {
+            FH = true;
+            FN = false;
+            FZ = value.AND(bitMask) == 1;
         }
     }
 }
