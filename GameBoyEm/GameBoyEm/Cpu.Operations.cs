@@ -252,7 +252,7 @@ namespace GameBoyEm
         private void ADDHLSP() { HL = Add16(SP, HL); }
         private void ADDSPN() { SP = Add16(RBN(), SP, true); }
 
-        // Rotates and Shifts
+        // Rotates, Shifts, and Swaps
         private void SRLB() { B = ShiftLeft(B); }
         private void RRA() { A = RotateRight(A); }
         private void RLA() { A = RotateLeft(A); }
@@ -290,14 +290,14 @@ namespace GameBoyEm
         private void CBRLH() { H = RotateLeft(H); }
         private void CBRLL() { L = RotateLeft(L); }
         private void CBRLHL() { WB(HL, RotateLeft(RB(HL))); }
-        private void CBSRAA() { A = ShiftRight(A); }
-        private void CBSRAB() { B = ShiftRight(B); }
-        private void CBSRAC() { C = ShiftRight(C); }
-        private void CBSRAD() { D = ShiftRight(D); }
-        private void CBSRAE() { E = ShiftRight(E); }
-        private void CBSRAH() { H = ShiftRight(H); }
-        private void CBSRAL() { L = ShiftRight(L); }
-        private void CBSRAHL() { WB(HL, ShiftRight(RB(HL))); }
+        private void CBSRAA() { A = ShiftRightMsb(A); }
+        private void CBSRAB() { B = ShiftRightMsb(B); }
+        private void CBSRAC() { C = ShiftRightMsb(C); }
+        private void CBSRAD() { D = ShiftRightMsb(D); }
+        private void CBSRAE() { E = ShiftRightMsb(E); }
+        private void CBSRAH() { H = ShiftRightMsb(H); }
+        private void CBSRAL() { L = ShiftRightMsb(L); }
+        private void CBSRAHL() { WB(HL, ShiftRightMsb(RB(HL))); }
         private void CBSLAA() { A = ShiftLeft(A); }
         private void CBSLAB() { B = ShiftLeft(B); }
         private void CBSLAC() { C = ShiftLeft(C); }
@@ -306,6 +306,22 @@ namespace GameBoyEm
         private void CBSLAH() { H = ShiftLeft(H); }
         private void CBSLAL() { L = ShiftLeft(L); }
         private void CBSLAHL() { WB(HL, ShiftLeft(RB(HL))); }
+        private void CBSWAPA() { A = Swap(A); }
+        private void CBSWAPB() { B = Swap(B); }
+        private void CBSWAPC() { C = Swap(C); }
+        private void CBSWAPD() { D = Swap(D); }
+        private void CBSWAPE() { E = Swap(E); }
+        private void CBSWAPH() { H = Swap(H); }
+        private void CBSWAPL() { L = Swap(L); }
+        private void CBSWAPHL() { WB(HL, Swap(RB(HL))); }
+        private void CBSRLA() { A = ShiftRight(A); }
+        private void CBSRLB() { B = ShiftRight(B); }
+        private void CBSRLC() { C = ShiftRight(C); }
+        private void CBSRLD() { D = ShiftRight(D); }
+        private void CBSRLE() { E = ShiftRight(E); }
+        private void CBSRLH() { H = ShiftRight(H); }
+        private void CBSRLL() { L = ShiftRight(L); }
+        private void CBSRLHL() { WB(HL, ShiftRight(RB(HL))); }
 
         // Jumps, Calls, Returns, and Resets
         private void JR() { JumpRel(); }
@@ -600,10 +616,21 @@ namespace GameBoyEm
             FZ = r == 0;
             return r;
         }
+        private byte ShiftRightMsb(byte value)
+        {
+            var lo = value.AND(1);
+            var hi = value.AND(128);
+            var r = value.RS().AND(hi); // Keep MSB
+            FC = lo == 1;
+            FH = false;
+            FN = false;
+            FZ = r == 0;
+            return r;
+        }
         private byte ShiftRight(byte value)
         {
             var lo = value.AND(1);
-            var r = value.RS();
+            var r = value.RS(); // Zero out MSB
             FC = lo == 1;
             FH = false;
             FN = false;
@@ -615,6 +642,17 @@ namespace GameBoyEm
             var hi = value.AND(128).RS(7);
             var r = value.LS();
             FC = hi == 1;
+            FH = false;
+            FN = false;
+            FZ = r == 0;
+            return r;
+        }
+        private byte Swap(byte value)
+        {
+            var hi = value.AND(_u4).LS(4);
+            var lo = value.AND(240).RS(4);
+            var r = hi.OR(lo);
+            FC = false;
             FH = false;
             FN = false;
             FZ = r == 0;
