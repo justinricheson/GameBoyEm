@@ -6,6 +6,8 @@ namespace GameBoyEm
     {
         // Misc
         private void NA() { } // Stub for invalid opcodes
+        private void DI() { IME = false; }
+        private void EI() { IME = true; }
         private void NOP() { }
         private void HALT() { }
         private void STOP() { }
@@ -106,13 +108,14 @@ namespace GameBoyEm
         private void LDEHL() { E = RB(HL); }
         private void LDHHL() { H = RB(HL); }
         private void LDLHL() { L = RB(HL); }
-        private void LDAN() { A = RB(PC++); }
-        private void LDBN() { B = RB(PC++); }
-        private void LDCN() { C = RB(PC++); }
-        private void LDDN() { D = RB(PC++); }
-        private void LDEN() { E = RB(PC++); }
-        private void LDHN() { H = RB(PC++); }
-        private void LDLN() { L = RB(PC++); }
+        private void LDAN() { A = RBN(); }
+        private void LDBN() { B = RBN(); }
+        private void LDCN() { C = RBN(); }
+        private void LDDN() { D = RBN(); }
+        private void LDEN() { E = RBN(); }
+        private void LDHN() { H = RBN(); }
+        private void LDLN() { L = RBN(); }
+        private void LDANN() { A = RB(RWN()); }
         private void LDABC() { A = RB(BC); }
         private void LDADE() { A = RB(DE); }
         private void LDBCA() { WB(BC, A); }
@@ -125,13 +128,15 @@ namespace GameBoyEm
         private void LDHLH() { WB(HL, H); }
         private void LDHLL() { WB(HL, L); }
         private void LDNA() { WB(RW(PC), A); PC += 2; }
-        private void LDHLMN() { WB(HL, RB(PC++)); }
+        private void LDHLMN() { WB(HL, RBN()); }
         private void LDIHLA() { WB(HL++, A); }
         private void LDDHLA() { WB(HL--, A); }
         private void LDIAHL() { A = RB(HL++); }
         private void LDDAHL() { A = RB(HL--); }
-        private void LDIOAN() { WB((ushort)(_io + PC++), A); }
         private void LDIOAC() { A = RB((ushort)(_io + C)); }
+        private void LDIOCA() { WB((ushort)(_io + C), A); }
+        private void LDIONA() { var n = RBN(); WB((ushort)(_io + n), A); }
+        private void LDIOAN() { var n = RBN(); A = RB((ushort)(_io + n)); }
 
         // 8-bit Arithmetic
         private void INCA() { A = Inc(A); }
@@ -156,7 +161,7 @@ namespace GameBoyEm
         private void ADDH() { Add(H); }
         private void ADDL() { Add(L); }
         private void ADDHL() { Add(RB(HL)); }
-        private void ADDN() { Add(RB(PC++)); }
+        private void ADDN() { Add(RBN()); }
         private void ADCA() { AddC(A); }
         private void ADCB() { AddC(B); }
         private void ADCC() { AddC(C); }
@@ -165,7 +170,7 @@ namespace GameBoyEm
         private void ADCH() { AddC(H); }
         private void ADCL() { AddC(L); }
         private void ADCHL() { AddC(RB(HL)); }
-        private void ADCN() { AddC(RB(PC++)); }
+        private void ADCN() { AddC(RBN()); }
         private void SUBA() { Sub(A); }
         private void SUBB() { Sub(B); }
         private void SUBC() { Sub(C); }
@@ -174,7 +179,7 @@ namespace GameBoyEm
         private void SUBH() { Sub(H); }
         private void SUBL() { Sub(L); }
         private void SUBHL() { Sub(RB(HL)); }
-        private void SUBN() { Sub(RB(PC++)); }
+        private void SUBN() { Sub(RBN()); }
         private void SBCA() { SubC(A); }
         private void SBCB() { SubC(B); }
         private void SBCC() { SubC(C); }
@@ -183,7 +188,7 @@ namespace GameBoyEm
         private void SBCH() { SubC(H); }
         private void SBCL() { SubC(L); }
         private void SBCHL() { SubC(RB(HL)); }
-        private void SBCN() { SubC(RB(PC++)); }
+        private void SBCN() { SubC(RBN()); }
         private void ANDA() { And(A); }
         private void ANDB() { And(B); }
         private void ANDC() { And(C); }
@@ -192,7 +197,7 @@ namespace GameBoyEm
         private void ANDH() { And(H); }
         private void ANDL() { And(L); }
         private void ANDHL() { And(RB(HL)); }
-        private void ANDN() { And(RB(PC++)); }
+        private void ANDN() { And(RBN()); }
         private void XORA() { Xor(A); }
         private void XORB() { Xor(B); }
         private void XORC() { Xor(C); }
@@ -201,7 +206,7 @@ namespace GameBoyEm
         private void XORH() { Xor(H); }
         private void XORL() { Xor(L); }
         private void XORHL() { Xor(RB(HL)); }
-        private void XORN() { Xor(RB(PC++)); }
+        private void XORN() { Xor(RBN()); }
         private void ORA() { Or(A); }
         private void ORB() { Or(B); }
         private void ORC() { Or(C); }
@@ -210,6 +215,7 @@ namespace GameBoyEm
         private void ORH() { Or(H); }
         private void ORL() { Or(L); }
         private void ORHL() { Or(RB(HL)); }
+        private void ORN() { Or(RBN()); }
         private void CPA() { Compare(A); }
         private void CPB() { Compare(B); }
         private void CPC() { Compare(C); }
@@ -218,15 +224,18 @@ namespace GameBoyEm
         private void CPH() { Compare(H); }
         private void CPL() { Compare(L); }
         private void CPHL() { Compare(RB(HL)); }
+        private void CPN() { Compare(RBN()); }
         private void INCHLM() { var n = RB(HL); FH = (n & _u4) == _u4; WB(HL, ++n); FN = false; FZ = n == 0; }
         private void DECHLM() { var n = RB(HL); WB(HL, --n); FH = (n & _u4) != _u4; FN = true; FZ = n == 0; }
 
         // 16-bit Loads
-        private void LDBCN() { C = RB(PC++); B = RB(PC++); }
-        private void LDDEN() { E = RB(PC++); D = RB(PC++); }
-        private void LDHLN() { L = RB(PC++); H = RB(PC++); }
-        private void LDSPN() { SP = RW(PC); PC += 2; }
-        private void LDNSP() { WW(RW(PC), SP); PC += 2; }
+        private void LDBCN() { C = RBN(); B = RBN(); }
+        private void LDDEN() { E = RBN(); D = RBN(); }
+        private void LDHLN() { L = RBN(); H = RBN(); }
+        private void LDSPN() { SP = RWN(); }
+        private void LDNSP() { WW(RWN(), SP);; }
+        private void LDHLSPN() { var n = RBN(); HL = Add16(n, SP, true); }
+        private void LDSPHL() { SP = HL; }
 
         // 16-bit Arithmetic
         private void INCSP() { SP++; }
@@ -241,7 +250,7 @@ namespace GameBoyEm
         private void ADDHLDE() { HL = Add16(DE, HL); }
         private void ADDHLHL() { HL = Add16(HL, HL); }
         private void ADDHLSP() { HL = Add16(SP, HL); }
-        private void ADDSPN() { SP = Add16(RB(PC++), SP); }
+        private void ADDSPN() { SP = Add16(RBN(), SP, true); }
 
         // Rotates and Shifts
         private void RRA() { var lo = A.AND(1); A = A.RS().OR(FC.LS(7)); F = 0; FC = lo == 1; FZ = A == 0; }
@@ -278,11 +287,15 @@ namespace GameBoyEm
         private void RST18() { Reset(24); }
         private void RST20() { Reset(32); }
         private void RST28() { Reset(40); }
+        private void RST30() { Reset(64); }
+        private void RST38() { Reset(72); }
 
         // Push and Pop
+        private void POPAF() { AF = Pop(); }
         private void POPBC() { BC = Pop(); }
         private void POPDE() { DE = Pop(); }
         private void POPHL() { HL = Pop(); }
+        private void PUSHAF() { Push(AF); }
         private void PUSHBC() { Push(BC); }
         private void PUSHDE() { Push(DE); }
         private void PUSHHL() { Push(HL); }
@@ -292,9 +305,16 @@ namespace GameBoyEm
         {
             return _mmu.ReadByte(address);
         }
+        private byte RBN() => RB(PC++);
         private ushort RW(ushort address)
         {
             return _mmu.ReadWord(address);
+        }
+        private ushort RWN()
+        {
+            var w = RW(PC);
+            PC += 2;
+            return w;
         }
         private void WB(ushort address, byte value)
         {
