@@ -99,7 +99,7 @@ namespace GameBoyEm
 
             _cbOps = new List<Action>
             {
-                /* 00 */
+                /* 00 */ CBRLCB, CBRLCC, CBRLCD, CBRLCE, CBRLCH, CBRLCL, CBRLCHL, CBRLCA, CBRRCB, CBRRCC, CBRRCD, CBRRCE, CBRRCH, CBRRCL, CBRRCHL, CBRRCA
                 /* 10 */
                 /* 20 */
                 /* 30 */
