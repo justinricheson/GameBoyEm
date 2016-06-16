@@ -253,9 +253,9 @@ namespace GameBoyEm
         private void ADDSPN() { SP = Add16(RBN(), SP, true); }
 
         // Rotates and Shifts
-        private void SRLB() { var lo = B.AND(1); B = B.RS(); F = 0; FC = lo == 1; FZ = B == 0; }
-        private void RRA() { var lo = A.AND(1); A = A.RS().OR(FC.LS(7)); F = 0; FC = lo == 1; FZ = A == 0; }
-        private void RLA() { var hi = A.AND(128); A = A.LS().OR(FC); F = 0; FC = hi == 128; FZ = A == 0; }
+        private void SRLB() { B = ShiftLeft(B); }
+        private void RRA() { A = RotateRight(A); }
+        private void RLA() { A = RotateLeft(A); }
         private void RRCA() { A = RotateRightC(A); }
         private void RLCA() { A = RotateLeftC(A); }
         private void CBRRCA() { A = RotateRightC(A); }
@@ -290,6 +290,22 @@ namespace GameBoyEm
         private void CBRLH() { H = RotateLeft(H); }
         private void CBRLL() { L = RotateLeft(L); }
         private void CBRLHL() { WB(HL, RotateLeft(RB(HL))); }
+        private void CBSRAA() { A = ShiftRight(A); }
+        private void CBSRAB() { B = ShiftRight(B); }
+        private void CBSRAC() { C = ShiftRight(C); }
+        private void CBSRAD() { D = ShiftRight(D); }
+        private void CBSRAE() { E = ShiftRight(E); }
+        private void CBSRAH() { H = ShiftRight(H); }
+        private void CBSRAL() { L = ShiftRight(L); }
+        private void CBSRAHL() { WB(HL, ShiftRight(RB(HL))); }
+        private void CBSLAA() { A = ShiftLeft(A); }
+        private void CBSLAB() { B = ShiftLeft(B); }
+        private void CBSLAC() { C = ShiftLeft(C); }
+        private void CBSLAD() { D = ShiftLeft(D); }
+        private void CBSLAE() { E = ShiftLeft(E); }
+        private void CBSLAH() { H = ShiftLeft(H); }
+        private void CBSLAL() { L = ShiftLeft(L); }
+        private void CBSLAHL() { WB(HL, ShiftLeft(RB(HL))); }
 
         // Jumps, Calls, Returns, and Resets
         private void JR() { JumpRel(); }
@@ -578,6 +594,26 @@ namespace GameBoyEm
         {
             var hi = value.AND(128).RS(7);
             var r = value.LS().OR(FC);
+            FC = hi == 1;
+            FH = false;
+            FN = false;
+            FZ = r == 0;
+            return r;
+        }
+        private byte ShiftRight(byte value)
+        {
+            var lo = value.AND(1);
+            var r = value.RS();
+            FC = lo == 1;
+            FH = false;
+            FN = false;
+            FZ = r == 0;
+            return r;
+        }
+        private byte ShiftLeft(byte value)
+        {
+            var hi = value.AND(128).RS(7);
+            var r = value.LS();
             FC = hi == 1;
             FH = false;
             FN = false;
