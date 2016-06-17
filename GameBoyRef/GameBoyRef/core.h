@@ -8,7 +8,6 @@
 
 #include <cstdlib>
 #include <cinttypes>
-#include "cpustate.h"
 
 namespace gameboy {
 	class CPURegisters;
@@ -24,13 +23,10 @@ namespace gameboy {
 		void handleCB();
 		void xx();
 		void CBxx();
-
-	public:
-		CpuState getCpuState();
-
-	private:
 		CPURegisters *registers;
 		Memory *memory;
+
+	private:
 		bool conditional;
 		unsigned int clock;
 

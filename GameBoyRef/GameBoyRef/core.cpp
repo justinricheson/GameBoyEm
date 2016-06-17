@@ -17,10 +17,6 @@ namespace gameboy {
 		delete registers;
 	}
 
-	CpuState Core::getCpuState() {
-		return CpuState(memory->getMemoryRecord(), registers);
-	}
-
 	void Core::emulateCycle() {
 		uint8_t lastClocks = 0;
 		uint8_t opCode = memory->read(registers->pc++);

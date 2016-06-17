@@ -1,16 +1,12 @@
 #include "stdafx.h"
-#include "core.h"
+#include "functions.h"
 
 int main()
 {
-	uint8_t *mem = new uint8_t[128];
-	memset(mem, 9, 128);
-	auto core = gameboy::Core(mem);
-	core.emulateCycle();
+	char *input = new char[1024];
+	char *output = new char[1024];
+	auto result = Run(input, output);
 
-	auto state = core.getCpuState();
-	auto a = state.getA();
-
-    return 0;
+	return 0;
 }
 

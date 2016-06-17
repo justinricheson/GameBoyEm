@@ -10,32 +10,22 @@
 #include "cpuregisters.h"
 
 namespace gameboy {
-	class GAMEBOY_API CpuState {
-	public:
-		explicit CpuState(MemoryRecord *records, CPURegisters *registers);
-
-		uint8_t getA() const;
-		uint8_t getB() const;
-		uint8_t getC() const;
-		uint8_t getD() const;
-		uint8_t getE() const;
-		uint8_t getF() const;
-		uint8_t getH() const;
-		uint8_t getL() const;
-
-		bool getZeroFlag() const;
-		bool getSubFlag() const;
-		bool getHalfCarryFlag() const;
-		bool getCarryFlag() const;
-
-		bool getIME() const;
-		uint16_t getSP() const;
-		uint16_t getPC() const;
-
-		MemoryRecord *getMemoryRecord() const;
-
-	private:
-		MemoryRecord *memoryRecords;
-		CPURegisters *cpuRegisters;
+	struct GAMEBOY_API CpuState {
+		uint8_t A;
+		uint8_t B;
+		uint8_t C;
+		uint8_t D;
+		uint8_t E;
+		uint8_t F;
+		uint8_t H;
+		uint8_t L;
+		uint16_t SP;
+		uint16_t PC;
+		bool FZ;
+		bool FN;
+		bool FH;
+		bool FC;
+		bool IME;
+		MemoryRecord *MemoryRecord;
 	};
 }
