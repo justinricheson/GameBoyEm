@@ -8,6 +8,9 @@ int main()
 	auto core = gameboy::Core(mem);
 	core.emulateCycle();
 
+	auto state = core.getCpuState();
+	auto a = state.getA();
+
     return 0;
 }
 
