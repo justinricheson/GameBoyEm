@@ -21,6 +21,39 @@ namespace GameBoyEm.Tests.Oracle
         public bool FH { get; set; }
         public bool FC { get; set; }
         public bool IME { get; set; }
+
+        public static bool operator ==(CpuState state1, CpuState state2)
+        {
+            if (ReferenceEquals(state1, null))
+            {
+                return ReferenceEquals(state2, null);
+            }
+
+            return state1.Equals(state2);
+        }
+        public static bool operator !=(CpuState state1, CpuState state2)
+        {
+            return !(state1 == state2);
+        }
+        public override bool Equals(object x)
+        {
+            var y = (CpuState)x;
+            return A == y.A
+                && B == y.B
+                && C == y.C
+                && D == y.D
+                && E == y.E
+                && F == y.F
+                && H == y.H
+                && L == y.L
+                && SP == y.SP
+                && PC == y.PC
+                && FZ == y.FZ
+                && FN == y.FN
+                && FH == y.FH
+                && FC == y.FC
+                && IME == y.IME;
+        }
     }
 
     public class CpuStartState : CpuState

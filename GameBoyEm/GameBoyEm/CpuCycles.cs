@@ -9,9 +9,6 @@ namespace GameBoyEm
     /// </summary>
     public static class CpuCycles
     {
-        public static IReadOnlyCollection<byte> Cycles = new ReadOnlyCollection<byte>(_cycles);
-        public static IReadOnlyCollection<byte> CBCycles = new ReadOnlyCollection<byte>(_cbCycles);
-
         private static List<byte> _cycles = new List<byte>
         {
             1, 3, 2, 2, 1, 1, 2, 1, 5, 2, 2, 2, 1, 1, 2, 1,
@@ -51,5 +48,8 @@ namespace GameBoyEm
             2, 2, 2, 2, 2, 2, 4, 2, 2, 2, 2, 2, 2, 2, 4, 2,
             2, 2, 2, 2, 2, 2, 4, 2, 2, 2, 2, 2, 2, 2, 4, 2
         };
+
+        public static IReadOnlyCollection<byte> Cycles = new ReadOnlyCollection<byte>(_cycles);
+        public static IReadOnlyCollection<byte> CBCycles = new ReadOnlyCollection<byte>(_cbCycles);
     }
 }

@@ -12,6 +12,11 @@
         byte F { get; }
         ushort SP { get; }
         ushort PC { get; }
+        bool FZ { get; }
+        bool FN { get; }
+        bool FH { get; }
+        bool FC { get; }
+        bool IME { get; }
 
         void Step();
     }

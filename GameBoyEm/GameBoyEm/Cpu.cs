@@ -29,7 +29,7 @@ namespace GameBoyEm
         public byte F { get; private set; } // Flags (bits 0-3: unused, 4: carry, 5: half-carry, 6: subtract, 7: zero)
         public ushort SP { get; private set; } // Stack pointer
         public ushort PC { get; private set; } // Program counter
-        private bool IME { get; set; } // Interrupt master enable
+        public bool IME { get; private set; } // Interrupt master enable
 
         // Pseudo Registers
         public ushort AF { get { return (ushort)((A << 8) + F); } private set { A = (byte)(value >> 8); F = (byte)(value & 255); } }
@@ -67,12 +67,12 @@ namespace GameBoyEm
         }
 
         public Cpu(IMmu mmu,
-            byte a = 0, byte b = 0, byte c = 0, byte d = 0,
-            byte e = 0, byte h = 0, byte l = 0, byte f = 0,
-            byte sp = 0, byte pc = 0)
+            byte a = 0, byte b = 0, byte c = 0, byte d = 0, byte e = 0,
+            byte h = 0, byte l = 0, byte f = 0, ushort sp = 0, ushort pc = 0,
+            bool fz = false, bool fn = false, bool fh = false, bool fc = false, bool ime = false)
         {
-            A = a; B = b; C = c; D = d;
-            E = e; H = h; L = l; F = f;
+            A = a; B = b; C = c; D = d; E = e; H = h; L = l; F = f;
+            FZ = fz; FN = fn; FH = fh; FC = fc; IME = ime;
             SP = sp; PC = pc;
 
             _mmu = mmu;

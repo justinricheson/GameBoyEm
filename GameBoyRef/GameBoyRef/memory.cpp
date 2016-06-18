@@ -38,7 +38,10 @@ namespace gameboy {
 
 	uint16_t Memory::readW(uint16_t address) {
 		records[nextRecord++] = MemoryRecord{ 2, address };
-		auto memLoc = (read(next + 1) << 8) | read(next);
+
+		uint8_t *hi = mem + next + 1;
+		uint8_t *lo = mem + next;
+		int memLoc = (*hi << 8) | *lo;
 		next += 2;
 		return memLoc;
 	}
