@@ -9,7 +9,7 @@ namespace GameBoyEm.Tests.Oracle
         [TestMethod]
         public void TestPInvoke()
         {
-            var foo = Oracle.Execute(new CpuState
+            var foo = Oracle.Execute(new CpuStartState
             {
                 A = 0x00,
                 B = 0x00,

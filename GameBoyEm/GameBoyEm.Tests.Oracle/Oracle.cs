@@ -11,11 +11,11 @@ namespace GameBoyEm.Tests.Oracle
             [MarshalAs(UnmanagedType.LPStr)]string input,
             [MarshalAs(UnmanagedType.LPStr)]StringBuilder output);
 
-        public static CpuState Execute(CpuState state)
+        public static CpuFinishState Execute(CpuStartState state)
         {
             var output = new StringBuilder(1024);
             var result = Run(state.ToString(), output);
-            return CpuState.FromString(output.ToString());
+            return CpuFinishState.FromString(output.ToString());
         }
     }
 }

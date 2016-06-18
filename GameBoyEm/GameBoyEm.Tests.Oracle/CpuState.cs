@@ -19,21 +19,33 @@ namespace GameBoyEm.Tests.Oracle
         public bool FH { get; set; }
         public bool FC { get; set; }
         public bool IME { get; set; }
-        public List<byte> InitialMemory { get; set; }
-        public List<MemoryRecord> MemoryRecord { get; set; }
+    }
 
-        public CpuState()
+    public class CpuStartState : CpuState
+    {
+        public List<byte> InitialMemory { get; set; }
+
+        public CpuStartState()
         {
             InitialMemory = new List<byte>();
-            MemoryRecord = new List<MemoryRecord>();
         }
 
         public override string ToString()
         {
             return string.Empty;
         }
+    }
 
-        public static CpuState FromString(string encoded)
+    public class CpuFinishState : CpuState
+    {
+        public List<MemoryRecord> MemoryRecord { get; set; }
+
+        public CpuFinishState()
+        {
+            MemoryRecord = new List<MemoryRecord>();
+        }
+
+        public static CpuFinishState FromString(string encoded)
         {
             return null;
         }
