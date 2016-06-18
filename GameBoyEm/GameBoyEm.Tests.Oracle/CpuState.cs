@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace GameBoyEm.Tests.Oracle
 {
@@ -32,22 +34,56 @@ namespace GameBoyEm.Tests.Oracle
 
         public override string ToString()
         {
-            return string.Empty;
+            string hex = BitConverter.ToString(InitialMemory.ToArray()).Replace("-", "");
+            return $"{A}|{B}|{C}|{D}|{E}|{F}|{H}|{L}|{SP}|{PC}|{S(FZ)}|{S(FN)}|{S(FH)}|{S(FC)}|{S(IME)},{hex}";
         }
+
+        private string S(bool flag) => flag ? "1" : "0";
     }
 
-    public class CpuFinishState : CpuState
+    public class CpuEndState : CpuState
     {
         public List<MemoryRecord> MemoryRecord { get; set; }
 
-        public CpuFinishState()
+        public CpuEndState()
         {
             MemoryRecord = new List<MemoryRecord>();
         }
 
-        public static CpuFinishState FromString(string encoded)
+        public static CpuEndState FromString(string encoded)
         {
-            return null;
+            var split1 = encoded.Split(',');
+            var registers = split1[0].Split('|');
+            var records = split1[1].Split('-');
+
+            return new CpuEndState
+            {
+                A = byte.Parse(registers[0]),
+                B = byte.Parse(registers[1]),
+                C = byte.Parse(registers[2]),
+                D = byte.Parse(registers[3]),
+                E = byte.Parse(registers[4]),
+                F = byte.Parse(registers[5]),
+                H = byte.Parse(registers[6]),
+                L = byte.Parse(registers[7]),
+                SP = ushort.Parse(registers[8]),
+                PC = ushort.Parse(registers[9]),
+                FZ = registers[10] == "1",
+                FN = registers[11] == "1",
+                FH = registers[12] == "1",
+                FC = registers[13] == "1",
+                IME = registers[14] == "1",
+                MemoryRecord = records.Select(r =>
+                {
+                    var fields = r.Split('|');
+                    return new MemoryRecord
+                    {
+                        Type = (MemoryRecordType)Enum.Parse(typeof(MemoryRecordType), fields[0]),
+                        Address = ushort.Parse(fields[1]),
+                        Value = ushort.Parse(fields[2])
+                    };
+                }).ToList()
+            };
         }
     }
 
@@ -61,8 +97,8 @@ namespace GameBoyEm.Tests.Oracle
     public enum MemoryRecordType
     {
         Read,
-        ReadWord,
         Write,
+        ReadWord,
         WriteWord
     }
 }
