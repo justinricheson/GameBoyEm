@@ -1,9 +1,8 @@
 ﻿using GameBoyEm.Interfaces.Fakes;
+using Microsoft.QualityTools.Testing.Fakes;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.QualityTools.Testing.Fakes;
 
 namespace GameBoyEm.Tests.Oracle
 {
@@ -11,9 +10,37 @@ namespace GameBoyEm.Tests.Oracle
     public class CpuTests
     {
         [TestMethod]
-        public void TestPInvoke()
+        public void RandomTestOracle()
         {
-            var startState = new CpuState
+            foreach (var state in GenerateCpuStates())
+            {
+                var r1 = Test(state);
+                var r2 = Oracle.Execute(state);
+
+                Assert.AreEqual(r1, r2);
+            }
+        }
+
+        private IEnumerable<CpuState> GenerateCpuStates()
+        {
+            // Non-CB tests
+            for (byte op = 0; op < 255; op++)
+            {
+                ushort pc = 0;
+                yield return GenerateRandomState(op, pc);
+            }
+
+            // CB tests
+            for (byte op = 0; op < 255; op++)
+            {
+                ushort pc = 0;
+                yield return GenerateRandomState(op, pc, true);
+            }
+        }
+
+        private CpuState GenerateRandomState(byte op, ushort pc, bool isCbInstruction = false)
+        {
+            var state = new CpuState // TODO generate random state
             {
                 A = 0x01,
                 B = 0x02,
@@ -23,7 +50,7 @@ namespace GameBoyEm.Tests.Oracle
                 H = 0x06,
                 L = 0x07,
                 SP = 0x0008,
-                PC = 0x0009,
+                PC = pc,
                 FZ = false,
                 FN = true,
                 FH = false,
@@ -31,16 +58,22 @@ namespace GameBoyEm.Tests.Oracle
                 IME = false,
                 Memory = new List<MemoryRecord>
                 {
-                    new MemoryRecord { Address = 0x0000, Value = 0x84 },
                     new MemoryRecord { Address = 0x0001, Value = 0x01 },
                     new MemoryRecord { Address = 0x0002, Value = 0x02 }
                 }
             };
 
-            var testState = Test(startState);
-            var oracleState = Oracle.Execute(startState);
+            if (isCbInstruction)
+            {
+                state.Memory.Insert(0, new MemoryRecord { Address = pc, Value = 0xCB });
+                state.Memory.Insert(1, new MemoryRecord { Address = (ushort)(pc + 1), Value = op });
+            }
+            else
+            {
+                state.Memory.Insert(0, new MemoryRecord { Address = pc, Value = op });
+            }
 
-            Assert.AreEqual(testState, oracleState);
+            return state;
         }
 
         private CpuState Test(CpuState cpuState)
