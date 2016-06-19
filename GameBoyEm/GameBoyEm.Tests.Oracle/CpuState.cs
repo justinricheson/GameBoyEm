@@ -11,7 +11,6 @@ namespace GameBoyEm.Tests.Oracle
         public byte C { get; set; }
         public byte D { get; set; }
         public byte E { get; set; }
-        public byte F { get; set; }
         public byte H { get; set; }
         public byte L { get; set; }
         public ushort SP { get; set; }
@@ -31,7 +30,7 @@ namespace GameBoyEm.Tests.Oracle
         public override string ToString()
         {
             string mem = string.Join("|", Memory.Select(m => $"{m.Address}:{m.Value}"));
-            return $"{A}|{B}|{C}|{D}|{E}|{F}|{H}|{L}|{SP}|{PC}|{S(FZ)}|{S(FN)}|{S(FH)}|{S(FC)}|{S(IME)},{mem}";
+            return $"{A}|{B}|{C}|{D}|{E}|{H}|{L}|{SP}|{PC}|{S(FZ)}|{S(FN)}|{S(FH)}|{S(FC)}|{S(IME)},{mem}";
         }
         public static CpuState FromString(string encoded)
         {
@@ -46,16 +45,15 @@ namespace GameBoyEm.Tests.Oracle
                 C = byte.Parse(registers[2]),
                 D = byte.Parse(registers[3]),
                 E = byte.Parse(registers[4]),
-                F = byte.Parse(registers[5]),
-                H = byte.Parse(registers[6]),
-                L = byte.Parse(registers[7]),
-                SP = ushort.Parse(registers[8]),
-                PC = ushort.Parse(registers[9]),
-                FZ = registers[10] == "1",
-                FN = registers[11] == "1",
-                FH = registers[12] == "1",
-                FC = registers[13] == "1",
-                IME = registers[14] == "1",
+                H = byte.Parse(registers[5]),
+                L = byte.Parse(registers[6]),
+                SP = ushort.Parse(registers[7]),
+                PC = ushort.Parse(registers[8]),
+                FZ = registers[9] == "1",
+                FN = registers[10] == "1",
+                FH = registers[11] == "1",
+                FC = registers[12] == "1",
+                IME = registers[13] == "1",
                 Memory = memory.Select(m =>
                 {
                     var fields = m.Split(':');
@@ -83,12 +81,12 @@ namespace GameBoyEm.Tests.Oracle
         public override bool Equals(object x)
         {
             var y = (CpuState)x;
-            return A == y.A
+            var registersEqual =
+                   A == y.A
                 && B == y.B
                 && C == y.C
                 && D == y.D
                 && E == y.E
-                && F == y.F
                 && H == y.H
                 && L == y.L
                 && SP == y.SP
@@ -98,6 +96,31 @@ namespace GameBoyEm.Tests.Oracle
                 && FH == y.FH
                 && FC == y.FC
                 && IME == y.IME;
+
+            if (!registersEqual)
+            {
+                return false;
+            }
+
+            foreach (var m1 in Memory)
+            {
+                bool match = false;
+                foreach (var m2 in y.Memory)
+                {
+                    if (m1.Address == m2.Address && m1.Value == m2.Value)
+                    {
+                        match = true;
+                        break;
+                    }
+                }
+
+                if (!match)
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         private string S(bool flag) => flag ? "1" : "0";

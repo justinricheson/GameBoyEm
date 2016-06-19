@@ -19,9 +19,7 @@ namespace gameboy {
 		void setMemoryRecord(std::vector<MemoryRecord> *record);
 
 	private:
-		uint8_t next;
 		std::vector<MemoryRecord> initMem;
 		std::map<uint16_t, uint8_t> mem;
-		int getnext();
 	};
 }

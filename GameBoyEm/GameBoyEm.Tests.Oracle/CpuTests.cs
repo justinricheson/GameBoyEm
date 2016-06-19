@@ -1,8 +1,9 @@
 ﻿using GameBoyEm.Interfaces.Fakes;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using static Microsoft.QualityTools.Testing.Fakes.FakesDelegates;
+using Microsoft.QualityTools.Testing.Fakes;
 
 namespace GameBoyEm.Tests.Oracle
 {
@@ -19,11 +20,10 @@ namespace GameBoyEm.Tests.Oracle
                 C = 0x03,
                 D = 0x04,
                 E = 0x05,
-                F = 0x06,
-                H = 0x07,
-                L = 0x08,
-                SP = 0x0009,
-                PC = 0x000A,
+                H = 0x06,
+                L = 0x07,
+                SP = 0x0008,
+                PC = 0x0009,
                 FZ = false,
                 FN = true,
                 FH = false,
@@ -39,22 +39,10 @@ namespace GameBoyEm.Tests.Oracle
 
             var testState = Test(startState);
             var oracleState = Oracle.Execute(startState);
+
             Assert.AreEqual(testState, oracleState);
         }
 
-        private int _next;
-        private int GetNext(int max)
-        {
-            if (_next + 1 == max)
-            {
-                _next = 0;
-            }
-            else
-            {
-                _next++;
-            }
-            return _next;
-        }
         private CpuState Test(CpuState cpuState)
         {
             var mem = new Dictionary<ushort, byte>();
@@ -63,17 +51,16 @@ namespace GameBoyEm.Tests.Oracle
                 mem.Add(m.Address, m.Value);
             }
 
-            var read = new Func<ushort, byte>(a =>
+            var read = new FakesDelegates.Func<ushort, byte>(a =>
             {
                 if (!mem.ContainsKey(a))
                 {
-                    var i = GetNext(cpuState.Memory.Count());
-                    mem[a] = cpuState.Memory[i].Value;
+                    return 0; // Only writes allocate memory
                 }
                 return mem[a];
             });
 
-            var readW = new Func<ushort, ushort>(a =>
+            var readW = new FakesDelegates.Func<ushort, ushort>(a =>
             {
                 var hi = read(a);
                 var lo = read((ushort)(a + 1));
@@ -85,21 +72,20 @@ namespace GameBoyEm.Tests.Oracle
             mmu.ReadWordUInt16 = readW;
             mmu.WriteByteUInt16Byte = (a, v) =>
             {
-                var val = read(a); // Ensure it's there
                 mem[a] = v;
             };
             mmu.WriteWordUInt16UInt16 = (a, v) =>
             {
-                var val = readW(a); // Ensure it's there
                 mem[a] = (byte)((v & 0xFF00) >> 8);
                 mem[(ushort)(a + 1)] = (byte)(v & 0xFF);
             };
 
             var cpu = new Cpu(mmu,
-                cpuState.A, cpuState.B, cpuState.C, cpuState.D,
-                cpuState.E, cpuState.F, cpuState.H, cpuState.L,
-                cpuState.SP, cpuState.PC, cpuState.FZ, cpuState.FN,
-                cpuState.FH, cpuState.FC, cpuState.IME);
+                cpuState.A, cpuState.B, cpuState.C,
+                cpuState.D, cpuState.E, cpuState.H,
+                cpuState.L, cpuState.SP, cpuState.PC,
+                cpuState.FZ, cpuState.FN, cpuState.FH,
+                cpuState.FC, cpuState.IME);
 
             cpu.Step();
 
@@ -110,7 +96,6 @@ namespace GameBoyEm.Tests.Oracle
                 C = cpu.C,
                 D = cpu.D,
                 E = cpu.E,
-                F = cpu.F,
                 H = cpu.H,
                 L = cpu.L,
                 SP = cpu.SP,

@@ -50,16 +50,16 @@ const int Run(char *input, char *output) {
 	core.registers->setC(std::stoi(registers[2].c_str()));
 	core.registers->setD(std::stoi(registers[3].c_str()));
 	core.registers->setE(std::stoi(registers[4].c_str()));
-	core.registers->setF(std::stoi(registers[5].c_str()));
-	core.registers->setH(std::stoi(registers[6].c_str()));
-	core.registers->setL(std::stoi(registers[7].c_str()));
-	core.registers->setSP(std::stoi(registers[8].c_str()));
-	core.registers->pc = std::stoi(registers[9].c_str());
-	core.registers->setZeroFlag(to_bool(registers[10]));
-	core.registers->setSubFlag(to_bool(registers[11]));
-	core.registers->setHalfCarryFlag(to_bool(registers[12]));
-	core.registers->setCarryFlag(to_bool(registers[13]));
-	core.registers->setIME(to_bool(registers[14]));
+	//core.registers->setF(std::stoi(registers[5].c_str())); // Set flags individually
+	core.registers->setH(std::stoi(registers[5].c_str()));
+	core.registers->setL(std::stoi(registers[6].c_str()));
+	core.registers->setSP(std::stoi(registers[7].c_str()));
+	core.registers->pc = std::stoi(registers[8].c_str());
+	core.registers->setZeroFlag(to_bool(registers[9]));
+	core.registers->setSubFlag(to_bool(registers[10]));
+	core.registers->setHalfCarryFlag(to_bool(registers[11]));
+	core.registers->setCarryFlag(to_bool(registers[12]));
+	core.registers->setIME(to_bool(registers[13]));
 
 	core.emulateCycle();
 
@@ -70,7 +70,7 @@ const int Run(char *input, char *output) {
 		<< (int)core.registers->getC() << "|"
 		<< (int)core.registers->getD() << "|"
 		<< (int)core.registers->getE() << "|"
-		<< (int)core.registers->getF() << "|"
+		//<< (int)core.registers->getF() << "|" // Get flags individually
 		<< (int)core.registers->getH() << "|"
 		<< (int)core.registers->getL() << "|"
 		<< std::to_string(core.registers->getSP()) << "|"

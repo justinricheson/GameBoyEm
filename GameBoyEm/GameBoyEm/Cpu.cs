@@ -68,10 +68,10 @@ namespace GameBoyEm
 
         public Cpu(IMmu mmu,
             byte a = 0, byte b = 0, byte c = 0, byte d = 0, byte e = 0,
-            byte h = 0, byte l = 0, byte f = 0, ushort sp = 0, ushort pc = 0,
+            byte h = 0, byte l = 0,  ushort sp = 0, ushort pc = 0,
             bool fz = false, bool fn = false, bool fh = false, bool fc = false, bool ime = false)
         {
-            A = a; B = b; C = c; D = d; E = e; H = h; L = l; F = f;
+            A = a; B = b; C = c; D = d; E = e; H = h; L = l;
             FZ = fz; FN = fn; FH = fh; FC = fc; IME = ime;
             SP = sp; PC = pc;
 
