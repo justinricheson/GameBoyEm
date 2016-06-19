@@ -24,7 +24,6 @@ namespace GameBoyEm.Tests.Oracle
         private static HashSet<byte> _skippedInstructions = new HashSet<byte>
         {
             16,  // STOP: oracle implementation increments pc, can't find any documentation to say if this is correct
-            39,  // DAA: skipping temporarily
             118, // HALT: oracle implementation decrements pc, think this only happens when interrupts are enabled, deal with this later
         };
         private IEnumerable<CpuState> GenerateCpuStates()
@@ -37,7 +36,7 @@ namespace GameBoyEm.Tests.Oracle
                     continue;
                 }
                 ushort pc = 0;
-                //yield return GenerateRandomState(op, pc);
+                yield return GenerateRandomState(op, pc);
             }
 
             // CB tests
@@ -77,9 +76,9 @@ namespace GameBoyEm.Tests.Oracle
             }
             else
             {
-                state.Memory.Insert(1, new MemoryRecord { Address = (ushort)(pc), Value = op });
-                state.Memory.Insert(2, new MemoryRecord { Address = (ushort)(pc + 1), Value = 0x01 });
-                state.Memory.Insert(3, new MemoryRecord { Address = (ushort)(pc + 2), Value = 0x02 });
+                state.Memory.Insert(0, new MemoryRecord { Address = (ushort)(pc), Value = op });
+                state.Memory.Insert(1, new MemoryRecord { Address = (ushort)(pc + 1), Value = 0x01 });
+                state.Memory.Insert(2, new MemoryRecord { Address = (ushort)(pc + 2), Value = 0x02 });
             }
 
             return state;

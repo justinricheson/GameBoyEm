@@ -16,7 +16,7 @@ namespace GameBoyEm
         {
             // Adjust A into binary coded decimal form
             int a = A;
-            if (FN)
+            if (!FN)
             {
                 if (FH || (a & _u4) > 9) // 9 is max BCD digit
                 {
