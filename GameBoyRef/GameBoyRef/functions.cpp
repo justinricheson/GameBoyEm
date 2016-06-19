@@ -30,33 +30,36 @@ bool to_bool(std::string const& s) {
 
 const int Run(char *input, char *output) {
 	auto inputStr = std::string(input);
-	std::vector<std::string> split1 = split(input, ',');
-	std::vector<std::string> split2 = split(split1[0], '|');
-
-	uint8_t *initMem = new uint8_t[split1[1].size() / 2];
-	for (int i = 0, j = 0; i < split1[1].size(); i += 2, j++) {
-		char tmp[2];
-		tmp[0] = split1[1].at(i);
-		tmp[1] = split1[1].at(i + 1);
-		initMem[j] = strtol(tmp, NULL, 16);
+	auto split1 = split(input, ',');
+	auto registers = split(split1[0], '|');
+	auto inMem = split(split1[1], '|');
+	
+	auto *initMem = new std::vector<gameboy::MemoryRecord>();
+	for (int i = 0; i < inMem.size(); i++) {
+		auto kvp = split(inMem[i], ':');
+		initMem->push_back(gameboy::MemoryRecord{
+			(uint16_t)std::stoi(kvp[0].c_str()),
+			(uint8_t)std::stoi(kvp[1].c_str())
+		});
 	}
 
-	auto core = gameboy::Core(initMem);
-	core.registers->setA(std::stoi(split2[0].c_str()));
-	core.registers->setB(std::stoi(split2[1].c_str()));
-	core.registers->setC(std::stoi(split2[2].c_str()));
-	core.registers->setD(std::stoi(split2[3].c_str()));
-	core.registers->setE(std::stoi(split2[4].c_str()));
-	core.registers->setF(std::stoi(split2[5].c_str()));
-	core.registers->setH(std::stoi(split2[6].c_str()));
-	core.registers->setL(std::stoi(split2[7].c_str()));
-	core.registers->setSP(std::stoi(split2[8].c_str()));
-	core.registers->pc = std::stoi(split2[9].c_str());
-	core.registers->setZeroFlag(to_bool(split2[10]));
-	core.registers->setSubFlag(to_bool(split2[11]));
-	core.registers->setHalfCarryFlag(to_bool(split2[12]));
-	core.registers->setCarryFlag(to_bool(split2[13]));
-	core.registers->setIME(to_bool(split2[14]));
+	auto core = gameboy::Core();
+	core.memory->setMemoryRecord(initMem);
+	core.registers->setA(std::stoi(registers[0].c_str()));
+	core.registers->setB(std::stoi(registers[1].c_str()));
+	core.registers->setC(std::stoi(registers[2].c_str()));
+	core.registers->setD(std::stoi(registers[3].c_str()));
+	core.registers->setE(std::stoi(registers[4].c_str()));
+	core.registers->setF(std::stoi(registers[5].c_str()));
+	core.registers->setH(std::stoi(registers[6].c_str()));
+	core.registers->setL(std::stoi(registers[7].c_str()));
+	core.registers->setSP(std::stoi(registers[8].c_str()));
+	core.registers->pc = std::stoi(registers[9].c_str());
+	core.registers->setZeroFlag(to_bool(registers[10]));
+	core.registers->setSubFlag(to_bool(registers[11]));
+	core.registers->setHalfCarryFlag(to_bool(registers[12]));
+	core.registers->setCarryFlag(to_bool(registers[13]));
+	core.registers->setIME(to_bool(registers[14]));
 
 	core.emulateCycle();
 
@@ -78,16 +81,15 @@ const int Run(char *input, char *output) {
 		<< (bool)core.registers->getCarryFlag() << "|"
 		<< (bool)core.registers->getIME() << ",";
 
-	auto mem = core.memory->getMemoryRecord();
-	for (int i = 0; i < core.memory->nextRecord; i++) {
-		auto rec = mem + i;
+	auto outMem = core.memory->getMemoryRecord();
+	for (int i = 0; i < outMem->size(); i++) {
+		gameboy::MemoryRecord rec = outMem->at(i);
 		cpuState
-			<< (int)rec->recordtype << "|"
-			<< std::to_string(rec->address) << "|"
-			<< std::to_string(rec->value);
+			<< std::to_string(rec.address) << ":"
+			<< std::to_string(rec.value);
 
-		if (i + 1 < core.memory->nextRecord)
-			cpuState << "-";
+		if (i + 1 < outMem->size())
+			cpuState << "|";
 	}
 
 	auto str = cpuState.str();

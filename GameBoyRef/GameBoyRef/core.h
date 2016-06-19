@@ -17,7 +17,7 @@ namespace gameboy {
 namespace gameboy {
 	class GAMEBOY_API Core {
 	public:
-		explicit Core(uint8_t *initMem);
+		explicit Core();
 		virtual ~Core();
 		void emulateCycle();
 		void handleCB();

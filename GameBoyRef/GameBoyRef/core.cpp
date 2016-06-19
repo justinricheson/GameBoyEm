@@ -5,9 +5,9 @@
 #include "memory.h"
 
 namespace gameboy {
-	Core::Core(uint8_t *initMem) :
+	Core::Core() :
 		registers(new CPURegisters),
-		memory(new Memory(initMem)) {
+		memory(new Memory()) {
 		conditional = false;
 		clock = 0;
 	}

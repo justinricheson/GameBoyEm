@@ -1,5 +1,4 @@
-﻿using System;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using System.Text;
 
 namespace GameBoyEm.Tests.Oracle
@@ -11,11 +10,11 @@ namespace GameBoyEm.Tests.Oracle
             [MarshalAs(UnmanagedType.LPStr)]string input,
             [MarshalAs(UnmanagedType.LPStr)]StringBuilder output);
 
-        public static CpuEndState Execute(CpuStartState state)
+        public static CpuState Execute(CpuState state)
         {
             var output = new StringBuilder(1024);
             var result = Run(state.ToString(), output);
-            return CpuEndState.FromString(output.ToString());
+            return CpuState.FromString(output.ToString());
         }
     }
 }

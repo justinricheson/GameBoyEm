@@ -4,8 +4,7 @@
 
 namespace gameboy {
 	struct MemoryRecord {
-		uint8_t recordtype;
 		uint16_t address;
-		uint16_t value;
+		uint8_t value;
 	};
 }
