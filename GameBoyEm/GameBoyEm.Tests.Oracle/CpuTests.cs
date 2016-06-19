@@ -37,14 +37,14 @@ namespace GameBoyEm.Tests.Oracle
                     continue;
                 }
                 ushort pc = 0;
-                yield return GenerateRandomState(op, pc);
+                //yield return GenerateRandomState(op, pc);
             }
 
             // CB tests
             for (byte op = 0; op < 255; op++)
             {
                 ushort pc = 0;
-                //yield return GenerateRandomState(op, pc, true);
+                yield return GenerateRandomState(op, pc, true);
             }
         }
 
@@ -65,22 +65,21 @@ namespace GameBoyEm.Tests.Oracle
                 FN = true,
                 FH = false,
                 FC = true,
-                IME = false,
-                Memory = new List<MemoryRecord>
-                {
-                    new MemoryRecord { Address = 0x0001, Value = 0x01 },
-                    new MemoryRecord { Address = 0x0002, Value = 0x02 }
-                }
+                IME = false
             };
 
             if (isCbInstruction)
             {
                 state.Memory.Insert(0, new MemoryRecord { Address = pc, Value = 0xCB });
                 state.Memory.Insert(1, new MemoryRecord { Address = (ushort)(pc + 1), Value = op });
+                state.Memory.Insert(2, new MemoryRecord { Address = (ushort)(pc + 2), Value = 0x01 });
+                state.Memory.Insert(3, new MemoryRecord { Address = (ushort)(pc + 3), Value = 0x02 });
             }
             else
             {
-                state.Memory.Insert(0, new MemoryRecord { Address = pc, Value = op });
+                state.Memory.Insert(1, new MemoryRecord { Address = (ushort)(pc), Value = op });
+                state.Memory.Insert(2, new MemoryRecord { Address = (ushort)(pc + 1), Value = 0x01 });
+                state.Memory.Insert(3, new MemoryRecord { Address = (ushort)(pc + 2), Value = 0x02 });
             }
 
             return state;

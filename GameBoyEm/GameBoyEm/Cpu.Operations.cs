@@ -814,7 +814,7 @@ namespace GameBoyEm
         {
             var lo = value.AND(1);
             var hi = value.AND(128);
-            var r = value.RS().AND(hi); // Keep MSB
+            var r = value.RS().OR(hi); // Keep MSB
             FC = lo == 1;
             FH = false;
             FN = false;
@@ -856,7 +856,7 @@ namespace GameBoyEm
         {
             FH = true;
             FN = false;
-            FZ = value.AND(bitMask) == 1;
+            FZ = value.AND(bitMask) == 0;
         }
     }
 }
