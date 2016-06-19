@@ -68,7 +68,7 @@ namespace GameBoyEm
 
         public Cpu(IMmu mmu,
             byte a = 0, byte b = 0, byte c = 0, byte d = 0, byte e = 0,
-            byte h = 0, byte l = 0,  ushort sp = 0, ushort pc = 0,
+            byte h = 0, byte l = 0, ushort sp = 0, ushort pc = 0,
             bool fz = false, bool fn = false, bool fh = false, bool fc = false, bool ime = false)
         {
             A = a; B = b; C = c; D = d; E = e; H = h; L = l;
@@ -82,7 +82,7 @@ namespace GameBoyEm
                 /* 00 */ NOP,     LDBCN,   LDBCA,   INCBC,   INCB,    DECB,    LDBN,     RLCA,    LDNSP,   ADDHLBC, LDABC,   DECBC,   INCC,    DECC,    LDCN,     RRCA,
                 /* 10 */ STOP,    LDDEN,   LDDEA,   INCDE,   INCD,    DECD,    LDDN,     RLA,     JR,      ADDHLDE, LDADE,   DECDE,   INCE,    DECE,    LDEN,     RRA,
                 /* 20 */ JRNZ,    LDHLN,   LDIHLA,  INCHL,   INCH,    DECH,    LDHN,     DAA,     JRZ,     ADDHLHL, LDIAHL,  DECHL,   INCL,    DECL,    LDLN,     CMPL,
-                /* 30 */ JRNC,    LDSPN,   LDDHLA,  INCSP,   INCHLM,  DECHLM,  LDHLMN,   SCF,     SRLB,    ADDHLSP, LDDAHL,  DECSP,   INCA,    DECA,    LDAN,     CCF,
+                /* 30 */ JRNC,    LDSPN,   LDDHLA,  INCSP,   INCHLM,  DECHLM,  LDHLMN,   SCF,     JRC,     ADDHLSP, LDDAHL,  DECSP,   INCA,    DECA,    LDAN,     CCF,
                 /* 40 */ LDBB,    LDBC,    LDBD,    LDBE,    LDBH,    LDBL,    LDBHL,    LDBA,    LDCB,    LDCC,    LDCD,    LDCE,    LDCH,    LDCL,    LDCHL,    LDCA,
                 /* 50 */ LDDB,    LDDC,    LDDD,    LDDE,    LDDH,    LDDL,    LDDHL,    LDDA,    LDEB,    LDEC,    LDED,    LDEE,    LDEH,    LDEL,    LDEHL,    LDEA,
                 /* 60 */ LDHB,    LDHC,    LDHD,    LDHE,    LDHH,    LDHL,    LDHHL,    LDHA,    LDLB,    LDLC,    LDLD,    LDLE,    LDLH,    LDLL,    LDLHL,    LDLA,

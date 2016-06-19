@@ -225,13 +225,13 @@ namespace GameBoyEm
         private void CPL() { Compare(L); }
         private void CPHL() { Compare(RB(HL)); }
         private void CPN() { Compare(RBN()); }
-        private void INCHLM() { var n = RB(HL); FH = (n & _u4) == _u4; WB(HL, ++n); FN = false; FZ = n == 0; }
-        private void DECHLM() { var n = RB(HL); WB(HL, --n); FH = (n & _u4) != _u4; FN = true; FZ = n == 0; }
+        private void INCHLM() { var n = (byte)(RB(HL) + 1); WB(HL, n); FH = (n & _u4) == 0; FN = false; FZ = n == 0; }
+        private void DECHLM() { var n = (byte)(RB(HL) - 1); WB(HL, n); FH = (n & _u4) == _u4; FN = true; FZ = n == 0; }
 
         // 16-bit Loads
-        private void LDBCN() { C = RBN(); B = RBN(); }
-        private void LDDEN() { E = RBN(); D = RBN(); }
-        private void LDHLN() { L = RBN(); H = RBN(); }
+        private void LDBCN() { BC = RWN(); }
+        private void LDDEN() { DE = RWN(); }
+        private void LDHLN() { HL = RWN(); }
         private void LDSPN() { SP = RWN(); }
         private void LDNSP() { WW(RWN(), SP); ; }
         private void LDHLSPN() { var n = RBN(); HL = Add16(n, SP, true); }
@@ -253,7 +253,6 @@ namespace GameBoyEm
         private void ADDSPN() { SP = Add16(RBN(), SP, true); }
 
         // Rotates, Shifts, and Swaps
-        private void SRLB() { B = ShiftLeft(B); }
         private void RRA() { A = RotateRight(A); }
         private void RLA() { A = RotateLeft(A); }
         private void RRCA() { A = RotateRightC(A); }
@@ -326,6 +325,7 @@ namespace GameBoyEm
         // Jumps, Calls, Returns, and Resets
         private void JR() { JumpRel(); }
         private void JRZ() { JumpRel(FZ); }
+        private void JRC() { JumpRel(FC); }
         private void JRNZ() { JumpRel(!FZ); }
         private void JRNC() { JumpRel(!FC); }
         private void JP() { JumpAbs(); }
@@ -351,8 +351,8 @@ namespace GameBoyEm
         private void RST18() { Reset(24); }
         private void RST20() { Reset(32); }
         private void RST28() { Reset(40); }
-        private void RST30() { Reset(64); }
-        private void RST38() { Reset(72); }
+        private void RST30() { Reset(48); }
+        private void RST38() { Reset(56); }
 
         // Push and Pop
         private void POPAF() { AF = Pop(); }
