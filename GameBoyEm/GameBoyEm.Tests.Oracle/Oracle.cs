@@ -12,7 +12,7 @@ namespace GameBoyEm.Tests.Oracle
 
         public static CpuState Execute(CpuState state)
         {
-            var output = new StringBuilder(1024);
+            var output = new StringBuilder(16384);
             var result = Run(state.ToString(), output);
             return CpuState.FromString(output.ToString());
         }

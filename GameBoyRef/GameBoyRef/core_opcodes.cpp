@@ -131,7 +131,17 @@ namespace gameboy {
 	void Core::LDnnSP() { memory->writeW(memory->readW(registers->pc), registers->getSP()); registers->pc += 2; }
 
 	//HL = SP+n
-	void Core::LDHLSPn() { int8_t n = memory->read(registers->pc++); uint16_t sp = registers->getSP(); uint16_t res = sp + n; registers->setHL(res); registers->setZeroFlag(false); registers->setSubFlag(false); registers->setHalfCarryFlag(((sp ^ n ^ res) & 0x10) == 0x10); registers->setCarryFlag(((sp ^ n ^ res) & 0x100) == 0x100); }
+	void Core::LDHLSPn()
+	{
+		int8_t n = memory->read(registers->pc++);
+		uint16_t sp = registers->getSP();
+		uint16_t res = sp + n;
+		registers->setHL(res);
+		registers->setZeroFlag(false);
+		registers->setSubFlag(false);
+		registers->setHalfCarryFlag(((sp ^ n ^ res) & 0x10) == 0x10);
+		registers->setCarryFlag(((sp ^ n ^ res) & 0x100) == 0x100);
+	}
 
 	//SP = HL
 	void Core::LDSPHL() { registers->setSP(registers->getHL()); }
@@ -247,11 +257,30 @@ namespace gameboy {
 	void Core::DECSP() { registers->setSP(registers->getSP() - 1); }
 
 	void Core::ADDHLBC() { uint16_t n = registers->getBC(); uint16_t reg = registers->getHL(); registers->setHL(registers->getHL() + n); registers->setSubFlag(false); registers->setHalfCarryFlag((((reg & 0xFFF) + (n & 0xFFF)) & 0x1000) != 0); registers->setCarryFlag((reg + n) > 0xFFFF); }
-	void Core::ADDHLDE() { uint16_t n = registers->getDE(); uint16_t reg = registers->getHL(); registers->setHL(registers->getHL() + n); registers->setSubFlag(false); registers->setHalfCarryFlag((((reg & 0xFFF) + (n & 0xFFF)) & 0x1000) != 0); registers->setCarryFlag((reg + n) > 0xFFFF); }
+	void Core::ADDHLDE()
+	{
+		uint16_t n = registers->getDE();
+		uint16_t reg = registers->getHL();
+		registers->setHL(registers->getHL() + n);
+		registers->setSubFlag(false);
+		registers->setHalfCarryFlag((((reg & 0xFFF) + (n & 0xFFF)) & 0x1000) != 0);
+		registers->setCarryFlag((reg + n) > 0xFFFF);
+	}
 	void Core::ADDHLHL() { uint16_t n = registers->getHL(); uint16_t reg = registers->getHL(); registers->setHL(registers->getHL() + n); registers->setSubFlag(false); registers->setHalfCarryFlag((((reg & 0xFFF) + (n & 0xFFF)) & 0x1000) != 0); registers->setCarryFlag((reg + n) > 0xFFFF); }
 	void Core::ADDHLSP() { uint16_t n = registers->getSP(); uint16_t reg = registers->getHL(); registers->setHL(registers->getHL() + n); registers->setSubFlag(false); registers->setHalfCarryFlag((((reg & 0xFFF) + (n & 0xFFF)) & 0x1000) != 0); registers->setCarryFlag((reg + n) > 0xFFFF); }
 
-	void Core::ADDSPn() { int8_t n = (int8_t)memory->read(registers->pc); uint16_t sp = registers->getSP(); int res = sp + n; registers->setSP(res); registers->setZeroFlag(false); registers->setSubFlag(false); registers->setHalfCarryFlag(((sp ^ n ^ (res & 0xFFFF)) & 0x10) == 0x10); registers->setCarryFlag(((sp ^ n ^ (res & 0xFFFF)) & 0x100) == 0x100); ++registers->pc; }
+	void Core::ADDSPn()
+	{
+		int8_t n = (int8_t)memory->read(registers->pc);
+		uint16_t sp = registers->getSP();
+		int res = sp + n;
+		registers->setSP(res);
+		registers->setZeroFlag(false);
+		registers->setSubFlag(false);
+		registers->setHalfCarryFlag(((sp ^ n ^ (res & 0xFFFF)) & 0x10) == 0x10);
+		registers->setCarryFlag(((sp ^ n ^ (res & 0xFFFF)) & 0x100) == 0x100);
+		++registers->pc;
+	}
 
 	//----------JUMPS----------//
 	void Core::JPnn() { registers->pc = memory->readW(registers->pc); }
@@ -302,7 +331,12 @@ namespace gameboy {
 	//----------RESTARTS----------//
 	void Core::RST00() { registers->setSP(registers->getSP() - 2); memory->writeW(registers->getSP(), registers->pc); registers->pc = 0x0000; }
 	void Core::RST08() { registers->setSP(registers->getSP() - 2); memory->writeW(registers->getSP(), registers->pc); registers->pc = 0x0008; }
-	void Core::RST10() { registers->setSP(registers->getSP() - 2); memory->writeW(registers->getSP(), registers->pc); registers->pc = 0x0010; }
+	void Core::RST10()
+	{
+		registers->setSP(registers->getSP() - 2);
+		memory->writeW(registers->getSP(), registers->pc);
+		registers->pc = 0x0010;
+	}
 	void Core::RST18() { registers->setSP(registers->getSP() - 2); memory->writeW(registers->getSP(), registers->pc); registers->pc = 0x0018; }
 	void Core::RST20() { registers->setSP(registers->getSP() - 2); memory->writeW(registers->getSP(), registers->pc); registers->pc = 0x0020; }
 	void Core::RST28() { registers->setSP(registers->getSP() - 2); memory->writeW(registers->getSP(), registers->pc); registers->pc = 0x0028; }

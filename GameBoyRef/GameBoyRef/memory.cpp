@@ -29,7 +29,7 @@ namespace gameboy {
 		initMem = *record;
 
 		for (auto it = record->begin(); it != record->end(); ++it) {
-			mem.emplace(it->address, it->value);
+			mem[it->address] = it->value;
 		}
 	}
 
@@ -42,7 +42,7 @@ namespace gameboy {
 	}
 
 	void Memory::write(uint16_t address, uint8_t value) {
-		mem.emplace(address, value);
+		mem[address] = value;
 	}
 
 	uint16_t Memory::readW(uint16_t address) {
@@ -52,7 +52,7 @@ namespace gameboy {
 	}
 
 	void Memory::writeW(uint16_t address, uint16_t value) {
-		mem.emplace(address, (value & 0xFF00) >> 8);
-		mem.emplace(address + 1, value & 0xFF);
+		mem[address] = (value & 0xFF00) >> 8;
+		mem[address + 1] = value & 0xFF;
 	}
 }

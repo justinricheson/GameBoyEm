@@ -1,7 +1,9 @@
 ﻿using GameBoyEm.Interfaces.Fakes;
 using Microsoft.QualityTools.Testing.Fakes;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 namespace GameBoyEm.Tests.Oracle
@@ -17,6 +19,7 @@ namespace GameBoyEm.Tests.Oracle
                 var r1 = Test(state);
                 var r2 = Oracle.Execute(state);
 
+                Debug.WriteLine($"Testing: {state.Memory[0].Value:X} - {state.Memory[1].Value:X}");
                 Assert.AreEqual(r1, r2);
             }
         }
@@ -25,6 +28,7 @@ namespace GameBoyEm.Tests.Oracle
         {
             16,  // STOP: oracle implementation increments pc, can't find any documentation to say if this is correct
             118, // HALT: oracle implementation decrements pc, think this only happens when interrupts are enabled, deal with this later
+            39,  // DAA: know difference between ref and impl versions (FC flag never unset in ref version)
         };
         private IEnumerable<CpuState> GenerateCpuStates()
         {
@@ -47,38 +51,38 @@ namespace GameBoyEm.Tests.Oracle
             }
         }
 
+        private static Random _r = new Random();
         private CpuState GenerateRandomState(byte op, ushort pc, bool isCbInstruction = false)
         {
-            var state = new CpuState // TODO generate random state
+            var state = new CpuState
             {
-                A = 0x01,
-                B = 0x02,
-                C = 0x03,
-                D = 0x04,
-                E = 0x05,
-                H = 0x06,
-                L = 0x07,
-                SP = 0x0008,
+                A = (byte)_r.Next(0, 256),
+                B = (byte)_r.Next(0, 256),
+                C = (byte)_r.Next(0, 256),
+                D = (byte)_r.Next(0, 256),
+                E = (byte)_r.Next(0, 256),
+                H = (byte)_r.Next(0, 256),
+                L = (byte)_r.Next(0, 256),
+                SP = (ushort)_r.Next(0, 65536),
                 PC = pc,
-                FZ = false,
-                FN = true,
-                FH = false,
-                FC = true,
-                IME = false
+                FZ = _r.Next() % 2 == 0,
+                FN = _r.Next() % 2 == 0,
+                FH = _r.Next() % 2 == 0,
+                FC = _r.Next() % 2 == 0,
+                IME = _r.Next() % 2 == 0
             };
 
+            var startAddress = isCbInstruction ? (ushort)(pc + 1) : pc;
             if (isCbInstruction)
             {
-                state.Memory.Insert(0, new MemoryRecord { Address = pc, Value = 0xCB });
-                state.Memory.Insert(1, new MemoryRecord { Address = (ushort)(pc + 1), Value = op });
-                state.Memory.Insert(2, new MemoryRecord { Address = (ushort)(pc + 2), Value = 0x01 });
-                state.Memory.Insert(3, new MemoryRecord { Address = (ushort)(pc + 3), Value = 0x02 });
+                state.Memory.Add(new MemoryRecord { Address = pc, Value = 0xCB });
             }
-            else
+            state.Memory.Add(new MemoryRecord { Address = startAddress, Value = op });
+
+            var nextAddress = (ushort)(startAddress + 1);
+            for (ushort i = nextAddress; i < 1024; i++)
             {
-                state.Memory.Insert(0, new MemoryRecord { Address = (ushort)(pc), Value = op });
-                state.Memory.Insert(1, new MemoryRecord { Address = (ushort)(pc + 1), Value = 0x01 });
-                state.Memory.Insert(2, new MemoryRecord { Address = (ushort)(pc + 2), Value = 0x02 });
+                state.Memory.Add(new MemoryRecord { Address = i, Value = (byte)_r.Next(0, 256) });
             }
 
             return state;

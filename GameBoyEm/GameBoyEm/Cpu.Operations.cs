@@ -41,6 +41,9 @@ namespace GameBoyEm
             }
 
             FH = false;
+
+            // Ref impl only sets FC if carry
+            // Docs say to set or unset based on carry/no-carry
             FC = (a & 256) == 256;
             A = (byte)a;
             FZ = A == 0;
@@ -234,7 +237,7 @@ namespace GameBoyEm
         private void LDHLN() { HL = RWN(); }
         private void LDSPN() { SP = RWN(); }
         private void LDNSP() { WW(RWN(), SP); ; }
-        private void LDHLSPN() { var n = RBN(); HL = Add16(n, SP, true); }
+        private void LDHLSPN() { HL = Add16_2((sbyte)RBN(), SP); }
         private void LDSPHL() { SP = HL; }
 
         // 16-bit Arithmetic
@@ -250,7 +253,7 @@ namespace GameBoyEm
         private void ADDHLDE() { HL = Add16(DE, HL); }
         private void ADDHLHL() { HL = Add16(HL, HL); }
         private void ADDHLSP() { HL = Add16(SP, HL); }
-        private void ADDSPN() { SP = Add16(RBN(), SP, true); }
+        private void ADDSPN() { SP = Add16_2((sbyte)RBN(), SP); }
 
         // Rotates, Shifts, and Swaps
         private void RRA() { A = RotateRight(A); }
@@ -669,14 +672,35 @@ namespace GameBoyEm
             FH = ((a & _u4) + (value & _u4) + carry & 16) != 0;
             FZ = A == 0;
         }
-        private ushort Add16(ushort x, ushort y, bool resetFZ = false)
+        private ushort Add16(ushort x, ushort y)
         {
             int add = x + y;
             FC = add > _u16;
             FH = (x & _u12) + (y & _u12) > _u12;
             FN = false;
-            if (resetFZ) FZ = false;
             return (ushort)add;
+        }
+        private ushort Add16_2(sbyte x, ushort y)
+        {
+            // Apparantly ADDSPN and LDHLSPN are special
+            // snowflakes that need to set the flags differently
+
+            // These don't work with negative numbers.
+            // Must set carry flags on borrows as well
+            //FC = (x & _u12) + (y & _u12) > _u12;
+            //FH = (x & _u4) + (y & _u4) > _u4;
+
+            var r = (ushort)(x + y);
+
+            // These work because xor is the same as adding without the carry/borrow
+            // So if we xor the initial values, then xor with the original addition,
+            // we get only the carried/borrowed bits. Then we just mask the result
+            // to check if the carry/borrow is in the right spot
+            FC = ((x ^ y ^ r) & 256) == 256;
+            FH = ((x ^ y ^ r) & 16) == 16;
+            FN = false;
+            FZ = false;
+            return r;
         }
         private void Sub(byte value)
         {
