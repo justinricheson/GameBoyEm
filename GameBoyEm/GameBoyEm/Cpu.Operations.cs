@@ -803,7 +803,7 @@ namespace GameBoyEm
             FN = false;
 
             // Some instructions unconditionally reset FZ even if the result is 0
-            // This differs from the official docs, but several ref impl's confirm as correct behavior
+            // This differs from the official docs, but several ref impl's confirm this behavior
             FZ = resetFz ? false : r == 0;
             return r;
         }
@@ -816,7 +816,7 @@ namespace GameBoyEm
             FN = false;
 
             // Some instructions unconditionally reset FZ even if the result is 0
-            // This differs from the official docs, but several ref impl's confirm as correct behavior
+            // This differs from the official docs, but several ref impl's confirm this behavior
             FZ = resetFz ? false : r == 0;
             return r;
         }

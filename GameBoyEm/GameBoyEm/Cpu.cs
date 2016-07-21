@@ -54,6 +54,11 @@ namespace GameBoyEm
         private static readonly ushort _u16 = ushort.MaxValue;
         private static readonly ushort _io = 65280;
 
+        public void Reset()
+        {
+            throw new NotImplementedException();
+        }
+
         public void Step()
         {
             Step(_ops, Cycles);

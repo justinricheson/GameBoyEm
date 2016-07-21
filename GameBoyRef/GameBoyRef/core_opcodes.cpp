@@ -435,7 +435,15 @@ namespace gameboy {
 	void Core::SWAPrHLm() { uint8_t n = memory->read(registers->getHL()); memory->write(registers->getHL(), (((n & 0x0F) << 4) | ((n & 0xF0) >> 4))); registers->setZeroFlag(memory->read(registers->getHL()) == 0); registers->setSubFlag(false); registers->setHalfCarryFlag(false); registers->setCarryFlag(false); }
 
 	//----------ROTATES AND SHIFTS----------//
-	void Core::RLCA() { uint8_t msb = registers->getA() & 0x80; registers->setA((registers->getA() << 1) | (msb >> 7)); registers->setZeroFlag(registers->getA() == 0); registers->setSubFlag(false); registers->setHalfCarryFlag(false); registers->setCarryFlag(msb); }
+	void Core::RLCA()
+	{
+		uint8_t msb = registers->getA() & 0x80;
+		registers->setA((registers->getA() << 1) | (msb >> 7));
+		registers->setZeroFlag(registers->getA() == 0);
+		registers->setSubFlag(false);
+		registers->setHalfCarryFlag(false);
+		registers->setCarryFlag(msb);
+	}
 	void Core::RLCB() { uint8_t msb = registers->getB() & 0x80; registers->setB((registers->getB() << 1) | (msb >> 7)); registers->setZeroFlag(registers->getB() == 0); registers->setSubFlag(false); registers->setHalfCarryFlag(false); registers->setCarryFlag(msb); }
 	void Core::RLCC() { uint8_t msb = registers->getC() & 0x80; registers->setC((registers->getC() << 1) | (msb >> 7)); registers->setZeroFlag(registers->getC() == 0); registers->setSubFlag(false); registers->setHalfCarryFlag(false); registers->setCarryFlag(msb); }
 	void Core::RLCD() { uint8_t msb = registers->getD() & 0x80; registers->setD((registers->getD() << 1) | (msb >> 7)); registers->setZeroFlag(registers->getD() == 0); registers->setSubFlag(false); registers->setHalfCarryFlag(false); registers->setCarryFlag(msb); }
@@ -444,7 +452,15 @@ namespace gameboy {
 	void Core::RLCL() { uint8_t msb = registers->getL() & 0x80; registers->setL((registers->getL() << 1) | (msb >> 7)); registers->setZeroFlag(registers->getL() == 0); registers->setSubFlag(false); registers->setHalfCarryFlag(false); registers->setCarryFlag(msb); }
 	void Core::RLCHLM() { uint8_t msb = memory->read(registers->getHL()) & 0x80; memory->write(registers->getHL(), (memory->read(registers->getHL()) << 1) | (msb >> 7)); registers->setZeroFlag(memory->read(registers->getHL()) == 0); registers->setSubFlag(false); registers->setHalfCarryFlag(false); registers->setCarryFlag(msb); }
 
-	void Core::RRCA() { uint8_t lsb = registers->getA() & 0x1; registers->setA((registers->getA() >> 1) | (lsb << 7)); registers->setZeroFlag(registers->getA() == 0); registers->setSubFlag(false); registers->setHalfCarryFlag(false); registers->setCarryFlag(lsb); }
+	void Core::RRCA()
+	{
+		uint8_t lsb = registers->getA() & 0x1;
+		registers->setA((registers->getA() >> 1) | (lsb << 7));
+		registers->setZeroFlag(registers->getA() == 0);
+		registers->setSubFlag(false);
+		registers->setHalfCarryFlag(false);
+		registers->setCarryFlag(lsb);
+	}
 	void Core::RRCB() { uint8_t lsb = registers->getB() & 0x1; registers->setB((registers->getB() >> 1) | (lsb << 7)); registers->setZeroFlag(registers->getB() == 0); registers->setSubFlag(false); registers->setHalfCarryFlag(false); registers->setCarryFlag(lsb); }
 	void Core::RRCC() { uint8_t lsb = registers->getC() & 0x1; registers->setC((registers->getC() >> 1) | (lsb << 7)); registers->setZeroFlag(registers->getC() == 0); registers->setSubFlag(false); registers->setHalfCarryFlag(false); registers->setCarryFlag(lsb); }
 	void Core::RRCD() { uint8_t lsb = registers->getD() & 0x1; registers->setD((registers->getD() >> 1) | (lsb << 7)); registers->setZeroFlag(registers->getD() == 0); registers->setSubFlag(false); registers->setHalfCarryFlag(false); registers->setCarryFlag(lsb); }
