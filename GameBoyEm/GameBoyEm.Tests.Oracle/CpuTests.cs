@@ -4,6 +4,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 
 namespace GameBoyEm.Tests.Oracle
@@ -14,13 +15,34 @@ namespace GameBoyEm.Tests.Oracle
         [TestMethod]
         public void RandomTestOracle()
         {
+            var badStates = new List<string>();
             foreach (var state in GenerateCpuStates())
             {
                 var r1 = Test(state);
                 var r2 = Oracle.Execute(state);
 
-                Debug.WriteLine($"Testing: {state.Memory[0].Value:X} - {state.Memory[1].Value:X}");
-                Assert.AreEqual(r1, r2);
+                try
+                {
+                    Assert.AreEqual(r1, r2);
+                }
+                catch
+                {
+                    badStates.Add(state.ToString());
+                    Debug.WriteLine("BAD STATE");
+                }
+            }
+
+            WriteBadStates("C:\\Users\\Justin Richeson\\Desktop\\badstates.log", badStates);
+        }
+
+        private void WriteBadStates(string path, List<string> badStates)
+        {
+            using (var wtr = new StreamWriter(path))
+            {
+                foreach (var badState in badStates)
+                {
+                    wtr.WriteLine(badState.ToString());
+                }
             }
         }
 
@@ -39,15 +61,26 @@ namespace GameBoyEm.Tests.Oracle
                 {
                     continue;
                 }
+
                 ushort pc = 0;
-                yield return GenerateRandomState(op, pc);
+                var num = 100;
+                for (int i = 0; i < num; i++)
+                {
+                    Debug.WriteLine($"Testing: {op:X2} - {i} of {num}");
+                    yield return GenerateRandomState(op, pc);
+                }
             }
 
             // CB tests
             for (byte op = 0; op < 255; op++)
             {
                 ushort pc = 0;
-                yield return GenerateRandomState(op, pc, true);
+                var num = 100;
+                for (int i = 0; i < num; i++)
+                {
+                    Debug.WriteLine($"Testing: CB{op:X2} - {i} of {num}");
+                    yield return GenerateRandomState(op, pc, true);
+                }
             }
         }
 

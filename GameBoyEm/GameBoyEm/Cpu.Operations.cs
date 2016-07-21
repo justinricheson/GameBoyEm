@@ -258,8 +258,8 @@ namespace GameBoyEm
         // Rotates, Shifts, and Swaps
         private void RRA() { A = RotateRight(A); }
         private void RLA() { A = RotateLeft(A); }
-        private void RRCA() { A = RotateRightC(A); }
-        private void RLCA() { A = RotateLeftC(A); }
+        private void RRCA() { A = RotateRightC(A, true); }
+        private void RLCA() { A = RotateLeftC(A, true); }
         private void CBRRCA() { A = RotateRightC(A); }
         private void CBRRCB() { B = RotateRightC(B); }
         private void CBRRCC() { C = RotateRightC(C); }
@@ -794,24 +794,30 @@ namespace GameBoyEm
             WW(SP, PC);
             PC = pc;
         }
-        private byte RotateRightC(byte value)
+        private byte RotateRightC(byte value, bool resetFz = false)
         {
             var lo = value.AND(1);
             var r = value.RS().OR(lo.LS(7));
             FC = lo == 1;
             FH = false;
             FN = false;
-            FZ = r == 0;
+
+            // Some instructions unconditionally reset FZ even if the result is 0
+            // This differs from the official docs, but several ref impl's confirm as correct behavior
+            FZ = resetFz ? false : r == 0;
             return r;
         }
-        private byte RotateLeftC(byte value)
+        private byte RotateLeftC(byte value, bool resetFz = false)
         {
             var hi = value.AND(128).RS(7);
             var r = value.LS().OR(hi);
             FC = hi == 1;
             FH = false;
             FN = false;
-            FZ = r == 0;
+
+            // Some instructions unconditionally reset FZ even if the result is 0
+            // This differs from the official docs, but several ref impl's confirm as correct behavior
+            FZ = resetFz ? false : r == 0;
             return r;
         }
         private byte RotateRight(byte value)

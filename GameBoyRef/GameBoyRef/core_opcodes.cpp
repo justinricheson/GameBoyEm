@@ -408,7 +408,15 @@ namespace gameboy {
 
 	void Core::RRANCB() { uint8_t lsb = registers->getA() & 0x01; registers->setA((((registers->getCarryFlag()) ? 0x1 : 0x0) << 7) | (registers->getA() >> 1)); registers->setZeroFlag(false); registers->setSubFlag(false); registers->setHalfCarryFlag(false); registers->setCarryFlag(lsb); }
 
-	void Core::RLCANCB() { uint8_t msb = registers->getA() & 0x80; registers->setA((registers->getA() << 1) | (msb >> 7)); registers->setZeroFlag(false); registers->setSubFlag(false); registers->setHalfCarryFlag(false); registers->setCarryFlag(msb); }
+	void Core::RLCANCB()
+	{
+		uint8_t msb = registers->getA() & 0x80;
+		registers->setA((registers->getA() << 1) | (msb >> 7));
+		registers->setZeroFlag(false);
+		registers->setSubFlag(false);
+		registers->setHalfCarryFlag(false);
+		registers->setCarryFlag(msb);
+	}
 
 	void Core::RLANCB() { uint8_t carry = registers->getCarryFlag() ? 0x01 : 0x00; uint8_t msb = registers->getA() & 0x80; registers->setA((registers->getA() << 1) | carry); registers->setZeroFlag(false); registers->setSubFlag(false); registers->setHalfCarryFlag(false); registers->setCarryFlag(msb); }
 
