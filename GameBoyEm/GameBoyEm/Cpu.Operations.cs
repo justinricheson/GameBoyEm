@@ -682,7 +682,7 @@ namespace GameBoyEm
         }
         private ushort Add16_2(sbyte x, ushort y)
         {
-            // Apparantly ADDSPN and LDHLSPN are special
+            // Apparently ADDSPN and LDHLSPN are special
             // snowflakes that need to set the flags differently
 
             // These don't work with negative numbers.

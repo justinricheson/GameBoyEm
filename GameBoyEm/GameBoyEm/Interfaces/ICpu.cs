@@ -19,5 +19,6 @@
         bool IME { get; }
 
         void Step();
+        void Reset();
     }
 }
