@@ -40,8 +40,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Cartridge\CartridgeBase.cs" />
+    <Compile Include="Cartridge\Cartridge.cs" />
     <Compile Include="Cartridge\CartridgeBuilder.cs" />
+    <Compile Include="Cartridge\RomOnlyCartridge.cs" />
     <Compile Include="Console.cs" />
     <Compile Include="CpuCycles.cs" />
     <Compile Include="Extensions.cs" />

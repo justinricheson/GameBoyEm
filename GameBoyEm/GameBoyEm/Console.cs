@@ -1,5 +1,7 @@
 ﻿using System;
 using GameBoyEm.Interfaces;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace GameBoyEm
 {
@@ -7,6 +9,7 @@ namespace GameBoyEm
     {
         private ICpu _cpu;
         private IMmu _mmu;
+        private bool _cartridgeLoaded;
 
         public Console(ICpu cpu, IMmu mmu)
         {
@@ -17,16 +20,27 @@ namespace GameBoyEm
         public void LoadCartridge(ICartridge cartridge)
         {
             _mmu.LoadCartridge(cartridge);
+            _cartridgeLoaded = true;
         }
 
-        public void PowerOn()
+        private CancellationTokenSource _tokenSource;
+        public async Task PowerOn()
         {
-            throw new NotImplementedException();
+            if (_tokenSource == null && _cartridgeLoaded)
+            {
+                Reset();
+                _tokenSource = new CancellationTokenSource();
+                await Task.Run(() => Emulate(_tokenSource.Token), _tokenSource.Token);
+            }
         }
 
         public void PowerOff()
         {
-            throw new NotImplementedException();
+            if (_tokenSource != null)
+            {
+                _tokenSource.Cancel();
+                _tokenSource = null;
+            }
         }
 
         public void Reset()
@@ -40,6 +54,19 @@ namespace GameBoyEm
             var mmu = new Mmu();
             var cpu = new Cpu(mmu);
             return new Console(cpu, mmu);
+        }
+
+        private void Emulate(CancellationToken cancel)
+        {
+            while (true)
+            {
+                if (cancel.IsCancellationRequested)
+                {
+                    break;
+                }
+
+                _cpu.Step();
+            }
         }
     }
 }

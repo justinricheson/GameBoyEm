@@ -36,6 +36,14 @@
         {
             return (byte)(first ^ second);
         }
+        public static byte ToByte(this int value)
+        {
+            return (byte)value;
+        }
+        public static byte ToByte(this ushort value)
+        {
+            return (byte)value;
+        }
     }
 
     public static class UShortExtensions
@@ -63,6 +71,14 @@
         public static ushort XOR(this ushort first, ushort second)
         {
             return (ushort)(first ^ second);
+        }
+        public static ushort ToShort(this int value)
+        {
+            return (ushort)value;
+        }
+        public static ushort ToShort(this byte value)
+        {
+            return value;
         }
     }
 }

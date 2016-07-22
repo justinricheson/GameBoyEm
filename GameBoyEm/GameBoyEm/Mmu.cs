@@ -25,10 +25,12 @@ namespace GameBoyEm
         // is available in the addresses directly above the working ram (except the last 512 bytes).
         // This is replicated so games that took advantage of this quirk are still compatible
 
-        // Don't see much benefit to breaking up the memory by
-        // section which will require offsets to read and write
-        // I'll prob regret this decision once it's too late to change
+        // Don't see much benefit in breaking up the memory which will require offsets to read and write.
+        // Will prob regret that decision as soon as it's too late to change
+        // Note: 0000 - 7FFF is stored in the cartridge, but we keep an empty block at the beginning
+        // of _memory to make it easier to address higher memory
         private byte[] _memory;
+        private ICartridge _cartridge;
 
         public Mmu()
         {
@@ -74,29 +76,38 @@ namespace GameBoyEm
             _memory[0xFFFF] = 0x00;
         }
 
-        public void LoadCartridge(ICartridge cartridge)
-        {
-            throw new NotImplementedException();
-        }
+        public void LoadCartridge(ICartridge cartridge) => _cartridge = cartridge;
 
         public byte ReadByte(ushort address)
         {
-            throw new NotImplementedException();
+            if (address <= 0x7FFF)
+            {
+                return _cartridge.Read(address);
+            }
+            return _memory[address];
         }
 
         public ushort ReadWord(ushort address)
         {
-            throw new NotImplementedException();
+            return ReadByte(address).ToShort()
+               .OR(ReadByte(++address).ToShort().LS(8));
         }
 
         public void WriteByte(ushort address, byte value)
         {
-            throw new NotImplementedException();
+            if (address <= 0x7FFF)
+            {
+                _cartridge.Write(address, value);
+                return;
+            }
+
+            _memory[address] = value;
         }
 
         public void WriteWord(ushort address, ushort value)
         {
-            throw new NotImplementedException();
+            WriteByte(address, value.AND(0x00FF).ToByte());
+            WriteByte(++address, value.AND(0xFF00).RS(8).ToByte());
         }
     }
 }

@@ -54,33 +54,10 @@ namespace GameBoyEm
         private static readonly ushort _u16 = ushort.MaxValue;
         private static readonly ushort _io = 65280;
 
-        public void Reset()
+        public Cpu(IMmu mmu)
         {
-            throw new NotImplementedException();
-        }
-
-        public void Step()
-        {
-            Step(_ops, Cycles);
-        }
-
-        private void Step(List<Action> ops, IReadOnlyCollection<byte> cycleTimes)
-        {
-            var op = _mmu.ReadByte(PC++); // Fetch
-            ops[op](); // Decode, Execute
-            _totalM += cycleTimes.ElementAt(op);
-        }
-
-        public Cpu(IMmu mmu,
-            byte a = 0, byte b = 0, byte c = 0, byte d = 0, byte e = 0,
-            byte h = 0, byte l = 0, ushort sp = 0, ushort pc = 0,
-            bool fz = false, bool fn = false, bool fh = false, bool fc = false, bool ime = false)
-        {
-            A = a; B = b; C = c; D = d; E = e; H = h; L = l;
-            FZ = fz; FN = fn; FH = fh; FC = fc; IME = ime;
-            SP = sp; PC = pc;
-
             _mmu = mmu;
+            Reset();
 
             _ops = new List<Action>
             {
@@ -121,6 +98,31 @@ namespace GameBoyEm
                 /* E0 */ CBSET4B, CBSET4C, CBSET4D, CBSET4E, CBSET4H, CBSET4L, CBSET4HL, CBSET4A, CBSET5B, CBSET5C, CBSET5D, CBSET5E, CBSET5H, CBSET5L, CBSET5HL, CBSET5A,
                 /* F0 */ CBSET6B, CBSET6C, CBSET6D, CBSET6E, CBSET6H, CBSET6L, CBSET6HL, CBSET6A, CBSET7B, CBSET7C, CBSET7D, CBSET7E, CBSET7H, CBSET7L, CBSET7HL, CBSET7A
             };
+        }
+
+        public void Reset()
+        {
+            // Magic init code obtained from https://github.com/boeker/gameboy/blob/master/src/gameboy/memory.cpp
+            // Sets up registers without having to execute the proprietary gameboy bios rom
+            IME = false;
+            AF = 0x01B0;
+            BC = 0x0013;
+            DE = 0x00D8;
+            HL = 0x014D;
+            SP = 0xFFFE;
+            PC = 0x0100;
+        }
+
+        public void Step()
+        {
+            Step(_ops, Cycles);
+        }
+
+        private void Step(List<Action> ops, IReadOnlyCollection<byte> cycleTimes)
+        {
+            var op = _mmu.ReadByte(PC++); // Fetch
+            ops[op](); // Decode, Execute
+            _totalM += cycleTimes.ElementAt(op);
         }
     }
 }
