@@ -1,4 +1,4 @@
-﻿using GameBoyEm.Interfaces;
+﻿using GameBoyEm.Api;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -119,13 +119,25 @@ namespace GameBoyEm
 
         private ushort Step(List<Action> ops, IReadOnlyCollection<byte> cycleTimes)
         {
-            var op = _mmu.ReadByte(PC++); // Fetch
-            ops[op](); // Decode, Execute
-            var cycles = _conditional
-                ? ConditionalCycles.ElementAt(op)
-                : cycleTimes.ElementAt(op);
-            _conditional = false;
-            return cycles;
+            if (IME && _mmu.InterruptsExist)
+            {
+                if (_mmu.Vblank) { Interrupt(0x0040); }
+                else if (_mmu.LcdStat) { Interrupt(0x0048); }
+                else if (_mmu.Timer) { Interrupt(0x0050); }
+                else if (_mmu.Serial) { Interrupt(0x0058); }
+                else if (_mmu.JoyPad) { Interrupt(0x0060); }
+                return 3;
+            }
+            else
+            {
+                var op = _mmu.ReadByte(PC++); // Fetch
+                ops[op](); // Decode, Execute
+                var cycles = _conditional
+                    ? ConditionalCycles.ElementAt(op)
+                    : cycleTimes.ElementAt(op);
+                _conditional = false;
+                return cycles;
+            }
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿using GameBoyEm.Interfaces.Fakes;
+﻿using GameBoyEm.Api.Fakes;
 using Microsoft.QualityTools.Testing.Fakes;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;

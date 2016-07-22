@@ -1,5 +1,5 @@
-﻿using System;
-using GameBoyEm.Interfaces;
+﻿using GameBoyEm.Api;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -11,6 +11,8 @@ namespace GameBoyEm
         private IMmu _mmu;
         private IGpu _gpu;
         private bool _cartridgeLoaded;
+
+        public EventHandler<DrawScreenEventArgs> OnDrawScreen;
 
         public Console(ICpu cpu, IMmu mmu, IGpu gpu)
         {
@@ -64,15 +66,15 @@ namespace GameBoyEm
         {
             while (true)
             {
-                if (cancel.IsCancellationRequested)
-                {
-                    break;
-                }
-
                 var cycles = _cpu.Step();
                 if (_gpu.Step(cycles))
                 {
-                    // TODO time to draw screen
+                    if (cancel.IsCancellationRequested)
+                    {
+                        break;
+                    }
+                    OnDrawScreen?.Invoke(this,
+                        new DrawScreenEventArgs(_gpu.FrameBuffer));
                 }
             }
         }

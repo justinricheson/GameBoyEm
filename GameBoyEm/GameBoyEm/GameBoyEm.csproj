@@ -40,6 +40,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Api\DrawScreenEventArgs.cs" />
     <Compile Include="Cartridge\Cartridge.cs" />
     <Compile Include="Cartridge\CartridgeBuilder.cs" />
     <Compile Include="Cartridge\RomOnlyCartridge.cs" />
@@ -47,10 +48,10 @@
     <Compile Include="CpuCycles.cs" />
     <Compile Include="Extensions.cs" />
     <Compile Include="Gpu.cs" />
-    <Compile Include="Interfaces\ICartridge.cs" />
-    <Compile Include="Interfaces\ICpu.cs" />
-    <Compile Include="Interfaces\IGpu.cs" />
-    <Compile Include="Interfaces\IMmu.cs" />
+    <Compile Include="Api\ICartridge.cs" />
+    <Compile Include="Api\ICpu.cs" />
+    <Compile Include="Api\IGpu.cs" />
+    <Compile Include="Api\IMmu.cs" />
     <Compile Include="Mmu.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Throw.cs" />

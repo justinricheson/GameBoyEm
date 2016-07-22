@@ -1,4 +1,4 @@
-﻿namespace GameBoyEm.Interfaces
+﻿namespace GameBoyEm.Api
 {
     public interface ICpu
     {

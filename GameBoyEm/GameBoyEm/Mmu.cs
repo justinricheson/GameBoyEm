@@ -1,5 +1,5 @@
 ﻿using System;
-using GameBoyEm.Interfaces;
+using GameBoyEm.Api;
 
 namespace GameBoyEm
 {
@@ -18,6 +18,16 @@ namespace GameBoyEm
         // FF80 - FFFE (high-speed zero-page)
         // FFFF (interrupt enable register)
 
+        // Interrupt Notes:
+        // FFFF - controls whether cpu should respond to a triggered interrupt
+        // Bit Map
+        // 0 Vblank
+        // 1 LCD Stat
+        // 2 Timer
+        // 3 Serial
+        // 4 Joypad
+        // FF0F - controls whether an interrupt has been triggered, same bit order as FFFF
+
         // Note: On the real system, cartridges could contain a rombank chip that swapped rom
         // banks in as needed. Only one bank is addressable at a time via this address range
 
@@ -31,6 +41,62 @@ namespace GameBoyEm
         // of _memory to make it easier to address higher memory
         private byte[] _memory;
         private ICartridge _cartridge;
+
+        public byte Interrupts
+        {
+            get
+            {
+                var interruptFlags = ReadByte(0xFF0F);
+                var interruptMasks = ReadByte(0xFFFF);
+                return (byte)(interruptFlags & interruptMasks & 0x1F);
+            }
+        }
+        public bool InterruptsExist { get { return Interrupts > 1; } }
+        public bool Vblank
+        {
+            get
+            {
+                var flag = (Interrupts & 0x01) == 0x01;
+                WriteByte(0xFF0F, (byte)(ReadByte(0xFF0F) & 0xFE)); // Disable Flag
+                return flag;
+            }
+        }
+        public bool LcdStat
+        {
+            get
+            {
+                var flag = (Interrupts & 0x02) == 0x02;
+                WriteByte(0xFF0F, (byte)(ReadByte(0xFF0F) & 0xFD)); // Disable Flag
+                return flag;
+            }
+        }
+        public bool Timer
+        {
+            get
+            {
+                var flag = (Interrupts & 0x04) == 0x04;
+                WriteByte(0xFF0F, (byte)(ReadByte(0xFF0F) & 0xFB)); // Disable Flag
+                return flag;
+            }
+        }
+        public bool Serial
+        {
+            get
+            {
+                var flag = (Interrupts & 0x08) == 0x08;
+                WriteByte(0xFF0F, (byte)(ReadByte(0xFF0F) & 0xF7)); // Disable Flag
+                return flag;
+            }
+        }
+        public bool JoyPad
+        {
+            get
+            {
+                var flag = (Interrupts & 0x10) == 0x10;
+                WriteByte(0xFF0F, (byte)(ReadByte(0xFF0F) & 0xEF)); // Disable Flag
+                return flag;
+            }
+        }
 
         public Mmu()
         {
@@ -75,7 +141,6 @@ namespace GameBoyEm
             _memory[0xFF4B] = 0x00;
             _memory[0xFFFF] = 0x00;
         }
-
         public void LoadCartridge(ICartridge cartridge) => _cartridge = cartridge;
 
         public byte ReadByte(ushort address)
@@ -86,13 +151,11 @@ namespace GameBoyEm
             }
             return _memory[address];
         }
-
         public ushort ReadWord(ushort address)
         {
             return ReadByte(address).ToShort()
                .OR(ReadByte(++address).ToShort().LS(8));
         }
-
         public void WriteByte(ushort address, byte value)
         {
             if (address <= 0x7FFF)
@@ -103,7 +166,6 @@ namespace GameBoyEm
 
             _memory[address] = value;
         }
-
         public void WriteWord(ushort address, ushort value)
         {
             WriteByte(address, value.AND(0x00FF).ToByte());

@@ -1,4 +1,5 @@
-﻿using GameBoyEm.Cartridge;
+﻿using GameBoyEm.Api;
+using GameBoyEm.Cartridge;
 using GameBoyEm.UI.Commands;
 using Microsoft.Win32;
 using System.IO;
@@ -41,7 +42,13 @@ namespace GameBoyEm.UI.ViewModels
 
             var console = Console.Default();
             console.LoadCartridge(cartridge);
+            console.OnDrawScreen += OnDrawScreen;
             await console.PowerOn();
+        }
+
+        private void OnDrawScreen(object sender, DrawScreenEventArgs e)
+        {
+
         }
     }
 }

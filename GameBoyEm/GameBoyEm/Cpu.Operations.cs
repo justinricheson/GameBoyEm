@@ -892,5 +892,12 @@ namespace GameBoyEm
             FN = false;
             FZ = value.AND(bitMask) == 0;
         }
+        private void Interrupt(ushort address)
+        {
+            IME = false;
+            SP -= 2;
+            WW(SP, PC);
+            PC = address;
+        }
     }
 }

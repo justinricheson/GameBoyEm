@@ -1,4 +1,4 @@
-﻿using GameBoyEm.Interfaces;
+﻿using GameBoyEm.Api;
 using System;
 
 namespace GameBoyEm
@@ -6,6 +6,11 @@ namespace GameBoyEm
     public class Gpu : IGpu
     {
         private IMmu _mmu;
+
+        public byte[] FrameBuffer
+        {
+            get { throw new NotImplementedException(); }
+        }
 
         public Gpu(IMmu mmu)
         {

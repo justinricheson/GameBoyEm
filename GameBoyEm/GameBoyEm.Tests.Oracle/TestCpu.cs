@@ -1,4 +1,4 @@
-﻿using GameBoyEm.Interfaces;
+﻿using GameBoyEm.Api;
 
 namespace GameBoyEm.Tests.Oracle
 {
