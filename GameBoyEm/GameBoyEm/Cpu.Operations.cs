@@ -593,6 +593,7 @@ namespace GameBoyEm
                 var pc = (int)PC;
                 pc += j;
                 PC = (ushort)pc;
+                _conditional = true;
             }
         }
         private void JumpAbs(bool predicate = true)
@@ -600,6 +601,7 @@ namespace GameBoyEm
             if (predicate)
             {
                 PC = RW(PC);
+                _conditional = true;
             }
             else
             {
@@ -612,6 +614,7 @@ namespace GameBoyEm
             {
                 PC = RW(SP);
                 SP += 2;
+                _conditional = true;
             }
         }
         private void Call(bool predicate = true)
@@ -621,6 +624,7 @@ namespace GameBoyEm
                 SP -= 2;
                 WW(SP, (ushort)(PC + 2)); // Push return address onto stack
                 PC = RW(PC); // Jump to argument
+                _conditional = true;
             }
             else
             {

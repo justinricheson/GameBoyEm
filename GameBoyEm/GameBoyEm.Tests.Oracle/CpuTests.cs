@@ -158,7 +158,7 @@ namespace GameBoyEm.Tests.Oracle
                 mem[(ushort)(a + 1)] = (byte)(v & 0xFF);
             };
 
-            var cpu = new Cpu(mmu,
+            var cpu = new TestCpu(mmu,
                 cpuState.A, cpuState.B, cpuState.C,
                 cpuState.D, cpuState.E, cpuState.H,
                 cpuState.L, cpuState.SP, cpuState.PC,

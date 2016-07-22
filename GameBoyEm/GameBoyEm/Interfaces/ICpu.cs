@@ -18,7 +18,7 @@
         bool FC { get; }
         bool IME { get; }
 
-        void Step();
+        ushort Step();
         void Reset();
     }
 }

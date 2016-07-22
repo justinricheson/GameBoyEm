@@ -19,33 +19,29 @@ namespace GameBoyEm
         private List<Action> _cbOps;
 
         // Registers
-        public byte A { get; private set; } // Accumulator
-        public byte B { get; private set; } // General Purpose
-        public byte C { get; private set; } // ..
-        public byte D { get; private set; }
-        public byte E { get; private set; }
-        public byte H { get; private set; }
-        public byte L { get; private set; }
-        public byte F { get; private set; } // Flags (bits 0-3: unused, 4: carry, 5: half-carry, 6: subtract, 7: zero)
-        public ushort SP { get; private set; } // Stack pointer
-        public ushort PC { get; private set; } // Program counter
-        public bool IME { get; private set; } // Interrupt master enable
+        public byte A { get; protected set; } // Accumulator
+        public byte B { get; protected set; } // General Purpose
+        public byte C { get; protected set; } // ..
+        public byte D { get; protected set; }
+        public byte E { get; protected set; }
+        public byte H { get; protected set; }
+        public byte L { get; protected set; }
+        public byte F { get; protected set; } // Flags (bits 0-3: unused, 4: carry, 5: half-carry, 6: subtract, 7: zero)
+        public ushort SP { get; protected set; } // Stack pointer
+        public ushort PC { get; protected set; } // Program counter
+        public bool IME { get; protected set; } // Interrupt master enable
 
         // Pseudo Registers
-        public ushort AF { get { return (ushort)((A << 8) + F); } private set { A = (byte)(value >> 8); F = (byte)(value & 255); } }
-        public ushort BC { get { return (ushort)((B << 8) + C); } private set { B = (byte)(value >> 8); C = (byte)(value & 255); } }
-        public ushort DE { get { return (ushort)((D << 8) + E); } private set { D = (byte)(value >> 8); E = (byte)(value & 255); } }
-        public ushort HL { get { return (ushort)((H << 8) + L); } private set { H = (byte)(value >> 8); L = (byte)(value & 255); } }
+        public ushort AF { get { return (ushort)((A << 8) + F); } protected set { A = (byte)(value >> 8); F = (byte)(value & 255); } }
+        public ushort BC { get { return (ushort)((B << 8) + C); } protected set { B = (byte)(value >> 8); C = (byte)(value & 255); } }
+        public ushort DE { get { return (ushort)((D << 8) + E); } protected set { D = (byte)(value >> 8); E = (byte)(value & 255); } }
+        public ushort HL { get { return (ushort)((H << 8) + L); } protected set { H = (byte)(value >> 8); L = (byte)(value & 255); } }
 
         // Flag Accessors
-        public bool FC { get { return (F & 16) != 0; } private set { if (value) F |= 16; else F &= 239; } }
-        public bool FH { get { return (F & 32) != 0; } private set { if (value) F |= 32; else F &= 223; } }
-        public bool FN { get { return (F & 64) != 0; } private set { if (value) F |= 64; else F &= 191; } }
-        public bool FZ { get { return (F & 128) != 0; } private set { if (value) F |= 128; else F &= 127; } }
-
-        // Cumulative instruction timers
-        private ulong _totalM;
-        private ulong _totalT { get { return _totalM << 2; } }
+        public bool FC { get { return (F & 16) != 0; } protected set { if (value) F |= 16; else F &= 239; } }
+        public bool FH { get { return (F & 32) != 0; } protected set { if (value) F |= 32; else F &= 223; } }
+        public bool FN { get { return (F & 64) != 0; } protected set { if (value) F |= 64; else F &= 191; } }
+        public bool FZ { get { return (F & 128) != 0; } protected set { if (value) F |= 128; else F &= 127; } }
 
         // Constants
         private static readonly byte _u4 = 15;
@@ -53,6 +49,9 @@ namespace GameBoyEm
         private static readonly ushort _u12 = 4095;
         private static readonly ushort _u16 = ushort.MaxValue;
         private static readonly ushort _io = 65280;
+
+        // Controls cycle time array selection
+        private bool _conditional;
 
         public Cpu(IMmu mmu)
         {
@@ -113,16 +112,20 @@ namespace GameBoyEm
             PC = 0x0100;
         }
 
-        public void Step()
+        public ushort Step()
         {
-            Step(_ops, Cycles);
+            return Step(_ops, Cycles);
         }
 
-        private void Step(List<Action> ops, IReadOnlyCollection<byte> cycleTimes)
+        private ushort Step(List<Action> ops, IReadOnlyCollection<byte> cycleTimes)
         {
             var op = _mmu.ReadByte(PC++); // Fetch
             ops[op](); // Decode, Execute
-            _totalM += cycleTimes.ElementAt(op);
+            var cycles = _conditional
+                ? ConditionalCycles.ElementAt(op)
+                : cycleTimes.ElementAt(op);
+            _conditional = false;
+            return cycles;
         }
     }
 }

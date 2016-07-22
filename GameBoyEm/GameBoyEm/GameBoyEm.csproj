@@ -46,8 +46,10 @@
     <Compile Include="Console.cs" />
     <Compile Include="CpuCycles.cs" />
     <Compile Include="Extensions.cs" />
+    <Compile Include="Gpu.cs" />
     <Compile Include="Interfaces\ICartridge.cs" />
     <Compile Include="Interfaces\ICpu.cs" />
+    <Compile Include="Interfaces\IGpu.cs" />
     <Compile Include="Interfaces\IMmu.cs" />
     <Compile Include="Mmu.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
