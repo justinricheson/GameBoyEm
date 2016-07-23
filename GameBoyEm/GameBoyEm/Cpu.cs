@@ -1,4 +1,5 @@
-﻿using GameBoyEm.Api;
+﻿using Common.Logging;
+using GameBoyEm.Api;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,6 +15,7 @@ namespace GameBoyEm
     /// </summary>
     public partial class Cpu : ICpu
     {
+        private ILog _log = LogManager.GetLogger<Cpu>();
         private IMmu _mmu;
         private List<Action> _ops;
         private List<Action> _cbOps;
@@ -119,6 +121,8 @@ namespace GameBoyEm
 
         private ushort Step(List<Action> ops, IReadOnlyCollection<byte> cycleTimes)
         {
+            ushort cycles = 0;
+            //string operation = "INTERRUPT";
             if (IME && _mmu.InterruptsExist)
             {
                 if (_mmu.Vblank) { Interrupt(0x0040); }
@@ -126,19 +130,46 @@ namespace GameBoyEm
                 else if (_mmu.Timer) { Interrupt(0x0050); }
                 else if (_mmu.Serial) { Interrupt(0x0058); }
                 else if (_mmu.JoyPad) { Interrupt(0x0060); }
-                return 3;
+                cycles = 3;
             }
             else
             {
-                System.Diagnostics.Debug.WriteLine(PC);
                 var op = _mmu.ReadByte(PC++); // Fetch
                 ops[op](); // Decode, Execute
-                var cycles = _conditional
+                cycles = _conditional
                     ? ConditionalCycles.ElementAt(op)
                     : cycleTimes.ElementAt(op);
                 _conditional = false;
-                return cycles;
+                //operation = $"{op}";
+                //if (State(op, cycles))
+                //{
+                //    string breakhere = "";
+                //}
             }
+
+            //_log.Debug($"OP: {operation} - Cycles: {cycles} - State: {ToString()}");
+
+            return cycles;
+        }
+
+        private bool State(int op, int cycles)
+        {
+            if (op == 251 && cycles == 1)
+            {
+                if (A == 128 && B == 0 && C == 0 && D == 0
+                    && E == 216 && F == 128 && H == 151 && L == 255
+                    && SP == 53247 && PC == 699 && IME)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        public override string ToString()
+        {
+            return $"{A}|{B}|{C}|{D}|{E}|{F}|{H}|{L}|{SP}|{PC}|{(IME ? 1 : 0)}";
         }
     }
 }

@@ -51,7 +51,7 @@ namespace GameBoyEm
                 return (byte)(interruptFlags & interruptMasks & 0x1F);
             }
         }
-        public bool InterruptsExist { get { return Interrupts > 1; } }
+        public bool InterruptsExist { get { return Interrupts > 0; } }
         public bool Vblank
         {
             get

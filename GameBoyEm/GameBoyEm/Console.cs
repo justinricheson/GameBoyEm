@@ -76,6 +76,26 @@ namespace GameBoyEm
                     OnDrawScreen?.Invoke(this,
                         new DrawScreenEventArgs(_gpu.FrameBuffer));
                 }
+                UpdateJoypadRegister();
+            }
+        }
+
+        private void UpdateJoypadRegister()
+        {
+            // Just disable everything for now
+            if (_mmu.ReadByte(0xFF00).AND(0x20) == 0)
+            {
+                _mmu.WriteByte(0xFF00, _mmu.ReadByte(0xFF00).OR(0x08));
+                _mmu.WriteByte(0xFF00, _mmu.ReadByte(0xFF00).OR(0x04));
+                _mmu.WriteByte(0xFF00, _mmu.ReadByte(0xFF00).OR(0x02));
+                _mmu.WriteByte(0xFF00, _mmu.ReadByte(0xFF00).OR(0x01));
+            }
+            else if (_mmu.ReadByte(0xFF00).AND(0x10) == 0)
+            {
+                _mmu.WriteByte(0xFF00, _mmu.ReadByte(0xFF00).OR(0x08));
+                _mmu.WriteByte(0xFF00, _mmu.ReadByte(0xFF00).OR(0x04));
+                _mmu.WriteByte(0xFF00, _mmu.ReadByte(0xFF00).OR(0x02));
+                _mmu.WriteByte(0xFF00, _mmu.ReadByte(0xFF00).OR(0x01));
             }
         }
     }
