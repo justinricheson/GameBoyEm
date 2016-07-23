@@ -5,7 +5,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:GameBoyEm.UI"
         mc:Ignorable="d" Title="GameBoyEm" Height="600" Width="800"
-        DataContext="{StaticResource MainViewModel}">
+        DataContext="{StaticResource MainViewModel}"
+        DataContextChanged="Window_DataContextChanged">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -18,7 +19,10 @@
                     <MenuItem Header="_Close" Command="{Binding CloseCommand}" />
                 </MenuItem>
             </Menu>
-            <StackPanel></StackPanel>
         </DockPanel>
+
+        <Grid Grid.Row="1">
+            <Image x:Name="ScreenImage" Height="144" Width="160" />
+        </Grid>
     </Grid>
 </Window>

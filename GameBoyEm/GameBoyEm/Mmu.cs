@@ -29,7 +29,7 @@ namespace GameBoyEm
         // FF0F - controls whether an interrupt has been triggered, same bit order as FFFF
 
         // Note: On the real system, cartridges could contain a rombank chip that swapped rom
-        // banks in as needed. Only one bank is addressable at a time via this address range
+        // banks in as needed. Only one bank is addressable at a time via 4000 - 7FFF
 
         // Note: Due to how the gameboy hardware is constructed, a shadow of the working ram
         // is available in the addresses directly above the working ram (except the last 512 bytes).

@@ -1,8 +1,11 @@
-﻿namespace GameBoyEm.Api
+﻿using System.Collections.Generic;
+using System.Windows.Media;
+
+namespace GameBoyEm.Api
 {
     public interface IGpu
     {
-        byte[] FrameBuffer { get; }
+        IList<Color> FrameBuffer { get; }
 
         void Reset();
         bool Step(ushort cycles);

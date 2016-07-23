@@ -1,12 +1,14 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Windows.Media;
 
 namespace GameBoyEm.Api
 {
     public class DrawScreenEventArgs : EventArgs
     {
-        public byte[] FrameBuffer { get; private set; }
+        public IList<Color> FrameBuffer { get; private set; }
 
-        public DrawScreenEventArgs(byte[] frameBuffer)
+        public DrawScreenEventArgs(IList<Color> frameBuffer)
         {
             FrameBuffer = frameBuffer;
         }

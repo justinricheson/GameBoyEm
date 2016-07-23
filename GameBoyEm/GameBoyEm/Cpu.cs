@@ -130,6 +130,7 @@ namespace GameBoyEm
             }
             else
             {
+                System.Diagnostics.Debug.WriteLine(PC);
                 var op = _mmu.ReadByte(PC++); // Fetch
                 ops[op](); // Decode, Execute
                 var cycles = _conditional
