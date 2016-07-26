@@ -1,5 +1,6 @@
 ﻿using GameBoyEm.Api;
 using System;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -11,6 +12,8 @@ namespace GameBoyEm
         public IMmu _mmu;
         public IGpu _gpu;
         private bool _cartridgeLoaded;
+        private long _cumulativeCycles;
+        private Stopwatch _sw = new Stopwatch();
 
         public ICpu Cpu { get { return _cpu; } }
 
@@ -76,9 +79,25 @@ namespace GameBoyEm
             var gpu = new Gpu(mmu);
             return new Console(cpu, mmu, gpu);
         }
+        
+        public bool Step()
+        {
+            var cycles = _cpu.Step();
+            _cumulativeCycles += cycles;
+
+            var draw = _gpu.Step(cycles);
+            if (draw)
+            {
+                OnDrawScreen?.Invoke(this,
+                    new DrawScreenEventArgs(_gpu.FrameBuffer));
+            }
+            UpdateJoypadRegister();
+            return draw;
+        }
 
         private void Emulate(CancellationToken cancel)
         {
+            _sw.Restart();
             while (true)
             {
                 if (Step())
@@ -88,20 +107,15 @@ namespace GameBoyEm
                         return;
                     }
                 }
-            }
-        }
 
-        public bool Step()
-        {
-            var cycles = _cpu.Step();
-            var draw = _gpu.Step(cycles);
-            if (draw)
-            {
-                OnDrawScreen?.Invoke(this,
-                    new DrawScreenEventArgs(_gpu.FrameBuffer));
+                if (_cumulativeCycles >= 4194304)
+                {
+                    // Slow down emulation to sync with ~4.194394MHz
+                    _cumulativeCycles -= 4194304;
+                    while (_sw.ElapsedTicks < TimeSpan.TicksPerSecond);
+                    _sw.Restart();
+                }
             }
-            UpdateJoypadRegister();
-            return draw;
         }
 
         private void UpdateJoypadRegister()
