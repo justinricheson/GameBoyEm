@@ -29,7 +29,19 @@ namespace GameBoyEm.UI
             if (vm != null)
             {
                 vm.UpdateScreen = UpdateScreen;
+                vm.OpenDebuggerWindow = OpenDebuggerWindow;
             }
+        }
+
+        private void OpenDebuggerWindow(Console console)
+        {
+            var window = new DebuggerView
+            {
+                DataContext = new DebuggerViewModel(console),
+                Owner = this
+            };
+
+            window.ShowDialog();
         }
 
         private void UpdateScreen(IList<Color> frameBuffer)

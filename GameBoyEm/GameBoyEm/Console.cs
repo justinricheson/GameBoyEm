@@ -7,10 +7,12 @@ namespace GameBoyEm
 {
     public class Console
     {
-        private ICpu _cpu;
-        private IMmu _mmu;
-        private IGpu _gpu;
+        public ICpu _cpu;
+        public IMmu _mmu;
+        public IGpu _gpu;
         private bool _cartridgeLoaded;
+
+        public ICpu Cpu { get { return _cpu; } }
 
         public EventHandler<DrawScreenEventArgs> OnDrawScreen;
 
@@ -33,17 +35,30 @@ namespace GameBoyEm
             if (_tokenSource == null && _cartridgeLoaded)
             {
                 Reset();
-                _tokenSource = new CancellationTokenSource();
-                await Task.Run(() => Emulate(_tokenSource.Token), _tokenSource.Token);
+                await Resume();
             }
         }
 
         public void PowerOff()
         {
-            if (_tokenSource != null)
+            Pause();
+        }
+
+        public void Pause()
+        {
+            if (_tokenSource != null && _cartridgeLoaded)
             {
                 _tokenSource.Cancel();
                 _tokenSource = null;
+            }
+        }
+
+        public async Task Resume()
+        {
+            if (_tokenSource == null && _cartridgeLoaded)
+            {
+                _tokenSource = new CancellationTokenSource();
+                await Task.Run(() => Emulate(_tokenSource.Token), _tokenSource.Token);
             }
         }
 
@@ -66,18 +81,27 @@ namespace GameBoyEm
         {
             while (true)
             {
-                var cycles = _cpu.Step();
-                if (_gpu.Step(cycles))
+                if (Step())
                 {
                     if (cancel.IsCancellationRequested)
                     {
-                        break;
+                        return;
                     }
-                    OnDrawScreen?.Invoke(this,
-                        new DrawScreenEventArgs(_gpu.FrameBuffer));
                 }
-                UpdateJoypadRegister();
             }
+        }
+
+        public bool Step()
+        {
+            var cycles = _cpu.Step();
+            var draw = _gpu.Step(cycles);
+            if (draw)
+            {
+                OnDrawScreen?.Invoke(this,
+                    new DrawScreenEventArgs(_gpu.FrameBuffer));
+            }
+            UpdateJoypadRegister();
+            return draw;
         }
 
         private void UpdateJoypadRegister()

@@ -1,0 +1,77 @@
+﻿<Window x:Class="GameBoyEm.UI.DebuggerView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:GameBoyEm.UI" mc:Ignorable="d"
+        DataContextChanged="Window_DataContextChanged"
+        Title="Debugger" Height="420" Width="600">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" MinWidth="100" />
+            <ColumnDefinition />
+        </Grid.ColumnDefinitions>
+
+        <Grid Grid.Column="0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition />
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="AUto" />
+            </Grid.ColumnDefinitions>
+
+            <Label Content="CPU State" FontWeight="Bold" Grid.ColumnSpan="2" />
+
+            <StackPanel Grid.Row="1" Grid.Column="0">
+                <Label Content="A" FontWeight="Bold" />
+                <Label Content="B" FontWeight="Bold" />
+                <Label Content="C" FontWeight="Bold" />
+                <Label Content="D" FontWeight="Bold" />
+                <Label Content="FC" FontWeight="Bold" />
+                <Label Content="FH" FontWeight="Bold" />
+                <Label Content="FN" FontWeight="Bold" />
+                <Label Content="FZ" FontWeight="Bold" />
+                <Label Content="H" FontWeight="Bold" />
+                <Label Content="L" FontWeight="Bold" />
+                <Label Content="SP" FontWeight="Bold" />
+                <Label Content="PC" FontWeight="Bold" />
+                <Label Content="IME" FontWeight="Bold" />
+            </StackPanel>
+
+            <StackPanel Grid.Row="1" Grid.Column="1">
+                <Label Content="{Binding A}" />
+                <Label Content="{Binding B}" />
+                <Label Content="{Binding C}" />
+                <Label Content="{Binding D}" />
+                <Label Content="{Binding FC}" />
+                <Label Content="{Binding FH}" />
+                <Label Content="{Binding FN}" />
+                <Label Content="{Binding FZ}" />
+                <Label Content="{Binding H}" />
+                <Label Content="{Binding L}" />
+                <Label Content="{Binding SP}" />
+                <Label Content="{Binding PC}" />
+                <Label Content="{Binding IME}" />
+            </StackPanel>
+        </Grid>
+
+        <Grid Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <Label Content="History" FontWeight="Bold" />
+
+            <ListBox x:Name="History" Grid.Row="1" ItemsSource="{Binding History}" />
+
+            <StackPanel Grid.Row="2" Orientation="Horizontal">
+                <Button Content="Step" Command="{Binding StepCommand}" Height="30" Width="90" Margin="0,0,10,0" />
+                <Button Content="Clear" Command="{Binding ClearCommand}" Height="30" Width="90" />
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Window>
