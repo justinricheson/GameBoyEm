@@ -118,7 +118,7 @@ namespace GameBoyEm
         {
             return Step(_ops, Cycles);
         }
-
+        
         private ushort Step(List<Action> ops, IReadOnlyCollection<byte> cycleTimes)
         {
             ushort cycles = 0;

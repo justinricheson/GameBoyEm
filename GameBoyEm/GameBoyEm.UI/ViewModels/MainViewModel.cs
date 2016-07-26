@@ -15,17 +15,14 @@ namespace GameBoyEm.UI.ViewModels
 {
     public class MainViewModel : ViewModelBase
     {
-        private WriteableBitmap _bmp;
-
         public ICommand OpenCommand { get; private set; }
         public ICommand CloseCommand { get; private set; }
-        public Action<WriteableBitmap, IList<Color>> UpdateScreen { get; set; }
+        public Action<IList<Color>> UpdateScreen { get; set; }
 
         public MainViewModel()
         {
             OpenCommand = new AsyncCommand(Open);
             CloseCommand = new ActionCommand(Application.Current.Shutdown);
-            _bmp = new WriteableBitmap(160, 144, 90, 90, PixelFormats.Bgr32, null);
         }
 
         private async Task Open()
@@ -56,7 +53,7 @@ namespace GameBoyEm.UI.ViewModels
 
         private void OnDrawScreen(object sender, DrawScreenEventArgs e)
         {
-            UpdateScreen?.Invoke(_bmp, e.FrameBuffer);
+            UpdateScreen?.Invoke(e.FrameBuffer);
         }
     }
 }

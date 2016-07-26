@@ -22,7 +22,7 @@
         </DockPanel>
 
         <Grid Grid.Row="1">
-            <Image x:Name="ScreenImage" Height="144" Width="160" />
+            <Image x:Name="ScreenImage" />
         </Grid>
     </Grid>
 </Window>

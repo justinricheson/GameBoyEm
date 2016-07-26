@@ -9,8 +9,17 @@ namespace GameBoyEm.UI
 {
     public partial class MainWindow : Window
     {
+        private WriteableBitmap _bmp;
+        private byte[] _array;
+        private int _stride;
+
         public MainWindow()
         {
+            _bmp = new WriteableBitmap(160, 144, 90, 90, PixelFormats.Bgr32, null);
+            var bytesPerPixel = (_bmp.Format.BitsPerPixel + 7) / 8;
+            _stride = _bmp.PixelWidth * bytesPerPixel;
+            _array = new byte[_stride * _bmp.PixelHeight];
+
             InitializeComponent();
         }
 
@@ -23,30 +32,25 @@ namespace GameBoyEm.UI
             }
         }
 
-        private void UpdateScreen(WriteableBitmap bmp, IList<Color> frameBuffer)
+        private void UpdateScreen(IList<Color> frameBuffer)
         {
-            bmp.Dispatcher.BeginInvoke((Action)(() =>
+            _bmp.Dispatcher.BeginInvoke((Action)(() =>
             {
-                var bytesPerPixel = (bmp.Format.BitsPerPixel + 7) / 8;
-                var stride = bmp.PixelWidth * bytesPerPixel;
-                var arraySize = stride * bmp.PixelHeight;
-                var array = new byte[arraySize];
-
                 for (int i = 0; i < frameBuffer.Count; i++)
                 {
                     var iPixel = i * 4;
                     var color = frameBuffer[i];
-                    array[iPixel + 0] = color.A;
-                    array[iPixel + 1] = color.R;
-                    array[iPixel + 2] = color.G;
-                    array[iPixel + 3] = color.B;
+                    _array[iPixel + 0] = color.B;
+                    _array[iPixel + 1] = color.G;
+                    _array[iPixel + 2] = color.R;
+                    _array[iPixel + 3] = color.A;
                 }
 
-                bmp.Lock();
-                bmp.WritePixels(new Int32Rect(0, 0, 160, 144), array, stride, 0);
-                bmp.Unlock();
+                _bmp.Lock();
+                _bmp.WritePixels(new Int32Rect(0, 0, 160, 144), _array, _stride, 0);
+                _bmp.Unlock();
 
-                ScreenImage.Source = bmp;
+                ScreenImage.Source = _bmp;
             }));
         }
     }
