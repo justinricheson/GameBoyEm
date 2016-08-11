@@ -74,7 +74,7 @@ namespace GameBoyEm
                 /* 90 */ SUBB,    SUBC,    SUBD,    SUBE,    SUBH,    SUBL,    SUBHL,    SUBA,    SBCB,    SBCC,    SBCD,    SBCE,    SBCH,    SBCL,    SBCHL,    SBCA,
                 /* A0 */ ANDB,    ANDC,    ANDD,    ANDE,    ANDH,    ANDL,    ANDHL,    ANDA,    XORB,    XORC,    XORD,    XORE,    XORH,    XORL,    XORHL,    XORA,
                 /* B0 */ ORB,     ORC,     ORD,     ORE,     ORH,     ORL,     ORHL,     ORA,     CPB,     CPC,     CPD,     CPE,     CPH,     CPL,     CPHL,     CPA,
-                /* C0 */ RETNZ,   POPBC,   JPNZ,    JP,      CALLNZ,  PUSHBC,  ADDN,     RST00,   RETZ,    RET,     JPZ,     CB,      CALLZ,   CALL,    ADCN,     RST08,
+                /* C0 */ RETNZ,   POPBC,   JPNZ,    JP,      CALLNZ,  PUSHBC,  ADDN,     RST00,   RETZ,    RET,     JPZ,     NA,      CALLZ,   CALL,    ADCN,     RST08,
                 /* D0 */ RETNC,   POPDE,   JPNC,    NA,      CALLNC,  PUSHDE,  SUBN,     RST10,   RETC,    RETI,    JPC,     NA,      CALLC,   NA,      SBCN,     RST18,
                 /* E0 */ LDIONA,  POPHL,   LDIOCA,  NA,      NA,      PUSHHL,  ANDN,     RST20,   ADDSPN,  JPHL,    LDNA,    NA,      NA,      NA,      XORN,     RST28,
                 /* F0 */ LDIOAN,  POPAF,   LDIOAC,  DI,      NA,      PUSHAF,  ORN,      RST30,   LDHLSPN, LDSPHL,  LDANN,   EI,      NA,      NA,      CPN,      RST38
@@ -114,15 +114,12 @@ namespace GameBoyEm
             PC = 0x0100;
         }
 
+        private ulong _stepCounter = 0;
         public ushort Step()
         {
-            return Step(_ops, Cycles);
-        }
-
-        private ushort Step(List<Action> ops, IReadOnlyCollection<byte> cycleTimes)
-        {
+            var isCb = false;
             ushort cycles = 0;
-            //string operation = "INTERRUPT";
+            string operation = "INTERRUPT";
             if (IME && _mmu.InterruptsExist)
             {
                 if (_mmu.Vblank) { _mmu.Vblank = false; Interrupt(0x0040); }
@@ -135,19 +132,32 @@ namespace GameBoyEm
             else
             {
                 var op = _mmu.ReadByte(PC++); // Fetch
+                if (op == 0xcb)
+                {
+                    isCb = true;
+                    op = _mmu.ReadByte(PC++);
+                }
+
+                var ops = isCb ? _cbOps : _ops;
                 ops[op](); // Decode, Execute
-                cycles = _conditional
-                    ? ConditionalCycles.ElementAt(op)
-                    : cycleTimes.ElementAt(op);
+
+                cycles = isCb ? CBCycles.ElementAt(op)
+                    : _conditional ? ConditionalCycles.ElementAt(op)
+                    : Cycles.ElementAt(op);
                 _conditional = false;
-                //operation = $"{op}";
+
+                operation = $"{op}";
                 //if (State(op, cycles))
                 //{
                 //    string breakhere = "";
                 //}
             }
 
-            //_log.Debug($"OP: {operation} - Cycles: {cycles} - State: {ToString()}");
+            _stepCounter++;
+            if(_stepCounter > 20000000)
+            {
+                //_log.Debug($"OP: {(isCb ? $"{0xCB}" : "")}{operation} - Cycles: {cycles} - State: {ToString()}");
+            }
 
             return cycles;
         }

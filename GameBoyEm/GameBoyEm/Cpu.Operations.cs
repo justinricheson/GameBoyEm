@@ -11,7 +11,6 @@ namespace GameBoyEm
         private void NOP() { }
         private void HALT() { }
         private void STOP() { }
-        private void CB() { Step(_cbOps, CBCycles); }
         private void DAA()
         {
             // Adjust A into binary coded decimal form
