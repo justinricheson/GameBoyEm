@@ -54,47 +54,201 @@ namespace GameBoyEm
         public bool InterruptsExist { get { return Interrupts > 0; } }
         public bool Vblank
         {
-            get
+            get { return (Interrupts & 0x01) == 0x01; }
+            set
             {
-                var flag = (Interrupts & 0x01) == 0x01;
-                WriteByte(0xFF0F, (byte)(ReadByte(0xFF0F) & 0xFE)); // Disable Flag
-                return flag;
+                if (value)
+                {
+                    WriteByte(0xFF0F, (byte)(ReadByte(0xFF0F) | 0x01));
+                }
+                else
+                {
+                    WriteByte(0xFF0F, (byte)(ReadByte(0xFF0F) & 0xFE));
+                }
             }
         }
         public bool LcdStat
         {
-            get
+            get { return (Interrupts & 0x02) == 0x02; }
+            set
             {
-                var flag = (Interrupts & 0x02) == 0x02;
-                WriteByte(0xFF0F, (byte)(ReadByte(0xFF0F) & 0xFD)); // Disable Flag
-                return flag;
+                if (value)
+                {
+                    WriteByte(0xFF0F, (byte)(ReadByte(0xFF0F) | 0x02));
+                }
+                else
+                {
+                    WriteByte(0xFF0F, (byte)(ReadByte(0xFF0F) & 0xFD));
+                }
             }
         }
         public bool Timer
         {
-            get
+            get { return (Interrupts & 0x04) == 0x04; }
+            set
             {
-                var flag = (Interrupts & 0x04) == 0x04;
-                WriteByte(0xFF0F, (byte)(ReadByte(0xFF0F) & 0xFB)); // Disable Flag
-                return flag;
+                if (value)
+                {
+                    WriteByte(0xFF0F, (byte)(ReadByte(0xFF0F) | 0x04));
+                }
+                else
+                {
+                    WriteByte(0xFF0F, (byte)(ReadByte(0xFF0F) & 0xFB));
+                }
             }
         }
         public bool Serial
         {
-            get
+            get { return (Interrupts & 0x08) == 0x08; }
+            set
             {
-                var flag = (Interrupts & 0x08) == 0x08;
-                WriteByte(0xFF0F, (byte)(ReadByte(0xFF0F) & 0xF7)); // Disable Flag
-                return flag;
+                if (value)
+                {
+                    WriteByte(0xFF0F, (byte)(ReadByte(0xFF0F) | 0x08));
+                }
+                else
+                {
+                    WriteByte(0xFF0F, (byte)(ReadByte(0xFF0F) & 0xF7));
+                }
             }
         }
         public bool JoyPad
         {
-            get
+            get { return (Interrupts & 0x10) == 0x10; }
+            set
             {
-                var flag = (Interrupts & 0x10) == 0x10;
-                WriteByte(0xFF0F, (byte)(ReadByte(0xFF0F) & 0xEF)); // Disable Flag
-                return flag;
+                if (value)
+                {
+                    WriteByte(0xFF0F, (byte)(ReadByte(0xFF0F) | 0x10));
+                }
+                else
+                {
+                    WriteByte(0xFF0F, (byte)(ReadByte(0xFF0F) & 0xEF));
+                }
+            }
+        }
+
+        public byte JoypadRegister { get { return ReadByte(0xFF00); } }
+        public bool KeySelector { get { return (ReadByte(0xFF00) & 0x20) == 0; } }
+        public bool DirSelector { get { return (ReadByte(0xFF00) & 0x10) == 0; } }
+        public bool StartPressed
+        {
+            get { return !((JoypadRegister & 0x08) == 0x08); }
+            set
+            {
+                if (value)
+                {
+                    WriteByte(0xFF00, ReadByte(0xFF00).AND(0xF7));
+                }
+                else
+                {
+                    WriteByte(0xFF00, ReadByte(0xFF00).OR(0x08));
+                }
+            }
+        }
+        public bool SelectPressed
+        {
+            get { return !((JoypadRegister & 0x04) == 0x04); }
+            set
+            {
+                if (value)
+                {
+                    WriteByte(0xFF00, ReadByte(0xFF00).AND(0xFB));
+                }
+                else
+                {
+                    WriteByte(0xFF00, ReadByte(0xFF00).OR(0x04));
+                }
+            }
+        }
+        public bool BPressed
+        {
+            get { return !((JoypadRegister & 0x02) == 0x02); }
+            set
+            {
+                if (value)
+                {
+                    WriteByte(0xFF00, ReadByte(0xFF00).AND(0xFD));
+                }
+                else
+                {
+                    WriteByte(0xFF00, ReadByte(0xFF00).OR(0x02));
+                }
+            }
+        }
+        public bool APressed
+        {
+            get { return !((JoypadRegister & 0x01) == 0x01); }
+            set
+            {
+                if (value)
+                {
+                    WriteByte(0xFF00, ReadByte(0xFF00).AND(0xFE));
+                }
+                else
+                {
+                    WriteByte(0xFF00, ReadByte(0xFF00).OR(0x01));
+                }
+            }
+        }
+        public bool DownPressed
+        {
+            get { return !((JoypadRegister & 0x08) == 0x08); }
+            set
+            {
+                if (value)
+                {
+                    WriteByte(0xFF00, ReadByte(0xFF00).AND(0xF7));
+                }
+                else
+                {
+                    WriteByte(0xFF00, ReadByte(0xFF00).OR(0x08));
+                }
+            }
+        }
+        public bool UpPressed
+        {
+            get { return !((JoypadRegister & 0x04) == 0x04); }
+            set
+            {
+                if (value)
+                {
+                    WriteByte(0xFF00, ReadByte(0xFF00).AND(0xFB));
+                }
+                else
+                {
+                    WriteByte(0xFF00, ReadByte(0xFF00).OR(0x04));
+                }
+            }
+        }
+        public bool LeftPressed
+        {
+            get { return !((JoypadRegister & 0x02) == 0x02); }
+            set
+            {
+                if (value)
+                {
+                    WriteByte(0xFF00, ReadByte(0xFF00).AND(0xFD));
+                }
+                else
+                {
+                    WriteByte(0xFF00, ReadByte(0xFF00).OR(0x02));
+                }
+            }
+        }
+        public bool RightPressed
+        {
+            get { return !((JoypadRegister & 0x01) == 0x01); }
+            set
+            {
+                if (value)
+                {
+                    WriteByte(0xFF00, ReadByte(0xFF00).AND(0xFE));
+                }
+                else
+                {
+                    WriteByte(0xFF00, ReadByte(0xFF00).OR(0x01));
+                }
             }
         }
 

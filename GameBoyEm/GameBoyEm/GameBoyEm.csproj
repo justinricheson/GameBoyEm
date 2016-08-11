@@ -58,10 +58,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Api\DrawScreenEventArgs.cs" />
+    <Compile Include="Api\IController.cs" />
     <Compile Include="Cartridge\Cartridge.cs" />
     <Compile Include="Cartridge\CartridgeBuilder.cs" />
     <Compile Include="Cartridge\RomOnlyCartridge.cs" />
     <Compile Include="Console.cs" />
+    <Compile Include="Controller.cs" />
     <Compile Include="CpuCycles.cs" />
     <Compile Include="Extensions.cs" />
     <Compile Include="Gpu.cs" />

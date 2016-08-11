@@ -80,12 +80,54 @@ namespace GameBoyEm.UI.ViewModels
 
         public MainViewModel()
         {
+            _console = Console.Default();
+
             Title = "GameboyEm";
             OpenCommand = new ActionCommand(Open);
             CloseCommand = new ActionCommand(Application.Current.Shutdown);
             PowerOnCommand = new AsyncCommand(PowerOn);
             PowerOffCommand = new ActionCommand(PowerOff);
             DebuggerCommand = new AsyncCommand(Debugger);
+        }
+
+        public void OnKeyDown(Key key)
+        {
+            if (!_console.TurnedOn)
+            {
+                return;
+            }
+
+            switch (key)
+            {
+                case Key.X: _console.Controller.APressed = true; break;
+                case Key.Z: _console.Controller.BPressed = true; break;
+                case Key.Enter: _console.Controller.StartPressed = true; break;
+                case Key.Space: _console.Controller.SelectPressed = true; break;
+                case Key.Up: _console.Controller.UpPressed = true; break;
+                case Key.Down: _console.Controller.DownPressed = true; break;
+                case Key.Left: _console.Controller.LeftPressed = true; break;
+                case Key.Right: _console.Controller.RightPressed = true; break;
+            }
+        }
+
+        public void OnKeyUp(Key key)
+        {
+            if (!_console.TurnedOn)
+            {
+                return;
+            }
+
+            switch (key)
+            {
+                case Key.X: _console.Controller.APressed = false; break;
+                case Key.Z: _console.Controller.BPressed = false; break;
+                case Key.Enter: _console.Controller.StartPressed = false; break;
+                case Key.Space: _console.Controller.SelectPressed = false; break;
+                case Key.Up: _console.Controller.UpPressed = false; break;
+                case Key.Down: _console.Controller.DownPressed = false; break;
+                case Key.Left: _console.Controller.LeftPressed = false; break;
+                case Key.Right: _console.Controller.RightPressed = false; break;
+            }
         }
 
         private void Open()
@@ -118,7 +160,6 @@ namespace GameBoyEm.UI.ViewModels
                 var cartridge = CartridgeBuilder.Build(
                     File.ReadAllBytes(_cartridgePath));
 
-                _console = Console.Default();
                 _console.LoadCartridge(cartridge);
                 _console.OnDrawScreen += OnDrawScreen;
                 await _console.PowerOn();

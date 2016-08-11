@@ -6,7 +6,8 @@
         xmlns:local="clr-namespace:GameBoyEm.UI"
         mc:Ignorable="d" Title="{Binding Title}" Height="600" Width="800"
         DataContext="{StaticResource MainViewModel}"
-        DataContextChanged="Window_DataContextChanged">
+        DataContextChanged="Window_DataContextChanged"
+        PreviewKeyDown="Window_PreviewKeyDown" PreviewKeyUp="Window_PreviewKeyUp">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />

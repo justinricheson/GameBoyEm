@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Windows;
+using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
@@ -9,6 +10,7 @@ namespace GameBoyEm.UI
 {
     public partial class MainWindow : Window
     {
+        private MainViewModel _viewModel;
         private WriteableBitmap _bmp;
         private byte[] _array;
         private int _stride;
@@ -28,8 +30,9 @@ namespace GameBoyEm.UI
             var vm = e.NewValue as MainViewModel;
             if (vm != null)
             {
-                vm.UpdateScreen = UpdateScreen;
-                vm.OpenDebuggerWindow = OpenDebuggerWindow;
+                _viewModel = vm;
+                _viewModel.UpdateScreen = UpdateScreen;
+                _viewModel.OpenDebuggerWindow = OpenDebuggerWindow;
             }
         }
 
@@ -64,6 +67,16 @@ namespace GameBoyEm.UI
 
                 ScreenImage.Source = _bmp;
             }));
+        }
+
+        private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            _viewModel.OnKeyDown(e.Key);
+        }
+
+        private void Window_PreviewKeyUp(object sender, KeyEventArgs e)
+        {
+            _viewModel.OnKeyUp(e.Key);
         }
     }
 }

@@ -8,22 +8,27 @@ namespace GameBoyEm
 {
     public class Console
     {
-        public ICpu _cpu;
-        public IMmu _mmu;
-        public IGpu _gpu;
+        private ICpu _cpu;
+        private IMmu _mmu;
+        private IGpu _gpu;
+        private IController _controller;
         private bool _cartridgeLoaded;
         private long _cumulativeCycles;
         private Stopwatch _sw = new Stopwatch();
+        private CancellationTokenSource _tokenSource;
 
+        public bool TurnedOn { get; private set; }
         public ICpu Cpu { get { return _cpu; } }
+        public IController Controller { get { return _controller; } }
 
         public EventHandler<DrawScreenEventArgs> OnDrawScreen;
 
-        public Console(ICpu cpu, IMmu mmu, IGpu gpu)
+        public Console(ICpu cpu, IMmu mmu, IGpu gpu, IController controller)
         {
             _cpu = cpu;
             _mmu = mmu;
             _gpu = gpu;
+            _controller = controller;
         }
 
         public void LoadCartridge(ICartridge cartridge)
@@ -32,11 +37,11 @@ namespace GameBoyEm
             _cartridgeLoaded = true;
         }
 
-        private CancellationTokenSource _tokenSource;
         public async Task PowerOn()
         {
-            if (_tokenSource == null && _cartridgeLoaded)
+            if (!TurnedOn && _cartridgeLoaded)
             {
+                TurnedOn = true;
                 Reset();
                 await Resume();
             }
@@ -49,8 +54,9 @@ namespace GameBoyEm
 
         public void Pause()
         {
-            if (_tokenSource != null && _cartridgeLoaded)
+            if (TurnedOn && _cartridgeLoaded)
             {
+                TurnedOn = false;
                 _tokenSource.Cancel();
                 _tokenSource = null;
             }
@@ -77,9 +83,10 @@ namespace GameBoyEm
             var mmu = new Mmu();
             var cpu = new Cpu(mmu);
             var gpu = new Gpu(mmu);
-            return new Console(cpu, mmu, gpu);
+            var controller = new Controller(mmu);
+            return new Console(cpu, mmu, gpu, controller);
         }
-        
+
         public bool Step()
         {
             var cycles = _cpu.Step();
@@ -91,7 +98,7 @@ namespace GameBoyEm
                 OnDrawScreen?.Invoke(this,
                     new DrawScreenEventArgs(_gpu.FrameBuffer));
             }
-            UpdateJoypadRegister();
+            _controller.Step();
             return draw;
         }
 
@@ -112,28 +119,9 @@ namespace GameBoyEm
                 {
                     // Slow down emulation to sync with ~4.194394MHz
                     _cumulativeCycles -= 4194304;
-                    while (_sw.ElapsedTicks < TimeSpan.TicksPerSecond);
+                    while (_sw.ElapsedTicks < TimeSpan.TicksPerSecond) ;
                     _sw.Restart();
                 }
-            }
-        }
-
-        private void UpdateJoypadRegister()
-        {
-            // Just disable everything for now
-            if (_mmu.ReadByte(0xFF00).AND(0x20) == 0)
-            {
-                _mmu.WriteByte(0xFF00, _mmu.ReadByte(0xFF00).OR(0x08));
-                _mmu.WriteByte(0xFF00, _mmu.ReadByte(0xFF00).OR(0x04));
-                _mmu.WriteByte(0xFF00, _mmu.ReadByte(0xFF00).OR(0x02));
-                _mmu.WriteByte(0xFF00, _mmu.ReadByte(0xFF00).OR(0x01));
-            }
-            else if (_mmu.ReadByte(0xFF00).AND(0x10) == 0)
-            {
-                _mmu.WriteByte(0xFF00, _mmu.ReadByte(0xFF00).OR(0x08));
-                _mmu.WriteByte(0xFF00, _mmu.ReadByte(0xFF00).OR(0x04));
-                _mmu.WriteByte(0xFF00, _mmu.ReadByte(0xFF00).OR(0x02));
-                _mmu.WriteByte(0xFF00, _mmu.ReadByte(0xFF00).OR(0x01));
             }
         }
     }

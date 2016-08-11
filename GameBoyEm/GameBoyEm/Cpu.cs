@@ -118,18 +118,18 @@ namespace GameBoyEm
         {
             return Step(_ops, Cycles);
         }
-        
+
         private ushort Step(List<Action> ops, IReadOnlyCollection<byte> cycleTimes)
         {
             ushort cycles = 0;
             //string operation = "INTERRUPT";
             if (IME && _mmu.InterruptsExist)
             {
-                if (_mmu.Vblank) { Interrupt(0x0040); }
-                else if (_mmu.LcdStat) { Interrupt(0x0048); }
-                else if (_mmu.Timer) { Interrupt(0x0050); }
-                else if (_mmu.Serial) { Interrupt(0x0058); }
-                else if (_mmu.JoyPad) { Interrupt(0x0060); }
+                if (_mmu.Vblank) { _mmu.Vblank = false; Interrupt(0x0040); }
+                else if (_mmu.LcdStat) { _mmu.LcdStat = false; Interrupt(0x0048); }
+                else if (_mmu.Timer) { _mmu.Timer = false; Interrupt(0x0050); }
+                else if (_mmu.Serial) { _mmu.Serial = false; Interrupt(0x0058); }
+                else if (_mmu.JoyPad) { _mmu.JoyPad = false; Interrupt(0x0060); }
                 cycles = 3;
             }
             else
