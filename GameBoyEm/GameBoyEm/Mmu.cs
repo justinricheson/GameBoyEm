@@ -261,7 +261,7 @@ namespace GameBoyEm
         {
             _memory = new byte[65536];
 
-            // Magic init code obtained from https://github.com/boeker/gameboy/blob/master/src/gameboy/memory.cpp
+            // Magic init code obtained from http://gbdev.gg8.se/wiki/articles/Pan_Docs
             // Sets up io memory without having to execute the proprietary gameboy bios rom
             _memory[0xFF05] = 0x00;
             _memory[0xFF06] = 0x00;
@@ -316,6 +316,17 @@ namespace GameBoyEm
             {
                 _cartridge.Write(address, value);
                 return;
+            }
+            else if (address == 0xFF46)
+            {
+                // DMA transfer, used to load OAM sprite information
+                var start = ReadByte(0xFF46) * 0x100;
+                for (int i = 0; i < 160; ++i)
+                {
+                    var source = (ushort)(start + i);
+                    var target = (ushort)(0xFE00 + i);
+                    WriteByte(target, ReadByte(source));
+                }
             }
 
             _memory[address] = value;

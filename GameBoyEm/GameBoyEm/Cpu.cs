@@ -103,7 +103,7 @@ namespace GameBoyEm
 
         public void Reset()
         {
-            // Magic init code obtained from https://github.com/boeker/gameboy/blob/master/src/gameboy/memory.cpp
+            // Magic init code obtained from http://gbdev.gg8.se/wiki/articles/Pan_Docs
             // Sets up registers without having to execute the proprietary gameboy bios rom
             IME = false;
             AF = 0x01B0;
@@ -114,7 +114,7 @@ namespace GameBoyEm
             PC = 0x0100;
         }
 
-        private ulong _stepCounter = 0;
+        //private ulong _stepCounter = 0;
         public ushort Step()
         {
             var isCb = false;
@@ -153,11 +153,11 @@ namespace GameBoyEm
                 //}
             }
 
-            _stepCounter++;
-            if(_stepCounter > 20000000)
-            {
-                //_log.Debug($"OP: {(isCb ? $"{0xCB}" : "")}{operation} - Cycles: {cycles} - State: {ToString()}");
-            }
+            //_stepCounter++;
+            //if(_stepCounter > 20000000)
+            //{
+            //    _log.Debug($"OP: {(isCb ? $"{0xCB}" : "")}{operation} - Cycles: {cycles} - State: {ToString()}");
+            //}
 
             return cycles;
         }

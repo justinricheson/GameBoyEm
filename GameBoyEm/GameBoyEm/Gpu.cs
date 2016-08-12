@@ -306,8 +306,7 @@ namespace GameBoyEm
                 {
                     continue;
                 }
-
-                // TODO WHERE MY SPRITES!?!
+                
                 var inTileY = (byte)(_currentLine - yCoord);
 
                 // Check if it is not on the current line

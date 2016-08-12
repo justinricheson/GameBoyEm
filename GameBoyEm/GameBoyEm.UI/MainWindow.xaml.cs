@@ -47,8 +47,7 @@ namespace GameBoyEm.UI
 
             window.ShowDialog();
         }
-
-        bool wtf;
+        
         private void UpdateScreen(IList<Color> frameBuffer)
         {
             _bmp.Dispatcher.BeginInvoke((Action)(() =>
@@ -67,23 +66,8 @@ namespace GameBoyEm.UI
                 _bmp.WritePixels(new Int32Rect(0, 0, 160, 144), _array, _stride, 0);
                 _bmp.Unlock();
 
-                if (wtf)
-                {
-                    CreateThumbnail("C:\\Users\\Justin Richeson\\Desktop\\image.bmp", _bmp);
-                }
-
                 ScreenImage.Source = _bmp;
             }));
-        }
-
-        private void CreateThumbnail(string path, BitmapSource image)
-        {
-            using (var fs = new FileStream(path, FileMode.Create))
-            {
-                var encoder = new PngBitmapEncoder();
-                encoder.Frames.Add(BitmapFrame.Create(image));
-                encoder.Save(fs);
-            }
         }
 
         private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
