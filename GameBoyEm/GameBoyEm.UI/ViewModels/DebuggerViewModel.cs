@@ -175,19 +175,18 @@ namespace GameBoyEm.UI.ViewModels
         private IEnumerable<CpuStateViewModel> StartStep(Action<Action> progress)
         {
             var history = new List<CpuStateViewModel>();
-            for (int i = 0; i < Steps; i++)
+
+            _console.Step((int)Steps, i =>
             {
                 if (EnableCpuHistory)
                 {
                     history.Add(new CpuStateViewModel(_cpu));
                 }
-
-                _console.Step();
-                if (i % 1000 == 0)
+                if (i % 100000 == 0)
                 {
                     progress(() => ProgressValue = i);
                 }
-            }
+            });
 
             return history;
         }

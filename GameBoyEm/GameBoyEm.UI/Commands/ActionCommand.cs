@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Common.Logging;
+using System;
 using System.Windows.Input;
 
 namespace GameBoyEm.UI.Commands
@@ -9,6 +10,9 @@ namespace GameBoyEm.UI.Commands
         public event EventHandler CanExecuteChanged;
         public ActionCommand(Action a) { _a = a; }
         public bool CanExecute(object parameter) => true;
-        public void Execute(object parameter) => _a();
+        public void Execute(object parameter)
+        {
+            _a();
+        }
     }
 }

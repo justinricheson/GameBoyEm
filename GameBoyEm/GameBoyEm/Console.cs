@@ -1,7 +1,9 @@
-﻿using GameBoyEm.Api;
+﻿using Common.Logging;
+using GameBoyEm.Api;
 using System;
 using System.Diagnostics;
 using System.Runtime.Serialization;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace GameBoyEm
@@ -91,8 +93,7 @@ namespace GameBoyEm
                 {
                     TurnedOn = false;
                     Reset();
-
-                    while (_emulating) ; // Wait for emulation to quit
+                    Wait();
                 }
             }
         }
@@ -104,7 +105,7 @@ namespace GameBoyEm
                 if (TurnedOn && !Paused)
                 {
                     Paused = true;
-                    while (_emulating) ; // Wait for emulation to quit
+                    Wait();
                 }
             }
         }
@@ -127,7 +128,7 @@ namespace GameBoyEm
             {
                 var wasTurnedOn = TurnedOn;
                 TurnedOn = false;
-                while (_emulating) ; // Wait for emulation to quit
+                Wait();
 
                 Cpu.Reset();
                 Mmu.Reset();
@@ -146,13 +147,17 @@ namespace GameBoyEm
             }
         }
 
-        public void Step()
+        public void Step(int steps, Action<int> progress)
         {
             lock (_sync)
             {
                 if (TurnedOn && Paused)
                 {
-                    StepUnlocked();
+                    for (int i = 0; i < steps; i++)
+                    {
+                        progress(i);
+                        StepUnlocked();
+                    }
                 }
             }
         }
@@ -185,13 +190,22 @@ namespace GameBoyEm
 
                 StepUnlocked();
 
-                if (_cumulativeCycles >= 4194304)
-                {
-                    // Slow down emulation to sync with ~4.194304MHz
-                    _cumulativeCycles -= 4194304;
-                    while (_sw.ElapsedTicks < TimeSpan.TicksPerSecond) ;
-                    _sw.Restart();
-                }
+                // TODO this is causing a stutter in release mode
+                //if (_cumulativeCycles >= 4194304)
+                //{
+                //    // Slow down emulation to sync with ~4.194304MHz
+                //    _cumulativeCycles -= 4194304;
+                //    while (_sw.ElapsedTicks < TimeSpan.TicksPerSecond) ;
+                //    _sw.Restart();
+                //}
+            }
+        }
+
+        private void Wait()
+        {
+            while (_emulating)
+            {
+                Thread.Sleep(0);
             }
         }
 
