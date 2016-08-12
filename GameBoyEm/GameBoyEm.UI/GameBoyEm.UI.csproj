@@ -76,6 +76,7 @@
     <Compile Include="DebuggerView.xaml.cs">
       <DependentUpon>DebuggerView.xaml</DependentUpon>
     </Compile>
+    <Compile Include="ViewModels\CpuStateViewModel.cs" />
     <Compile Include="ViewModels\DebuggerViewModel.cs" />
     <Compile Include="ViewModels\MainViewModel.cs" />
     <Compile Include="ViewModels\ViewModelBase.cs" />

@@ -37,11 +37,12 @@ namespace GameBoyEm.UI
             }
         }
 
-        private void OpenDebuggerWindow(Console console)
+        private void OpenDebuggerWindow(DebuggerViewModel vm)
         {
+            vm.Refresh();
             var window = new DebuggerView
             {
-                DataContext = new DebuggerViewModel(console),
+                DataContext = vm,
                 Owner = this
             };
 

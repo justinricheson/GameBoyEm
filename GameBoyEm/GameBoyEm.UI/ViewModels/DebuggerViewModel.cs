@@ -1,7 +1,11 @@
 ﻿using GameBoyEm.Api;
 using GameBoyEm.UI.Commands;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Input;
 
 namespace GameBoyEm.UI.ViewModels
@@ -10,46 +14,205 @@ namespace GameBoyEm.UI.ViewModels
     {
         private Console _console;
         private ICpu _cpu;
+        private uint _steps;
+        private bool _enableDebugger;
+        private bool _enableCpuHistory;
+        private bool _enableCpuHistoryEnabled;
+        private bool _progressVisible;
+        private int _progressMax;
+        private int _progressValue;
+        private ObservableCollection<CpuStateViewModel> _cpuHistory;
 
-        public string A { get { return $"{_cpu.A:X2}"; } }
-        public string B { get { return $"{_cpu.B:X2}"; } }
-        public string C { get { return $"{_cpu.C:X2}"; } }
-        public string D { get { return $"{_cpu.D:X2}"; } }
-        public string FC { get { return $"{_cpu.FC}"; } }
-        public string FH { get { return $"{_cpu.FH}"; } }
-        public string FN { get { return $"{_cpu.FN}"; } }
-        public string FZ { get { return $"{_cpu.FZ}"; } }
-        public string H { get { return $"{_cpu.H:X2}"; } }
-        public string L { get { return $"{_cpu.L:X2}"; } }
-        public string SP { get { return $"{_cpu.SP:X4}"; } }
-        public string PC { get { return $"{_cpu.PC:X4}"; } }
-        public string IME { get { return $"{_cpu.IME}"; } }
-        
-        public ObservableCollection<string> History { get; set; }
+        public CpuStateViewModel Current { get; private set; }
+        public ObservableCollection<CpuStateViewModel> CpuHistory
+        {
+            get { return _cpuHistory; }
+            set
+            {
+                if (_cpuHistory != value)
+                {
+                    _cpuHistory = value;
+                    Notify();
+                }
+            }
+        }
+        public uint Steps
+        {
+            get { return _steps; }
+            set
+            {
+                if (_steps != value)
+                {
+                    _steps = value;
+                    EnableCpuHistoryEnabled = _steps <= 1000;
+                    if (!EnableCpuHistoryEnabled)
+                    {
+                        EnableCpuHistory = false;
+                    }
+
+                    Notify();
+                }
+            }
+        }
+        public bool EnableCpuHistory
+        {
+            get { return _enableCpuHistory; }
+            set
+            {
+                if (_enableCpuHistory != value)
+                {
+                    _enableCpuHistory = value;
+                    Notify();
+                }
+            }
+        }
+        public bool EnableCpuHistoryEnabled
+        {
+            get { return _enableCpuHistoryEnabled; }
+            set
+            {
+                if (_enableCpuHistoryEnabled != value)
+                {
+                    _enableCpuHistoryEnabled = value;
+                    Notify();
+                }
+            }
+        }
+        public bool EnableDebugger
+        {
+            get { return _enableDebugger; }
+            set
+            {
+                if (_enableDebugger != value)
+                {
+                    _enableDebugger = value;
+                    Notify();
+                }
+            }
+        }
+        public bool ProgressVisible
+        {
+            get { return _progressVisible; }
+            set
+            {
+                if (_progressVisible != value)
+                {
+                    _progressVisible = value;
+                    Notify();
+                }
+            }
+        }
+        public int ProgressMax
+        {
+            get { return _progressMax; }
+            set
+            {
+                if (_progressMax != value)
+                {
+                    _progressMax = value;
+                    Notify();
+                }
+            }
+        }
+        public int ProgressValue
+        {
+            get { return _progressValue; }
+            set
+            {
+                if (_progressValue != value)
+                {
+                    _progressValue = value;
+                    Notify();
+                }
+            }
+        }
         public ICommand ClearCommand { get; set; }
         public ICommand StepCommand { get; set; }
         public Action ScrollToBottom { get; set; }
 
         public DebuggerViewModel(Console console)
         {
+            _enableDebugger = true;
             _console = console;
             _cpu = _console.Cpu;
-            History = new ObservableCollection<string>();
+            Steps = 1;
+            CpuHistory = new ObservableCollection<CpuStateViewModel>();
             ClearCommand = new ActionCommand(Clear);
             StepCommand = new ActionCommand(Step);
+            Refresh();
+        }
+
+        public void Refresh()
+        {
+            Current = new CpuStateViewModel(_cpu);
+            CpuHistory.Clear();
         }
 
         private void Step()
         {
-            History.Add($"{A}|{B}|{C}|{D}|{FC}|{FH}|{FN}|{FZ}|{H}|{L}|{SP}|{PC}|{IME}");
+            EnableDebugger = false;
+            ProgressVisible = true;
+            ProgressValue = 0;
+            ProgressMax = (int)Steps;
+
+            if (Steps <= 1000)
+            {
+                // Avoid creating the thread for small step counts
+                // which slows down the ui for fast clicks
+                EndStep(StartStep(p => p()));
+            }
+            else
+            {
+                var t = new Thread(() =>
+                {
+                    var history = StartStep(App.Current.Dispatcher.Invoke);
+                    App.Current.Dispatcher.Invoke(() => { EndStep(history); });
+                });
+                t.Start();
+            }
+        }
+
+        private IEnumerable<CpuStateViewModel> StartStep(Action<Action> progress)
+        {
+            var history = new List<CpuStateViewModel>();
+            for (int i = 0; i < Steps; i++)
+            {
+                if (EnableCpuHistory)
+                {
+                    history.Add(new CpuStateViewModel(_cpu));
+                }
+
+                _console.Step();
+                if (i % 1000 == 0)
+                {
+                    progress(() => ProgressValue = i);
+                }
+            }
+
+            return history;
+        }
+
+        private void EndStep(IEnumerable<CpuStateViewModel> history)
+        {
+            if (EnableCpuHistory)
+            {
+                foreach (var state in history)
+                {
+                    CpuHistory.Add(state);
+                };
+            }
+
+            Current = new CpuStateViewModel(_cpu);
             ScrollToBottom?.Invoke();
-            _console.Step();
-            Notify(null);
+            NotifyAll();
+
+            ProgressVisible = false;
+            EnableDebugger = true;
         }
 
         private void Clear()
         {
-            History.Clear();
+            CpuHistory.Clear();
         }
     }
 }

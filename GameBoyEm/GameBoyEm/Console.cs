@@ -21,6 +21,7 @@ namespace GameBoyEm
         public bool Paused { get; private set; }
         public bool TurnedOn { get; private set; }
         public bool CartridgeLoaded { get; private set; }
+        public bool EmitFrames { get; set; }
         public EventHandler<DrawScreenEventArgs> OnDrawScreen;
 
         public Console(ICpu cpu, IMmu mmu, IGpu gpu, IController controller)
@@ -29,6 +30,7 @@ namespace GameBoyEm
             Mmu = mmu;
             Gpu = gpu;
             Controller = controller;
+            EmitFrames = true;
         }
 
         protected Console(SerializationInfo info, StreamingContext ctx)
@@ -36,7 +38,7 @@ namespace GameBoyEm
             Cpu = (ICpu)info.GetValue("Cpu", typeof(ICpu));
             Mmu = (IMmu)info.GetValue("Mmu", typeof(IMmu));
             Gpu = (IGpu)info.GetValue("Gpu", typeof(IGpu));
-            
+
             // Hack to reset references on deserialize
             (Cpu as Cpu).Mmu = Mmu;
             (Gpu as Gpu).Mmu = Mmu;
@@ -45,6 +47,7 @@ namespace GameBoyEm
             CartridgeLoaded = true;
             TurnedOn = true;
             Paused = true;
+            EmitFrames = true;
         }
 
         public static Console Default()
@@ -160,7 +163,7 @@ namespace GameBoyEm
             _cumulativeCycles += cycles;
 
             var draw = Gpu.Step(cycles);
-            if (draw)
+            if (draw && EmitFrames)
             {
                 OnDrawScreen?.Invoke(this,
                     new DrawScreenEventArgs(Gpu.FrameBuffer));

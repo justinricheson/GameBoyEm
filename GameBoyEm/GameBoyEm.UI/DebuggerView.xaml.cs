@@ -1,5 +1,7 @@
 ﻿using GameBoyEm.UI.ViewModels;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Media;
 
 namespace GameBoyEm.UI
 {
@@ -17,8 +19,18 @@ namespace GameBoyEm.UI
             {
                 vm.ScrollToBottom = () =>
                 {
-                    History.SelectedIndex = History.Items.Count - 1;
-                    History.ScrollIntoView(History.SelectedItem);
+                    if (CpuHistory.Items.Count > 0)
+                    {
+                        var border = VisualTreeHelper.GetChild(CpuHistory, 0) as Decorator;
+                        if (border != null)
+                        {
+                            var scroll = border.Child as ScrollViewer;
+                            if (scroll != null)
+                            {
+                                scroll.ScrollToEnd();
+                            }
+                        }
+                    }
                 };
             }
         }

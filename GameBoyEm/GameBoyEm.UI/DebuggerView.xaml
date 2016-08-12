@@ -5,8 +5,12 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:GameBoyEm.UI" mc:Ignorable="d"
         DataContextChanged="Window_DataContextChanged"
-        Title="Debugger" Height="420" Width="600">
-    <Grid>
+        Title="Debugger" Height="440" Width="650">
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="boolToVisibilityConverter"/>
+    </Window.Resources>
+    
+    <Grid IsEnabled="{Binding EnableDebugger}">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto" MinWidth="100" />
             <ColumnDefinition />
@@ -29,6 +33,7 @@
                 <Label Content="B" FontWeight="Bold" />
                 <Label Content="C" FontWeight="Bold" />
                 <Label Content="D" FontWeight="Bold" />
+                <Label Content="E" FontWeight="Bold" />
                 <Label Content="FC" FontWeight="Bold" />
                 <Label Content="FH" FontWeight="Bold" />
                 <Label Content="FN" FontWeight="Bold" />
@@ -41,19 +46,20 @@
             </StackPanel>
 
             <StackPanel Grid.Row="1" Grid.Column="1">
-                <Label Content="{Binding A}" />
-                <Label Content="{Binding B}" />
-                <Label Content="{Binding C}" />
-                <Label Content="{Binding D}" />
-                <Label Content="{Binding FC}" />
-                <Label Content="{Binding FH}" />
-                <Label Content="{Binding FN}" />
-                <Label Content="{Binding FZ}" />
-                <Label Content="{Binding H}" />
-                <Label Content="{Binding L}" />
-                <Label Content="{Binding SP}" />
-                <Label Content="{Binding PC}" />
-                <Label Content="{Binding IME}" />
+                <Label Content="{Binding Current.A}" />
+                <Label Content="{Binding Current.B}" />
+                <Label Content="{Binding Current.C}" />
+                <Label Content="{Binding Current.D}" />
+                <Label Content="{Binding Current.E}" />
+                <Label Content="{Binding Current.FC}" />
+                <Label Content="{Binding Current.FH}" />
+                <Label Content="{Binding Current.FN}" />
+                <Label Content="{Binding Current.FZ}" />
+                <Label Content="{Binding Current.H}" />
+                <Label Content="{Binding Current.L}" />
+                <Label Content="{Binding Current.SP}" />
+                <Label Content="{Binding Current.PC}" />
+                <Label Content="{Binding Current.IME}" />
             </StackPanel>
         </Grid>
 
@@ -64,14 +70,38 @@
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
-            <Label Content="History" FontWeight="Bold" />
+            <Label Content="CPU History" FontWeight="Bold" />
 
-            <ListBox x:Name="History" Grid.Row="1" ItemsSource="{Binding History}" />
-
+            <DataGrid x:Name="CpuHistory" Grid.Row="1" ItemsSource="{Binding CpuHistory, IsAsync=True}"
+                CanUserAddRows="False" CanUserDeleteRows="False"
+                CanUserSortColumns="False" CanUserResizeRows="False"
+                EnableColumnVirtualization="True" EnableRowVirtualization="True">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="A" Binding="{Binding A}" IsReadOnly="True" Width="Auto" />
+                    <DataGridTextColumn Header="B" Binding="{Binding B}" IsReadOnly="True" Width="Auto" />
+                    <DataGridTextColumn Header="C" Binding="{Binding C}" IsReadOnly="True" Width="Auto" />
+                    <DataGridTextColumn Header="D" Binding="{Binding D}" IsReadOnly="True" Width="Auto" />
+                    <DataGridTextColumn Header="E" Binding="{Binding E}" IsReadOnly="True" Width="Auto" />
+                    <DataGridTextColumn Header="FC" Binding="{Binding FC}" IsReadOnly="True" Width="Auto" />
+                    <DataGridTextColumn Header="FH" Binding="{Binding FH}" IsReadOnly="True" Width="Auto" />
+                    <DataGridTextColumn Header="FN" Binding="{Binding FN}" IsReadOnly="True" Width="Auto" />
+                    <DataGridTextColumn Header="FZ" Binding="{Binding FZ}" IsReadOnly="True" Width="Auto" />
+                    <DataGridTextColumn Header="H" Binding="{Binding H}" IsReadOnly="True" Width="Auto" />
+                    <DataGridTextColumn Header="L" Binding="{Binding L}" IsReadOnly="True" Width="Auto" />
+                    <DataGridTextColumn Header="SP" Binding="{Binding SP}" IsReadOnly="True" Width="Auto" />
+                    <DataGridTextColumn Header="PC" Binding="{Binding PC}" IsReadOnly="True" Width="Auto" />
+                    <DataGridTextColumn Header="IME" Binding="{Binding IME}" IsReadOnly="True" Width="Auto" />
+                </DataGrid.Columns>
+            </DataGrid>
+            
             <StackPanel Grid.Row="2" Orientation="Horizontal">
-                <Button Content="Step" Command="{Binding StepCommand}" Height="30" Width="90" Margin="0,0,10,0" />
                 <Button Content="Clear" Command="{Binding ClearCommand}" Height="30" Width="90" Margin="0,0,10,0" />
+                <Button Content="Step" Command="{Binding StepCommand}" Height="30" Width="90" Margin="0,0,10,0" />
+                <Label Content="Number of Steps" Height="30" Margin="0,0,10,0" />
+                <TextBox Text="{Binding Steps, UpdateSourceTrigger=PropertyChanged}" VerticalContentAlignment="Center" Height="30" Width="90" Margin="0,0,10,0" />
+                <CheckBox Content="Enable CPU History" IsChecked="{Binding EnableCpuHistory}" IsEnabled="{Binding EnableCpuHistoryEnabled}" Height="30" VerticalContentAlignment="Center" />
             </StackPanel>
+            <ProgressBar Minimum="0" Maximum="{Binding ProgressMax}" Value="{Binding ProgressValue}" Grid.Row="2" Visibility="{Binding ProgressVisible, Converter={StaticResource boolToVisibilityConverter}}" />
         </Grid>
     </Grid>
 </Window>

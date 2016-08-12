@@ -14,6 +14,7 @@ namespace GameBoyEm.UI.ViewModels
 {
     public class MainViewModel : ViewModelBase
     {
+        private DebuggerViewModel _debuggerVm;
         private Console _console;
         private Console Console
         {
@@ -28,6 +29,7 @@ namespace GameBoyEm.UI.ViewModels
 
                 _console = value;
                 _console.OnDrawScreen += OnDrawScreen;
+                _debuggerVm = new DebuggerViewModel(_console);
             }
         }
 
@@ -85,7 +87,7 @@ namespace GameBoyEm.UI.ViewModels
         public ICommand ResetCommand { get; private set; }
         public ICommand DebuggerCommand { get; private set; }
         public Action<IList<Color>> UpdateScreen { get; set; }
-        public Action<Console> OpenDebuggerWindow { get; set; }
+        public Action<DebuggerViewModel> OpenDebuggerWindow { get; set; }
 
         public MainViewModel()
         {
@@ -254,7 +256,7 @@ namespace GameBoyEm.UI.ViewModels
             _console.Pause();
             NotifyAll();
 
-            OpenDebuggerWindow?.Invoke(_console);
+            OpenDebuggerWindow?.Invoke(_debuggerVm);
 
             _console.Resume();
             NotifyAll();
