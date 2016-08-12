@@ -72,7 +72,8 @@
 
             <Label Content="CPU History" FontWeight="Bold" />
 
-            <DataGrid x:Name="CpuHistory" Grid.Row="1" ItemsSource="{Binding CpuHistory, IsAsync=True}"
+            <DataGrid x:Name="CpuHistory" Grid.Row="1" AutoGenerateColumns="False"
+                ItemsSource="{Binding CpuHistory, IsAsync=True}"
                 CanUserAddRows="False" CanUserDeleteRows="False"
                 CanUserSortColumns="False" CanUserResizeRows="False"
                 EnableColumnVirtualization="True" EnableRowVirtualization="True">
