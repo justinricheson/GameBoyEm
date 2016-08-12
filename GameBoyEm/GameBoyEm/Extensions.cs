@@ -1,4 +1,6 @@
-﻿namespace GameBoyEm
+﻿using System.Windows.Media;
+
+namespace GameBoyEm
 {
     public static class ByteExtensions
     {
@@ -79,6 +81,26 @@
         public static ushort ToShort(this byte value)
         {
             return value;
+        }
+    }
+
+    public static class ColorExtensions
+    {
+        public static int ToArgb(this Color color)
+        {
+            return (color.A << 24)
+                 | (color.R << 16)
+                 | (color.G << 8)
+                 | color.B;
+        }
+
+        public static Color FromArgb(this int argb)
+        {
+            return Color.FromArgb(
+                (byte)(argb >> 24),
+                (byte)(argb >> 16),
+                (byte)(argb >> 8),
+                (byte)(argb));
         }
     }
 }

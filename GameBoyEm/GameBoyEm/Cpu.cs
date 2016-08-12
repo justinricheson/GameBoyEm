@@ -3,6 +3,7 @@ using GameBoyEm.Api;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Serialization;
 using static GameBoyEm.CpuCycles;
 
 namespace GameBoyEm
@@ -13,12 +14,15 @@ namespace GameBoyEm
     /// Notes: IO is memory mapped. Memory is byte addressable with
     /// 16-bit addresses (64KB total memory).
     /// </summary>
-    public partial class Cpu : ICpu
+    [Serializable]
+    public partial class Cpu : ICpu, ISerializable
     {
         private ILog _log = LogManager.GetLogger<Cpu>();
         private IMmu _mmu;
         private List<Action> _ops;
         private List<Action> _cbOps;
+
+        internal IMmu Mmu { set { _mmu = value; } }
 
         // Registers
         public byte A { get; protected set; } // Accumulator
@@ -55,11 +59,8 @@ namespace GameBoyEm
         // Controls cycle time array selection
         private bool _conditional;
 
-        public Cpu(IMmu mmu)
+        private Cpu()
         {
-            _mmu = mmu;
-            Reset();
-
             _ops = new List<Action>
             {
                 /* 00 */ NOP,     LDBCN,   LDBCA,   INCBC,   INCB,    DECB,    LDBN,     RLCA,    LDNSP,   ADDHLBC, LDABC,   DECBC,   INCC,    DECC,    LDCN,     RRCA,
@@ -101,6 +102,27 @@ namespace GameBoyEm
             };
         }
 
+        public Cpu(IMmu mmu) : this()
+        {
+            _mmu = mmu;
+            Reset();
+        }
+
+        protected Cpu(SerializationInfo info, StreamingContext ctx) : this()
+        {
+            A = info.GetByte("A");
+            B = info.GetByte("B");
+            C = info.GetByte("C");
+            D = info.GetByte("D");
+            E = info.GetByte("E");
+            F = info.GetByte("F");
+            H = info.GetByte("H");
+            L = info.GetByte("L");
+            SP = info.GetUInt16("SP");
+            PC = info.GetUInt16("PC");
+            IME = info.GetBoolean("IME");
+        }
+
         public void Reset()
         {
             // Magic init code obtained from http://gbdev.gg8.se/wiki/articles/Pan_Docs
@@ -119,7 +141,7 @@ namespace GameBoyEm
         {
             var isCb = false;
             ushort cycles = 0;
-            string operation = "INTERRUPT";
+            //string operation = "INTERRUPT";
             if (IME && _mmu.InterruptsExist)
             {
                 if (_mmu.Vblank) { _mmu.Vblank = false; Interrupt(0x0040); }
@@ -146,7 +168,7 @@ namespace GameBoyEm
                     : Cycles.ElementAt(op);
                 _conditional = false;
 
-                operation = $"{op}";
+                //operation = $"{op}";
                 //if (State(op, cycles))
                 //{
                 //    string breakhere = "";
@@ -162,24 +184,39 @@ namespace GameBoyEm
             return cycles;
         }
 
-        private bool State(int op, int cycles)
-        {
-            if (op == 251 && cycles == 1)
-            {
-                if (A == 128 && B == 0 && C == 0 && D == 0
-                    && E == 216 && F == 128 && H == 151 && L == 255
-                    && SP == 53247 && PC == 699 && IME)
-                {
-                    return true;
-                }
-            }
+        //private bool State(int op, int cycles)
+        //{
+        //    if (op == 251 && cycles == 1)
+        //    {
+        //        if (A == 128 && B == 0 && C == 0 && D == 0
+        //            && E == 216 && F == 128 && H == 151 && L == 255
+        //            && SP == 53247 && PC == 699 && IME)
+        //        {
+        //            return true;
+        //        }
+        //    }
 
-            return false;
-        }
+        //    return false;
+        //}
 
-        public override string ToString()
+        //public override string ToString()
+        //{
+        //    return $"{A}|{B}|{C}|{D}|{E}|{F}|{H}|{L}|{SP}|{PC}|{(IME ? 1 : 0)}";
+        //}
+
+        public void GetObjectData(SerializationInfo info, StreamingContext context)
         {
-            return $"{A}|{B}|{C}|{D}|{E}|{F}|{H}|{L}|{SP}|{PC}|{(IME ? 1 : 0)}";
+            info.AddValue("A", A);
+            info.AddValue("B", B);
+            info.AddValue("C", C);
+            info.AddValue("D", D);
+            info.AddValue("E", E);
+            info.AddValue("F", F);
+            info.AddValue("H", H);
+            info.AddValue("L", L);
+            info.AddValue("SP", SP);
+            info.AddValue("PC", PC);
+            info.AddValue("IME", IME);
         }
     }
 }

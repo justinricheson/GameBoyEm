@@ -1,35 +1,50 @@
 ﻿using GameBoyEm.Api;
 using System;
 using System.Diagnostics;
-using System.Threading;
+using System.Runtime.Serialization;
 using System.Threading.Tasks;
 
 namespace GameBoyEm
 {
-    public class Console
+    [Serializable]
+    public class Console : ISerializable
     {
         private object _sync = new object();
-        private ICpu _cpu;
-        private IMmu _mmu;
-        private IGpu _gpu;
-        private IController _controller;
         private long _cumulativeCycles;
         private Stopwatch _sw = new Stopwatch();
         private bool _emulating;
 
+        public ICpu Cpu { get; }
+        public IMmu Mmu { get; }
+        public IGpu Gpu { get; }
+        public IController Controller { get; }
         public bool Paused { get; private set; }
         public bool TurnedOn { get; private set; }
         public bool CartridgeLoaded { get; private set; }
-        public ICpu Cpu { get { return _cpu; } }
-        public IController Controller { get { return _controller; } }
         public EventHandler<DrawScreenEventArgs> OnDrawScreen;
 
         public Console(ICpu cpu, IMmu mmu, IGpu gpu, IController controller)
         {
-            _cpu = cpu;
-            _mmu = mmu;
-            _gpu = gpu;
-            _controller = controller;
+            Cpu = cpu;
+            Mmu = mmu;
+            Gpu = gpu;
+            Controller = controller;
+        }
+
+        protected Console(SerializationInfo info, StreamingContext ctx)
+        {
+            Cpu = (ICpu)info.GetValue("Cpu", typeof(ICpu));
+            Mmu = (IMmu)info.GetValue("Mmu", typeof(IMmu));
+            Gpu = (IGpu)info.GetValue("Gpu", typeof(IGpu));
+            
+            // Hack to reset references on deserialize
+            (Cpu as Cpu).Mmu = Mmu;
+            (Gpu as Gpu).Mmu = Mmu;
+            Controller = new Controller(Mmu);
+
+            CartridgeLoaded = true;
+            TurnedOn = true;
+            Paused = true;
         }
 
         public static Console Default()
@@ -47,7 +62,7 @@ namespace GameBoyEm
             {
                 if (!TurnedOn)
                 {
-                    _mmu.LoadCartridge(cartridge);
+                    Mmu.LoadCartridge(cartridge);
                     CartridgeLoaded = true;
                 }
             }
@@ -111,13 +126,13 @@ namespace GameBoyEm
                 TurnedOn = false;
                 while (_emulating) ; // Wait for emulation to quit
 
-                _cpu.Reset();
-                _mmu.Reset();
-                _gpu.Reset();
+                Cpu.Reset();
+                Mmu.Reset();
+                Gpu.Reset();
 
                 // Draw blank frame buffer
                 OnDrawScreen?.Invoke(this,
-                    new DrawScreenEventArgs(_gpu.FrameBuffer));
+                    new DrawScreenEventArgs(Gpu.FrameBuffer));
 
                 Paused = false;
 
@@ -141,16 +156,16 @@ namespace GameBoyEm
 
         private void StepUnlocked()
         {
-            var cycles = _cpu.Step();
+            var cycles = Cpu.Step();
             _cumulativeCycles += cycles;
 
-            var draw = _gpu.Step(cycles);
+            var draw = Gpu.Step(cycles);
             if (draw)
             {
                 OnDrawScreen?.Invoke(this,
-                    new DrawScreenEventArgs(_gpu.FrameBuffer));
+                    new DrawScreenEventArgs(Gpu.FrameBuffer));
             }
-            _controller.Step();
+            Controller.Step();
         }
 
         private void Emulate()
@@ -169,12 +184,19 @@ namespace GameBoyEm
 
                 if (_cumulativeCycles >= 4194304)
                 {
-                    // Slow down emulation to sync with ~4.194394MHz
+                    // Slow down emulation to sync with ~4.194304MHz
                     _cumulativeCycles -= 4194304;
                     while (_sw.ElapsedTicks < TimeSpan.TicksPerSecond) ;
                     _sw.Restart();
                 }
             }
+        }
+
+        public void GetObjectData(SerializationInfo info, StreamingContext context)
+        {
+            info.AddValue("Cpu", Cpu);
+            info.AddValue("Mmu", Mmu);
+            info.AddValue("Gpu", Gpu);
         }
     }
 }

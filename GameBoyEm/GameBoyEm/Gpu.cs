@@ -1,11 +1,14 @@
 ﻿using GameBoyEm.Api;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Serialization;
 using System.Windows.Media;
 
 namespace GameBoyEm
 {
-    public class Gpu : IGpu
+    [Serializable]
+    public class Gpu : IGpu, ISerializable
     {
         private IMmu _mmu;
         private bool _isEnabled;
@@ -19,11 +22,12 @@ namespace GameBoyEm
         private List<Color> _bgPalette;
         private List<Color> _spritePalette;
 
+        internal IMmu Mmu { set { _mmu = value; } }
+
         public IList<Color> FrameBuffer { get { return _frameBuffer; } }
 
-        public Gpu(IMmu mmu)
+        private Gpu()
         {
-            _mmu = mmu;
             _defaultPalette = new List<Color>
             {
                 Colors.White,
@@ -33,7 +37,28 @@ namespace GameBoyEm
             };
             _bgPalette = _defaultPalette.Take(4).ToList();
             _spritePalette = _defaultPalette.Take(4).ToList();
+        }
+
+        public Gpu(IMmu mmu) : this()
+        {
+            _mmu = mmu;
             Reset();
+        }
+
+        protected Gpu(SerializationInfo info, StreamingContext ctx) : this()
+        {
+            _isEnabled = info.GetBoolean("IsEnabled");
+            _isLineRendered = info.GetBoolean("IsLineRendered");
+            _clocks = info.GetUInt32("Clocks");
+            _currentLine = info.GetUInt32("CurrentLine");
+            _delay = info.GetInt32("Delay");
+            _mode = (Mode)info.GetValue("Mode", typeof(Mode));
+            _frameBuffer = ((List<int>)info.GetValue("FrameBuffer", typeof(List<int>)))
+                .Select(i => i.FromArgb()).ToList();
+            _bgPalette = ((List<int>)info.GetValue("BackgroundPalette", typeof(List<int>)))
+                .Select(i => i.FromArgb()).ToList();
+            _spritePalette = ((List<int>)info.GetValue("SpritePalette", typeof(List<int>)))
+                .Select(i => i.FromArgb()).ToList();
         }
 
         public void Reset()
@@ -306,7 +331,7 @@ namespace GameBoyEm
                 {
                     continue;
                 }
-                
+
                 var inTileY = (byte)(_currentLine - yCoord);
 
                 // Check if it is not on the current line
@@ -433,6 +458,19 @@ namespace GameBoyEm
         {
             _currentLine = lineNum;
             _mmu.WriteByte(0xFF44, (byte)lineNum);
+        }
+
+        public void GetObjectData(SerializationInfo info, StreamingContext context)
+        {
+            info.AddValue("IsEnabled", _isEnabled);
+            info.AddValue("IsLineRendered", _isLineRendered);
+            info.AddValue("Clocks", _clocks);
+            info.AddValue("CurrentLine", _currentLine);
+            info.AddValue("Delay", _delay);
+            info.AddValue("Mode", _mode);
+            info.AddValue("FrameBuffer", _frameBuffer.Select(c => c.ToArgb()).ToList());
+            info.AddValue("BackgroundPalette", _bgPalette.Select(c => c.ToArgb()).ToList());
+            info.AddValue("SpritePalette", _spritePalette.Select(c => c.ToArgb()).ToList());
         }
 
         private enum Mode

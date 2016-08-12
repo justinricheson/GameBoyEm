@@ -1,9 +1,11 @@
 ﻿using GameBoyEm.Api;
-using System.Linq;
+using System;
+using System.Runtime.Serialization;
 
 namespace GameBoyEm.Cartridge
 {
-    public abstract class Cartridge : ICartridge
+    [Serializable]
+    public abstract class Cartridge : ICartridge, ISerializable
     {
         protected const ushort RomBankSize = 16384;
         protected const ushort TypeAddress = 0x0147;
@@ -15,6 +17,11 @@ namespace GameBoyEm.Cartridge
             _rom = rom;
         }
 
+        protected Cartridge(SerializationInfo info, StreamingContext ctx)
+        {
+            _rom = (byte[])info.GetValue("Rom", typeof(byte[]));
+        }
+
         public static CartridgeType GetType(byte[] rom)
         {
             var type = rom[TypeAddress];
@@ -24,6 +31,10 @@ namespace GameBoyEm.Cartridge
         }
         public abstract byte Read(ushort address);
         public abstract void Write(ushort address, byte value);
+        public virtual void GetObjectData(SerializationInfo info, StreamingContext context)
+        {
+            info.AddValue("Rom", _rom);
+        }
     }
 
     public enum CartridgeType

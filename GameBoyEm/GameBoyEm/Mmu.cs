@@ -1,9 +1,11 @@
-﻿using System;
-using GameBoyEm.Api;
+﻿using GameBoyEm.Api;
+using System;
+using System.Runtime.Serialization;
 
 namespace GameBoyEm
 {
-    public class Mmu : IMmu
+    [Serializable]
+    public class Mmu : IMmu, ISerializable
     {
         // Memory Map
         // 0000 - 3FFF (cartridge rom)
@@ -257,6 +259,12 @@ namespace GameBoyEm
             Reset();
         }
 
+        protected Mmu(SerializationInfo info, StreamingContext ctx)
+        {
+            _memory = (byte[])info.GetValue("Memory", typeof(byte[]));
+            _cartridge = (ICartridge)info.GetValue("Cartridge", typeof(ICartridge));
+        }
+
         public void Reset()
         {
             _memory = new byte[65536];
@@ -335,6 +343,12 @@ namespace GameBoyEm
         {
             WriteByte(address, value.AND(0x00FF).ToByte());
             WriteByte(++address, value.AND(0xFF00).RS(8).ToByte());
+        }
+
+        public void GetObjectData(SerializationInfo info, StreamingContext context)
+        {
+            info.AddValue("Memory", _memory);
+            info.AddValue("Cartridge", _cartridge);
         }
     }
 }

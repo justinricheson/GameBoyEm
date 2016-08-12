@@ -5,19 +5,37 @@ using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Threading.Tasks;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
 
 namespace GameBoyEm.UI.ViewModels
 {
     public class MainViewModel : ViewModelBase
     {
         private Console _console;
+        private Console Console
+        {
+            get { return _console; }
+            set
+            {
+                if (_console != null)
+                {
+                    _console.PowerOff();
+                    _console.OnDrawScreen -= OnDrawScreen;
+                }
+
+                _console = value;
+                _console.OnDrawScreen += OnDrawScreen;
+            }
+        }
 
         public string Title { get; private set; }
+        public bool SaveStateEnabled
+        {
+            get { return _console.CartridgeLoaded && _console.TurnedOn; }
+        }
         public bool PowerOnEnabled
         {
             get { return _console.CartridgeLoaded && !_console.TurnedOn; }
@@ -59,6 +77,8 @@ namespace GameBoyEm.UI.ViewModels
             }
         }
         public ICommand OpenCommand { get; private set; }
+        public ICommand LoadStateCommand { get; private set; }
+        public ICommand SaveStateCommand { get; private set; }
         public ICommand CloseCommand { get; private set; }
         public ICommand PowerOnCommand { get; private set; }
         public ICommand PowerOffCommand { get; private set; }
@@ -69,11 +89,12 @@ namespace GameBoyEm.UI.ViewModels
 
         public MainViewModel()
         {
-            _console = Console.Default();
-            _console.OnDrawScreen += OnDrawScreen;
+            Console = Console.Default();
 
             Title = "GameboyEm";
             OpenCommand = new ActionCommand(Open);
+            LoadStateCommand = new ActionCommand(LoadState);
+            SaveStateCommand = new ActionCommand(SaveState);
             CloseCommand = new ActionCommand(Application.Current.Shutdown);
             PowerOnCommand = new ActionCommand(PowerOn);
             PowerOffCommand = new ActionCommand(PowerOff);
@@ -132,12 +153,73 @@ namespace GameBoyEm.UI.ViewModels
             var result = dlg.ShowDialog();
             if (result == true)
             {
-                var cartridge = CartridgeBuilder.Build(
-                    File.ReadAllBytes(dlg.FileName));
-                _console.LoadCartridge(cartridge);
-                Title = $"GameboyEm - {dlg.FileName}";
-                NotifyAll();
+                try
+                {
+                    _console.PowerOff();
+                    var cartridge = CartridgeBuilder.Build(
+                        File.ReadAllBytes(dlg.FileName));
+                    _console.LoadCartridge(cartridge);
+                    Title = $"GameboyEm - {dlg.FileName}";
+                    NotifyAll();
+                }
+                catch (Exception e)
+                {
+                    MessageBox.Show("Error", e.ToString(),
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                }
             }
+        }
+
+        private void LoadState()
+        {
+            var dlg = new OpenFileDialog
+            {
+                DefaultExt = ".state",
+                Filter = "Gameboy State Files (*.state)|*.state"
+            };
+            
+            if (dlg.ShowDialog() == true)
+            {
+                try
+                {
+                    using (var fs = new FileStream(dlg.FileName, FileMode.Open))
+                    {
+                        Console = (Console)new BinaryFormatter().Deserialize(fs);
+                    }
+                    NotifyAll();
+                }
+                catch (Exception e)
+                {
+                    MessageBox.Show("Error", e.ToString(),
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
+
+        private void SaveState()
+        {
+            var wasPaused = _console.Paused;
+            _console.Pause();
+
+            var dlg = new SaveFileDialog();
+            dlg.FileName = "game";
+            dlg.DefaultExt = ".state";
+            dlg.Filter = "Gameboy State files (.state)|*.state";
+
+            if (dlg.ShowDialog() == true)
+            {
+                using (var fs = new FileStream(dlg.FileName, FileMode.OpenOrCreate))
+                {
+                    new BinaryFormatter().Serialize(fs, _console);
+                }
+            }
+
+            if (!wasPaused)
+            {
+                _console.Resume();
+            }
+
+            NotifyAll();
         }
 
         private void PowerOn()

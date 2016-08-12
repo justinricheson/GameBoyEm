@@ -8,6 +8,8 @@ namespace GameBoyEm
     {
         private IMmu _mmu;
 
+        internal IMmu Mmu { set { _mmu = value; } }
+
         public bool APressed { get; set; }
         public bool BPressed { get; set; }
         public bool SelectPressed { get; set; }
