@@ -11,5 +11,10 @@ namespace GameBoyEm.UI.ViewModels
             PropertyChanged?.Invoke(this,
                 new PropertyChangedEventArgs(propertyName));
         }
+        protected void NotifyAll()
+        {
+            PropertyChanged?.Invoke(this,
+                new PropertyChangedEventArgs(null));
+        }
     }
 }

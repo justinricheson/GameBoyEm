@@ -24,7 +24,6 @@ namespace GameBoyEm
         public Gpu(IMmu mmu)
         {
             _mmu = mmu;
-            _frameBuffer = Enumerable.Repeat(Colors.White, 160 * 144).ToList();
             _defaultPalette = new List<Color>
             {
                 Colors.White,
@@ -45,6 +44,7 @@ namespace GameBoyEm
             _clocks = 0;
             ChangeMode(Mode.VBlank);
             _delay = 0;
+            _frameBuffer = Enumerable.Repeat(Colors.White, 160 * 144).ToList();
         }
 
         public bool Step(ushort cycles)
@@ -107,17 +107,17 @@ namespace GameBoyEm
 
                             if (_mmu.ReadByte(0xFF41).AND(0x10) > 0)
                             {
-                                _mmu.WriteByte(0xFF0F, _mmu.ReadByte(0xFF0F).OR(0x02)); // Set LCD-STAT interrupt
+                                _mmu.LcdStat = true;
                             }
 
-                            _mmu.WriteByte(0xFF0F, _mmu.ReadByte(0xFF0F).OR(0x01)); // Set VBlank interrupt
+                            _mmu.Vblank = true;
                         }
                         else
                         {
                             ChangeMode(Mode.OAM);
                             if (_mmu.ReadByte(0xFF41).AND(0x20) > 0)
                             {
-                                _mmu.WriteByte(0xFF0F, _mmu.ReadByte(0xFF0F).OR(0x02)); // Set LCD-STAT interrupt
+                                _mmu.LcdStat = true;
                             }
                         }
                     }
@@ -134,7 +134,7 @@ namespace GameBoyEm
 
                             if (_mmu.ReadByte(0xFF41).AND(0x20) > 0)
                             {
-                                _mmu.WriteByte(0xFF0F, _mmu.ReadByte(0xFF0F).OR(0x02)); // Set LCD-STAT interrupt
+                                _mmu.LcdStat = true;
                             }
                         }
                     }
@@ -160,7 +160,7 @@ namespace GameBoyEm
 
                         if (_mmu.ReadByte(0xFF41).AND(0x08) > 0)
                         {
-                            _mmu.WriteByte(0xFF0F, _mmu.ReadByte(0xFF0F).OR(0x02)); // Set LCD-STAT interrupt
+                            _mmu.LcdStat = true;
                         }
                     }
                     break;

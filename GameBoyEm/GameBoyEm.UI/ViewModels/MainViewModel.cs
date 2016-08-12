@@ -16,78 +16,69 @@ namespace GameBoyEm.UI.ViewModels
     public class MainViewModel : ViewModelBase
     {
         private Console _console;
-        private string _cartridgePath;
-        private string _title;
-        private bool _powerOnEnabled;
-        private bool _powerOffEnabled;
-        private bool _debuggerEnabled;
 
-        public string Title
-        {
-            get { return _title; }
-            set
-            {
-                if (_title != value)
-                {
-                    _title = value;
-                    Notify();
-                }
-            }
-        }
+        public string Title { get; private set; }
         public bool PowerOnEnabled
         {
-            get { return _powerOnEnabled; }
-            set
-            {
-                if (_powerOnEnabled != value)
-                {
-                    _powerOnEnabled = value;
-                    Notify();
-                }
-            }
+            get { return _console.CartridgeLoaded && !_console.TurnedOn; }
         }
         public bool PowerOffEnabled
         {
-            get { return _powerOffEnabled; }
-            set
-            {
-                if (_powerOffEnabled != value)
-                {
-                    _powerOffEnabled = value;
-                    Notify();
-                }
-            }
+            get { return _console.TurnedOn; }
+        }
+        public bool ResetEnabled
+        {
+            get { return _console.TurnedOn; }
         }
         public bool DebuggerEnabled
         {
-            get { return _debuggerEnabled; }
+            get { return _console.TurnedOn; }
+        }
+        public bool PauseResumeEnabled
+        {
+            get { return _console.TurnedOn; }
+        }
+        public string PauseResumeLabel
+        {
+            get { return _console.Paused ? "Resume" : "Pause"; }
+        }
+        public bool IsPaused
+        {
+            get { return _console.Paused; }
             set
             {
-                if (_debuggerEnabled != value)
+                if (_console.Paused)
                 {
-                    _debuggerEnabled = value;
-                    Notify();
+                    _console.Resume();
                 }
+                else
+                {
+                    _console.Pause();
+                }
+                NotifyAll();
             }
         }
         public ICommand OpenCommand { get; private set; }
         public ICommand CloseCommand { get; private set; }
         public ICommand PowerOnCommand { get; private set; }
         public ICommand PowerOffCommand { get; private set; }
-        public ICommand DebuggerCommand { get; set; }
+        public ICommand ResetCommand { get; private set; }
+        public ICommand DebuggerCommand { get; private set; }
         public Action<IList<Color>> UpdateScreen { get; set; }
         public Action<Console> OpenDebuggerWindow { get; set; }
 
         public MainViewModel()
         {
             _console = Console.Default();
+            _console.OnDrawScreen += OnDrawScreen;
 
             Title = "GameboyEm";
             OpenCommand = new ActionCommand(Open);
             CloseCommand = new ActionCommand(Application.Current.Shutdown);
-            PowerOnCommand = new AsyncCommand(PowerOn);
+            PowerOnCommand = new ActionCommand(PowerOn);
             PowerOffCommand = new ActionCommand(PowerOff);
-            DebuggerCommand = new AsyncCommand(Debugger);
+            ResetCommand = new ActionCommand(Reset);
+            DebuggerCommand = new ActionCommand(Debugger);
         }
 
         public void OnKeyDown(Key key)
@@ -141,55 +132,50 @@ namespace GameBoyEm.UI.ViewModels
             var result = dlg.ShowDialog();
             if (result == true)
             {
-                _cartridgePath = dlg.FileName;
-                PowerOnEnabled = true;
-                PowerOffEnabled = false;
-                DebuggerEnabled = false;
+                var cartridge = CartridgeBuilder.Build(
+                    File.ReadAllBytes(dlg.FileName));
+                _console.LoadCartridge(cartridge);
                 Title = $"GameboyEm - {dlg.FileName}";
+                NotifyAll();
             }
         }
 
-        private async Task PowerOn()
+        private void PowerOn()
         {
             try
             {
-                PowerOnEnabled = false;
-                PowerOffEnabled = true;
-                DebuggerEnabled = true;
-
-                var cartridge = CartridgeBuilder.Build(
-                    File.ReadAllBytes(_cartridgePath));
-
-                _console.LoadCartridge(cartridge);
-                _console.OnDrawScreen += OnDrawScreen;
-                await _console.PowerOn();
+                _console.PowerOn();
             }
             catch (Exception e)
             {
                 MessageBox.Show("Error", e.ToString(),
                     MessageBoxButton.OK, MessageBoxImage.Error);
-
-                PowerOnEnabled = true;
-                PowerOffEnabled = false;
-                DebuggerEnabled = false;
             }
+
+            NotifyAll();
         }
 
         private void PowerOff()
         {
             _console.PowerOff();
-            PowerOnEnabled = true;
-            PowerOffEnabled = false;
-            DebuggerEnabled = false;
+            NotifyAll();
         }
 
-        private async Task Debugger()
+        private void Reset()
+        {
+            _console.Reset();
+            NotifyAll();
+        }
+
+        private void Debugger()
         {
             _console.Pause();
+            NotifyAll();
 
             OpenDebuggerWindow?.Invoke(_console);
 
-            await _console.Resume();
+            _console.Resume();
+            NotifyAll();
         }
 
         private void OnDrawScreen(object sender, DrawScreenEventArgs e)

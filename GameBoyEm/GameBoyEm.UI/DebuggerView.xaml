@@ -70,7 +70,7 @@
 
             <StackPanel Grid.Row="2" Orientation="Horizontal">
                 <Button Content="Step" Command="{Binding StepCommand}" Height="30" Width="90" Margin="0,0,10,0" />
-                <Button Content="Clear" Command="{Binding ClearCommand}" Height="30" Width="90" />
+                <Button Content="Clear" Command="{Binding ClearCommand}" Height="30" Width="90" Margin="0,0,10,0" />
             </StackPanel>
         </Grid>
     </Grid>

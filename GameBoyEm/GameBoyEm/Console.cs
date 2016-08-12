@@ -8,19 +8,20 @@ namespace GameBoyEm
 {
     public class Console
     {
+        private object _sync = new object();
         private ICpu _cpu;
         private IMmu _mmu;
         private IGpu _gpu;
         private IController _controller;
-        private bool _cartridgeLoaded;
         private long _cumulativeCycles;
         private Stopwatch _sw = new Stopwatch();
-        private CancellationTokenSource _tokenSource;
+        private bool _emulating;
 
+        public bool Paused { get; private set; }
         public bool TurnedOn { get; private set; }
+        public bool CartridgeLoaded { get; private set; }
         public ICpu Cpu { get { return _cpu; } }
         public IController Controller { get { return _controller; } }
-
         public EventHandler<DrawScreenEventArgs> OnDrawScreen;
 
         public Console(ICpu cpu, IMmu mmu, IGpu gpu, IController controller)
@@ -29,53 +30,6 @@ namespace GameBoyEm
             _mmu = mmu;
             _gpu = gpu;
             _controller = controller;
-        }
-
-        public void LoadCartridge(ICartridge cartridge)
-        {
-            _mmu.LoadCartridge(cartridge);
-            _cartridgeLoaded = true;
-        }
-
-        public async Task PowerOn()
-        {
-            if (!TurnedOn && _cartridgeLoaded)
-            {
-                TurnedOn = true;
-                Reset();
-                await Resume();
-            }
-        }
-
-        public void PowerOff()
-        {
-            Pause();
-        }
-
-        public void Pause()
-        {
-            if (TurnedOn && _cartridgeLoaded)
-            {
-                TurnedOn = false;
-                _tokenSource.Cancel();
-                _tokenSource = null;
-            }
-        }
-
-        public async Task Resume()
-        {
-            if (_tokenSource == null && _cartridgeLoaded)
-            {
-                _tokenSource = new CancellationTokenSource();
-                await Task.Run(() => Emulate(_tokenSource.Token), _tokenSource.Token);
-            }
-        }
-
-        public void Reset()
-        {
-            _cpu.Reset();
-            _mmu.Reset();
-            _gpu.Reset();
         }
 
         public static Console Default()
@@ -87,7 +41,105 @@ namespace GameBoyEm
             return new Console(cpu, mmu, gpu, controller);
         }
 
-        public bool Step()
+        public void LoadCartridge(ICartridge cartridge)
+        {
+            lock (_sync)
+            {
+                if (!TurnedOn)
+                {
+                    _mmu.LoadCartridge(cartridge);
+                    CartridgeLoaded = true;
+                }
+            }
+        }
+
+        public void PowerOn()
+        {
+            lock (_sync)
+            {
+                if (!TurnedOn && CartridgeLoaded)
+                {
+                    TurnedOn = true;
+                    Task.Run(() => Emulate());
+                }
+            }
+        }
+
+        public void PowerOff()
+        {
+            lock (_sync)
+            {
+                if (TurnedOn)
+                {
+                    TurnedOn = false;
+                    Reset();
+
+                    while (_emulating) ; // Wait for emulation to quit
+                }
+            }
+        }
+
+        public void Pause()
+        {
+            lock (_sync)
+            {
+                if (TurnedOn && !Paused)
+                {
+                    Paused = true;
+                    while (_emulating) ; // Wait for emulation to quit
+                }
+            }
+        }
+
+        public void Resume()
+        {
+            lock (_sync)
+            {
+                if (TurnedOn && Paused)
+                {
+                    Paused = false;
+                    Task.Run(() => Emulate());
+                }
+            }
+        }
+
+        public void Reset()
+        {
+            lock (_sync)
+            {
+                var wasTurnedOn = TurnedOn;
+                TurnedOn = false;
+                while (_emulating) ; // Wait for emulation to quit
+
+                _cpu.Reset();
+                _mmu.Reset();
+                _gpu.Reset();
+
+                // Draw blank frame buffer
+                OnDrawScreen?.Invoke(this,
+                    new DrawScreenEventArgs(_gpu.FrameBuffer));
+
+                Paused = false;
+
+                if (wasTurnedOn)
+                {
+                    PowerOn();
+                }
+            }
+        }
+
+        public void Step()
+        {
+            lock (_sync)
+            {
+                if (TurnedOn && Paused)
+                {
+                    StepUnlocked();
+                }
+            }
+        }
+
+        private void StepUnlocked()
         {
             var cycles = _cpu.Step();
             _cumulativeCycles += cycles;
@@ -99,21 +151,21 @@ namespace GameBoyEm
                     new DrawScreenEventArgs(_gpu.FrameBuffer));
             }
             _controller.Step();
-            return draw;
         }
 
-        private void Emulate(CancellationToken cancel)
+        private void Emulate()
         {
+            _emulating = true;
             _sw.Restart();
             while (true)
             {
-                if (Step())
+                if (Paused || !TurnedOn)
                 {
-                    if (cancel.IsCancellationRequested)
-                    {
-                        return;
-                    }
+                    _emulating = false;
+                    return;
                 }
+
+                StepUnlocked();
 
                 if (_cumulativeCycles >= 4194304)
                 {

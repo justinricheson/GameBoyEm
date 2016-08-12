@@ -17,20 +17,25 @@
         <DockPanel Grid.Row="0">
             <Menu DockPanel.Dock="Top">
                 <MenuItem Header="_File">
-                    <MenuItem Header="_Open" Command="{Binding OpenCommand}" />
+                    <MenuItem Header="_Open ROM" Command="{Binding OpenCommand}" />
+                    <MenuItem Header="_Save State" Command="{Binding SaveCommand}" />
+                    <MenuItem Header="_Load State" Command="{Binding LoadCommand}" />
                     <MenuItem Header="_Close" Command="{Binding CloseCommand}" />
                 </MenuItem>
             </Menu>
         </DockPanel>
 
         <Grid Grid.Row="1">
-            <Image x:Name="ScreenImage" />
+            <Image x:Name="ScreenImage"
+                RenderOptions.BitmapScalingMode="HighQuality" />
         </Grid>
 
         <StackPanel Grid.Row="2" Orientation="Horizontal">
             <Button Content="Power On" Command="{Binding PowerOnCommand}" IsEnabled="{Binding PowerOnEnabled}" Height="30" Width="90" Margin="0,0,10,0" />
             <Button Content="Power Off" Command="{Binding PowerOffCommand}" IsEnabled="{Binding PowerOffEnabled}" Height="30" Width="90" Margin="0,0,10,0" />
-            <Button Content="Debugger" Command="{Binding DebuggerCommand}" IsEnabled="{Binding DebuggerEnabled}" Height="30" Width="90" />
+            <Button Content="Reset" Command="{Binding ResetCommand}" IsEnabled="{Binding ResetEnabled}" Height="30" Width="90" Margin="0,0,10,0" />
+            <Button Content="Debugger" Command="{Binding DebuggerCommand}" IsEnabled="{Binding DebuggerEnabled}" Height="30" Width="90" Margin="0,0,10,0" />
+            <ToggleButton Content="{Binding PauseResumeLabel}" IsEnabled="{Binding PauseResumeEnabled}" IsChecked="{Binding IsPaused}" Height="30" Width="90" />
         </StackPanel>
     </Grid>
 </Window>
