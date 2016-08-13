@@ -175,7 +175,7 @@ namespace GameBoyEm
             }
             Controller.Step();
         }
-
+        
         private void Emulate()
         {
             _emulating = true;
