@@ -143,19 +143,19 @@ namespace GameBoyEm
                             ChangeMode(Mode.VBlank);
                             draw = true;
 
-                            if (_mmu.ReadByte(0xFF41).AND(0x10) > 0)
+                            if (_mmu.LcdcVblank)
                             {
-                                _mmu.LcdStat = true;
+                                _mmu.LcdStatInterrupt = true;
                             }
 
-                            _mmu.Vblank = true;
+                            _mmu.VblankInterrupt = true;
                         }
                         else
                         {
                             ChangeMode(Mode.OAM);
-                            if (_mmu.ReadByte(0xFF41).AND(0x20) > 0)
+                            if (_mmu.LcdcOam)
                             {
-                                _mmu.LcdStat = true;
+                                _mmu.LcdStatInterrupt = true;
                             }
                         }
                     }
@@ -170,9 +170,9 @@ namespace GameBoyEm
                             ChangeMode(Mode.OAM);
                             SetLine(0);
 
-                            if (_mmu.ReadByte(0xFF41).AND(0x20) > 0)
+                            if (_mmu.LcdcOam)
                             {
-                                _mmu.LcdStat = true;
+                                _mmu.LcdStatInterrupt = true;
                             }
                         }
                     }
@@ -196,9 +196,9 @@ namespace GameBoyEm
                         _clocks -= 43;
                         ChangeMode(Mode.HBlank);
 
-                        if (_mmu.ReadByte(0xFF41).AND(0x08) > 0)
+                        if (_mmu.LcdcHblank)
                         {
-                            _mmu.LcdStat = true;
+                            _mmu.LcdStatInterrupt = true;
                         }
                     }
                     break;
@@ -211,18 +211,17 @@ namespace GameBoyEm
 
         private void RenderScanLine()
         {
-            var lcdc = _mmu.ReadByte(0xFF40);
-            if (lcdc.AND(0x80) > 0) // LCD enabled
+            if (_mmu.LcdEnabled)
             {
-                if (lcdc.AND(0x01) > 0) // Background flag
+                if (_mmu.DisplayBackground)
                 {
                     RenderBackground();
                 }
-                if (lcdc.AND(0x20) > 0) // Window flag
+                if (_mmu.DisplayWindow)
                 {
                     RenderWindow();
                 }
-                if (lcdc.AND(0x02) > 0) // Sprite flag
+                if (_mmu.DisplaySprites)
                 {
                     RenderSprites();
                 }

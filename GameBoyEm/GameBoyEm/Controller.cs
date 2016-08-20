@@ -33,7 +33,7 @@ namespace GameBoyEm
                  || APressed && !_mmu.APressed
                  || BPressed && !_mmu.BPressed)
                 {
-                    _mmu.JoyPad = true;
+                    _mmu.JoyPadInterrupt = true;
                 }
 
                 _mmu.StartPressed = StartPressed;
@@ -48,7 +48,7 @@ namespace GameBoyEm
                  || LeftPressed && !_mmu.LeftPressed
                  || RightPressed && !_mmu.RightPressed)
                 {
-                    _mmu.JoyPad = true;
+                    _mmu.JoyPadInterrupt = true;
                 }
 
                 _mmu.UpPressed = UpPressed;

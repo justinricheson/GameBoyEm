@@ -54,7 +54,7 @@ namespace GameBoyEm
             }
         }
         public bool InterruptsExist { get { return Interrupts > 0; } }
-        public bool Vblank
+        public bool VblankInterrupt
         {
             get { return (Interrupts & 0x01) == 0x01; }
             set
@@ -69,7 +69,7 @@ namespace GameBoyEm
                 }
             }
         }
-        public bool LcdStat
+        public bool LcdStatInterrupt
         {
             get { return (Interrupts & 0x02) == 0x02; }
             set
@@ -84,7 +84,7 @@ namespace GameBoyEm
                 }
             }
         }
-        public bool Timer
+        public bool TimerInterrupt
         {
             get { return (Interrupts & 0x04) == 0x04; }
             set
@@ -99,7 +99,7 @@ namespace GameBoyEm
                 }
             }
         }
-        public bool Serial
+        public bool SerialInterrupt
         {
             get { return (Interrupts & 0x08) == 0x08; }
             set
@@ -114,7 +114,7 @@ namespace GameBoyEm
                 }
             }
         }
-        public bool JoyPad
+        public bool JoyPadInterrupt
         {
             get { return (Interrupts & 0x10) == 0x10; }
             set
@@ -133,33 +133,18 @@ namespace GameBoyEm
         public byte JoypadRegister { get { return ReadByte(0xFF00); } }
         public bool KeySelector { get { return (ReadByte(0xFF00) & 0x20) == 0; } }
         public bool DirSelector { get { return (ReadByte(0xFF00) & 0x10) == 0; } }
-        public bool StartPressed
+        public bool APressed
         {
-            get { return !((JoypadRegister & 0x08) == 0x08); }
+            get { return !((JoypadRegister & 0x01) == 0x01); }
             set
             {
                 if (value)
                 {
-                    WriteByte(0xFF00, ReadByte(0xFF00).AND(0xF7));
+                    WriteByte(0xFF00, ReadByte(0xFF00).AND(0xFE));
                 }
                 else
                 {
-                    WriteByte(0xFF00, ReadByte(0xFF00).OR(0x08));
-                }
-            }
-        }
-        public bool SelectPressed
-        {
-            get { return !((JoypadRegister & 0x04) == 0x04); }
-            set
-            {
-                if (value)
-                {
-                    WriteByte(0xFF00, ReadByte(0xFF00).AND(0xFB));
-                }
-                else
-                {
-                    WriteByte(0xFF00, ReadByte(0xFF00).OR(0x04));
+                    WriteByte(0xFF00, ReadByte(0xFF00).OR(0x01));
                 }
             }
         }
@@ -178,37 +163,7 @@ namespace GameBoyEm
                 }
             }
         }
-        public bool APressed
-        {
-            get { return !((JoypadRegister & 0x01) == 0x01); }
-            set
-            {
-                if (value)
-                {
-                    WriteByte(0xFF00, ReadByte(0xFF00).AND(0xFE));
-                }
-                else
-                {
-                    WriteByte(0xFF00, ReadByte(0xFF00).OR(0x01));
-                }
-            }
-        }
-        public bool DownPressed
-        {
-            get { return !((JoypadRegister & 0x08) == 0x08); }
-            set
-            {
-                if (value)
-                {
-                    WriteByte(0xFF00, ReadByte(0xFF00).AND(0xF7));
-                }
-                else
-                {
-                    WriteByte(0xFF00, ReadByte(0xFF00).OR(0x08));
-                }
-            }
-        }
-        public bool UpPressed
+        public bool SelectPressed
         {
             get { return !((JoypadRegister & 0x04) == 0x04); }
             set
@@ -223,18 +178,18 @@ namespace GameBoyEm
                 }
             }
         }
-        public bool LeftPressed
+        public bool StartPressed
         {
-            get { return !((JoypadRegister & 0x02) == 0x02); }
+            get { return !((JoypadRegister & 0x08) == 0x08); }
             set
             {
                 if (value)
                 {
-                    WriteByte(0xFF00, ReadByte(0xFF00).AND(0xFD));
+                    WriteByte(0xFF00, ReadByte(0xFF00).AND(0xF7));
                 }
                 else
                 {
-                    WriteByte(0xFF00, ReadByte(0xFF00).OR(0x02));
+                    WriteByte(0xFF00, ReadByte(0xFF00).OR(0x08));
                 }
             }
         }
@@ -253,6 +208,62 @@ namespace GameBoyEm
                 }
             }
         }
+        public bool LeftPressed
+        {
+            get { return !((JoypadRegister & 0x02) == 0x02); }
+            set
+            {
+                if (value)
+                {
+                    WriteByte(0xFF00, ReadByte(0xFF00).AND(0xFD));
+                }
+                else
+                {
+                    WriteByte(0xFF00, ReadByte(0xFF00).OR(0x02));
+                }
+            }
+        }
+        public bool UpPressed
+        {
+            get { return !((JoypadRegister & 0x04) == 0x04); }
+            set
+            {
+                if (value)
+                {
+                    WriteByte(0xFF00, ReadByte(0xFF00).AND(0xFB));
+                }
+                else
+                {
+                    WriteByte(0xFF00, ReadByte(0xFF00).OR(0x04));
+                }
+            }
+        }
+        public bool DownPressed
+        {
+            get { return !((JoypadRegister & 0x08) == 0x08); }
+            set
+            {
+                if (value)
+                {
+                    WriteByte(0xFF00, ReadByte(0xFF00).AND(0xF7));
+                }
+                else
+                {
+                    WriteByte(0xFF00, ReadByte(0xFF00).OR(0x08));
+                }
+            }
+        }
+
+        public byte LcdcRegister { get { return ReadByte(0xFF40); } }
+        public bool LcdEnabled { get { return LcdcRegister.AND(0x80) != 0; } }
+        public bool DisplayBackground {  get { return LcdcRegister.AND(0x01) != 0; } }
+        public bool DisplaySprites { get { return LcdcRegister.AND(0x02) != 0; } }
+        public bool DisplayWindow { get { return LcdcRegister.AND(0x20) != 0; } }
+
+        public byte LcdcStatRegister { get { return ReadByte(0xFF41); } }
+        public bool LcdcHblank { get { return LcdcStatRegister.AND(0x08) != 0; } }
+        public bool LcdcVblank { get { return LcdcStatRegister.AND(0x10) != 0; } }
+        public bool LcdcOam { get { return LcdcStatRegister.AND(0x20) != 0; } }
 
         public Mmu()
         {
@@ -309,6 +320,7 @@ namespace GameBoyEm
             _memory[0xFF4B] = 0x00;
             _memory[0xFFFF] = 0x00;
         }
+
         public void LoadCartridge(ICartridge cartridge) => _cartridge = cartridge;
 
         public byte ReadByte(ushort address)

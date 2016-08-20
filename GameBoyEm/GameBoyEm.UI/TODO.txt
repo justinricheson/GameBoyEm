@@ -4,3 +4,4 @@ Refactor GPU logic, improve mmu abstraction for gpu registers
 Add icon resources
 Fix real time delay
 Add hexviewer for memory to debugger
+Add control input simulator

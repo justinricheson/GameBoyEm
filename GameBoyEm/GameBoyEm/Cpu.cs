@@ -159,11 +159,11 @@ namespace GameBoyEm
             //string operation = "INTERRUPT";
             if (IME && _mmu.InterruptsExist)
             {
-                if (_mmu.Vblank) { _mmu.Vblank = false; Interrupt(0x0040); }
-                else if (_mmu.LcdStat) { _mmu.LcdStat = false; Interrupt(0x0048); }
-                else if (_mmu.Timer) { _mmu.Timer = false; Interrupt(0x0050); }
-                else if (_mmu.Serial) { _mmu.Serial = false; Interrupt(0x0058); }
-                else if (_mmu.JoyPad) { _mmu.JoyPad = false; Interrupt(0x0060); }
+                if (_mmu.VblankInterrupt) { _mmu.VblankInterrupt = false; Interrupt(0x0040); }
+                else if (_mmu.LcdStatInterrupt) { _mmu.LcdStatInterrupt = false; Interrupt(0x0048); }
+                else if (_mmu.TimerInterrupt) { _mmu.TimerInterrupt = false; Interrupt(0x0050); }
+                else if (_mmu.SerialInterrupt) { _mmu.SerialInterrupt = false; Interrupt(0x0058); }
+                else if (_mmu.JoyPadInterrupt) { _mmu.JoyPadInterrupt = false; Interrupt(0x0060); }
                 cycles = 3;
             }
             else

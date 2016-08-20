@@ -248,7 +248,7 @@ namespace GameBoyEm.UI.ViewModels
         {
             // TODO if debugger not open, offer to open
             // TODO option to pause execution
-            var result = MessageBox.Show($"Remove breakpoint {e.PC}?", "Breakpoint hit",
+            var result = MessageBox.Show($"Remove breakpoint 0x{e.PC:X4}?", "Breakpoint hit",
                 MessageBoxButton.YesNo, MessageBoxImage.Question);
             if (result == MessageBoxResult.Yes)
             {
