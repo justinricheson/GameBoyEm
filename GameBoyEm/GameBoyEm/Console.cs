@@ -1,6 +1,7 @@
 ﻿using Common.Logging;
 using GameBoyEm.Api;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.Serialization;
 using System.Threading;
@@ -11,10 +12,10 @@ namespace GameBoyEm
     [Serializable]
     public class Console : ISerializable
     {
-        private object _sync = new object();
         private long _cumulativeCycles;
         private Stopwatch _sw = new Stopwatch();
         private bool _emulating;
+        private HashSet<uint> _breakpoints;
 
         public ICpu Cpu { get; }
         public IMmu Mmu { get; }
@@ -25,6 +26,7 @@ namespace GameBoyEm
         public bool CartridgeLoaded { get; private set; }
         public bool EmitFrames { get; set; }
         public EventHandler<DrawScreenEventArgs> OnDrawScreen;
+        public EventHandler<BreakpointEventArgs> OnBreakpoint;
 
         public Console(ICpu cpu, IMmu mmu, IGpu gpu, IController controller)
         {
@@ -33,6 +35,7 @@ namespace GameBoyEm
             Gpu = gpu;
             Controller = controller;
             EmitFrames = true;
+            _breakpoints = new HashSet<uint>();
         }
 
         protected Console(SerializationInfo info, StreamingContext ctx)
@@ -46,10 +49,18 @@ namespace GameBoyEm
             (Gpu as Gpu).Mmu = Mmu;
             Controller = new Controller(Mmu);
 
+            _breakpoints = new HashSet<uint>();
             CartridgeLoaded = true;
             TurnedOn = true;
             Paused = true;
             EmitFrames = true;
+        }
+
+        public void GetObjectData(SerializationInfo info, StreamingContext context)
+        {
+            info.AddValue("Cpu", Cpu);
+            info.AddValue("Mmu", Mmu);
+            info.AddValue("Gpu", Gpu);
         }
 
         public static Console Default()
@@ -63,107 +74,105 @@ namespace GameBoyEm
 
         public void LoadCartridge(ICartridge cartridge)
         {
-            lock (_sync)
+            if (!TurnedOn)
             {
-                if (!TurnedOn)
-                {
-                    Mmu.LoadCartridge(cartridge);
-                    CartridgeLoaded = true;
-                }
+                Mmu.LoadCartridge(cartridge);
+                CartridgeLoaded = true;
             }
         }
 
         public void PowerOn()
         {
-            lock (_sync)
+            if (!TurnedOn && CartridgeLoaded)
             {
-                if (!TurnedOn && CartridgeLoaded)
-                {
-                    TurnedOn = true;
-                    Task.Run(() => Emulate());
-                }
+                TurnedOn = true;
+                Task.Run(() => Emulate());
             }
         }
 
         public void PowerOff()
         {
-            lock (_sync)
+            if (TurnedOn)
             {
-                if (TurnedOn)
-                {
-                    TurnedOn = false;
-                    Reset();
-                    Wait();
-                }
+                TurnedOn = false;
+                Reset();
+                Wait();
             }
         }
 
         public void Pause()
         {
-            lock (_sync)
+            if (TurnedOn && !Paused)
             {
-                if (TurnedOn && !Paused)
-                {
-                    Paused = true;
-                    Wait();
-                }
+                Paused = true;
+                Wait();
             }
         }
 
         public void Resume()
         {
-            lock (_sync)
+            if (TurnedOn && Paused)
             {
-                if (TurnedOn && Paused)
-                {
-                    Paused = false;
-                    Task.Run(() => Emulate());
-                }
+                Paused = false;
+                Task.Run(() => Emulate());
             }
         }
 
         public void Reset()
         {
-            lock (_sync)
+            var wasTurnedOn = TurnedOn;
+            TurnedOn = false;
+            Wait();
+
+            Cpu.Reset();
+            Mmu.Reset();
+            Gpu.Reset();
+
+            // Draw blank frame buffer
+            OnDrawScreen?.Invoke(this,
+                new DrawScreenEventArgs(Gpu.FrameBuffer));
+
+            Paused = false;
+
+            if (wasTurnedOn)
             {
-                var wasTurnedOn = TurnedOn;
-                TurnedOn = false;
-                Wait();
+                PowerOn();
+            }
+        }
 
-                Cpu.Reset();
-                Mmu.Reset();
-                Gpu.Reset();
+        public void SetBreakpoint(uint pc)
+        {
+            _breakpoints.Add(pc);
+        }
 
-                // Draw blank frame buffer
-                OnDrawScreen?.Invoke(this,
-                    new DrawScreenEventArgs(Gpu.FrameBuffer));
+        public void UnsetBreakpoint(uint pc)
+        {
+            _breakpoints.Remove(pc);
+        }
 
-                Paused = false;
-
-                if (wasTurnedOn)
+        public void StepMany(int steps, Action<int> progress)
+        {
+            if (TurnedOn && Paused)
+            {
+                for (int i = 0; i < steps; i++)
                 {
-                    PowerOn();
+                    progress(i);
+                    Step();
                 }
             }
         }
 
-        public void Step(int steps, Action<int> progress)
+        private void Step()
         {
-            lock (_sync)
+            if (_breakpoints.Count > 0)
             {
-                if (TurnedOn && Paused)
+                if (_breakpoints.Contains(Cpu.PC))
                 {
-                    for (int i = 0; i < steps; i++)
-                    {
-                        progress(i);
-                        StepUnlocked();
-                    }
+                    OnBreakpoint?.Invoke(this,
+                        new BreakpointEventArgs(Cpu.PC));
                 }
             }
-        }
 
-        private void StepUnlocked()
-        {
             var cycles = Cpu.Step();
             _cumulativeCycles += cycles;
 
@@ -175,7 +184,7 @@ namespace GameBoyEm
             }
             Controller.Step();
         }
-        
+
         private void Emulate()
         {
             _emulating = true;
@@ -188,7 +197,7 @@ namespace GameBoyEm
                     return;
                 }
 
-                StepUnlocked();
+                Step();
 
                 // TODO this is causing a stutter in release mode
                 //if (_cumulativeCycles >= 4194304)
@@ -207,13 +216,6 @@ namespace GameBoyEm
             {
                 Thread.Sleep(0);
             }
-        }
-
-        public void GetObjectData(SerializationInfo info, StreamingContext context)
-        {
-            info.AddValue("Cpu", Cpu);
-            info.AddValue("Mmu", Mmu);
-            info.AddValue("Gpu", Gpu);
         }
     }
 }

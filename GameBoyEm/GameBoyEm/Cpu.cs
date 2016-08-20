@@ -123,6 +123,21 @@ namespace GameBoyEm
             IME = info.GetBoolean("IME");
         }
 
+        public void GetObjectData(SerializationInfo info, StreamingContext context)
+        {
+            info.AddValue("A", A);
+            info.AddValue("B", B);
+            info.AddValue("C", C);
+            info.AddValue("D", D);
+            info.AddValue("E", E);
+            info.AddValue("F", F);
+            info.AddValue("H", H);
+            info.AddValue("L", L);
+            info.AddValue("SP", SP);
+            info.AddValue("PC", PC);
+            info.AddValue("IME", IME);
+        }
+
         public void Reset()
         {
             // Magic init code obtained from http://gbdev.gg8.se/wiki/articles/Pan_Docs
@@ -203,20 +218,5 @@ namespace GameBoyEm
         //{
         //    return $"{A}|{B}|{C}|{D}|{E}|{F}|{H}|{L}|{SP}|{PC}|{(IME ? 1 : 0)}";
         //}
-
-        public void GetObjectData(SerializationInfo info, StreamingContext context)
-        {
-            info.AddValue("A", A);
-            info.AddValue("B", B);
-            info.AddValue("C", C);
-            info.AddValue("D", D);
-            info.AddValue("E", E);
-            info.AddValue("F", F);
-            info.AddValue("H", H);
-            info.AddValue("L", L);
-            info.AddValue("SP", SP);
-            info.AddValue("PC", PC);
-            info.AddValue("IME", IME);
-        }
     }
 }

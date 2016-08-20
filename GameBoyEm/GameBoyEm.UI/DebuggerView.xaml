@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:GameBoyEm.UI" mc:Ignorable="d"
         DataContextChanged="Window_DataContextChanged"
-        Title="Debugger" Height="440" Width="650">
+        Title="Debugger" Height="440" Width="850">
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="boolToVisibilityConverter"/>
     </Window.Resources>
@@ -14,6 +14,7 @@
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto" MinWidth="100" />
             <ColumnDefinition />
+            <ColumnDefinition Width="Auto" MinWidth="100" />
         </Grid.ColumnDefinitions>
 
         <Grid Grid.Column="0">
@@ -23,7 +24,7 @@
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="AUto" />
+                <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
 
             <Label Content="CPU State" FontWeight="Bold" Grid.ColumnSpan="2" />
@@ -94,15 +95,34 @@
                     <DataGridTextColumn Header="IME" Binding="{Binding IME}" IsReadOnly="True" Width="Auto" />
                 </DataGrid.Columns>
             </DataGrid>
-            
+
             <StackPanel Grid.Row="2" Orientation="Horizontal">
                 <Button Content="Clear" Command="{Binding ClearCommand}" Height="30" Width="90" Margin="0,0,10,0" />
                 <Button Content="Step" Command="{Binding StepCommand}" Height="30" Width="90" Margin="0,0,10,0" />
-                <Label Content="Number of Steps" Height="30" Margin="0,0,10,0" />
+                <Label Content="Number of Steps:" Height="30" Margin="0,0,10,0" />
                 <TextBox Text="{Binding Steps, UpdateSourceTrigger=PropertyChanged}" VerticalContentAlignment="Center" Height="30" Width="90" Margin="0,0,10,0" />
                 <CheckBox Content="Enable CPU History" IsChecked="{Binding EnableCpuHistory}" IsEnabled="{Binding EnableCpuHistoryEnabled}" Height="30" VerticalContentAlignment="Center" />
             </StackPanel>
             <ProgressBar Minimum="0" Maximum="{Binding ProgressMax}" Value="{Binding ProgressValue}" Grid.Row="2" Visibility="{Binding ProgressVisible, Converter={StaticResource boolToVisibilityConverter}}" />
+        </Grid>
+
+        <Grid Grid.Column="2">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            
+            <Label Content="Breakpoints" FontWeight="Bold" Grid.Row="0" />
+
+            <ListBox Grid.Row="1" ItemStringFormat="0x{0:X4}" ItemsSource="{Binding Breakpoints}" SelectedIndex="{Binding SelectedBreakpointIndex}" />
+            
+            <StackPanel Orientation="Horizontal" Grid.Row="2">
+                <Label Content="PC:" Margin="0,0,10,0" />
+                <TextBox Text="{Binding Breakpoint, StringFormat=0x{0:X4}}" VerticalContentAlignment="Center" Width="75" Margin="0,0,10,0" />
+                <Button Content="+" Command="{Binding AddBreakpointCommand}" Height="30" Width="30" Margin="0,0,10,0" />
+                <Button Content="-" Command="{Binding RemoveBreakpointCommand}" Height="30" Width="30" />
+            </StackPanel>
         </Grid>
     </Grid>
 </Window>

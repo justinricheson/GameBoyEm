@@ -6,6 +6,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Input;
 
 namespace GameBoyEm.UI.ViewModels
@@ -21,17 +22,21 @@ namespace GameBoyEm.UI.ViewModels
         private bool _progressVisible;
         private int _progressMax;
         private int _progressValue;
-        private ObservableCollection<CpuStateViewModel> _cpuHistory;
+        private ushort? _breakpoint;
 
         public CpuStateViewModel Current { get; private set; }
-        public ObservableCollection<CpuStateViewModel> CpuHistory
+        public ObservableCollection<CpuStateViewModel> CpuHistory { get; private set; }
+        public ObservableCollection<ushort> Breakpoints { get; private set; }
+        public int SelectedBreakpointIndex { get; set; }
+        public string Breakpoint
         {
-            get { return _cpuHistory; }
+            get { return $"{_breakpoint:X4}"; }
             set
             {
-                if (_cpuHistory != value)
+                var parsed = Convert.ToUInt16(value, 16);
+                if (parsed != _breakpoint)
                 {
-                    _cpuHistory = value;
+                    _breakpoint = parsed;
                     Notify();
                 }
             }
@@ -128,6 +133,8 @@ namespace GameBoyEm.UI.ViewModels
         }
         public ICommand ClearCommand { get; set; }
         public ICommand StepCommand { get; set; }
+        public ICommand AddBreakpointCommand { get; set; }
+        public ICommand RemoveBreakpointCommand { get; set; }
         public Action ScrollToBottom { get; set; }
 
         public DebuggerViewModel(Console console)
@@ -135,10 +142,15 @@ namespace GameBoyEm.UI.ViewModels
             _enableDebugger = true;
             _console = console;
             _cpu = _console.Cpu;
+            _console.OnBreakpoint += OnBreakpoint;
+
             Steps = 1;
             CpuHistory = new ObservableCollection<CpuStateViewModel>();
+            Breakpoints = new ObservableCollection<ushort>();
             ClearCommand = new ActionCommand(Clear);
             StepCommand = new ActionCommand(Step);
+            AddBreakpointCommand = new ActionCommand(AddBreakpoint);
+            RemoveBreakpointCommand = new ActionCommand(RemoveBreakpoint);
             Refresh();
         }
 
@@ -176,7 +188,7 @@ namespace GameBoyEm.UI.ViewModels
         {
             var history = new List<CpuStateViewModel>();
 
-            _console.Step((int)Steps, i =>
+            _console.StepMany((int)Steps, i =>
             {
                 if (EnableCpuHistory)
                 {
@@ -212,6 +224,40 @@ namespace GameBoyEm.UI.ViewModels
         private void Clear()
         {
             CpuHistory.Clear();
+        }
+
+        private void AddBreakpoint()
+        {
+            if (_breakpoint != null && !Breakpoints.Contains(_breakpoint.Value))
+            {
+                Breakpoints.Add(_breakpoint.Value);
+                _console.SetBreakpoint(_breakpoint.Value);
+            }
+        }
+
+        private void RemoveBreakpoint()
+        {
+            if (_breakpoint != null && SelectedBreakpointIndex >= 0)
+            {
+                Breakpoints.RemoveAt(SelectedBreakpointIndex);
+                _console.UnsetBreakpoint(_breakpoint.Value);
+            }
+        }
+
+        private void OnBreakpoint(object sender, BreakpointEventArgs e)
+        {
+            // TODO if debugger not open, offer to open
+            // TODO option to pause execution
+            var result = MessageBox.Show($"Remove breakpoint {e.PC}?", "Breakpoint hit",
+                MessageBoxButton.YesNo, MessageBoxImage.Question);
+            if (result == MessageBoxResult.Yes)
+            {
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    Breakpoints.Remove(e.PC);
+                    _console.UnsetBreakpoint(e.PC);
+                });
+            }
         }
     }
 }

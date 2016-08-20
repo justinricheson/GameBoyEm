@@ -57,6 +57,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Api\BreakpointEventArgs.cs" />
     <Compile Include="Api\DrawScreenEventArgs.cs" />
     <Compile Include="Api\IController.cs" />
     <Compile Include="Cartridge\Cartridge.cs" />

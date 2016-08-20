@@ -61,6 +61,19 @@ namespace GameBoyEm
                 .Select(i => i.FromArgb()).ToList();
         }
 
+        public void GetObjectData(SerializationInfo info, StreamingContext context)
+        {
+            info.AddValue("IsEnabled", _isEnabled);
+            info.AddValue("IsLineRendered", _isLineRendered);
+            info.AddValue("Clocks", _clocks);
+            info.AddValue("CurrentLine", _currentLine);
+            info.AddValue("Delay", _delay);
+            info.AddValue("Mode", _mode);
+            info.AddValue("FrameBuffer", _frameBuffer.Select(c => c.ToArgb()).ToList());
+            info.AddValue("BackgroundPalette", _bgPalette.Select(c => c.ToArgb()).ToList());
+            info.AddValue("SpritePalette", _spritePalette.Select(c => c.ToArgb()).ToList());
+        }
+
         public void Reset()
         {
             _isEnabled = true;
@@ -458,19 +471,6 @@ namespace GameBoyEm
         {
             _currentLine = lineNum;
             _mmu.WriteByte(0xFF44, (byte)lineNum);
-        }
-
-        public void GetObjectData(SerializationInfo info, StreamingContext context)
-        {
-            info.AddValue("IsEnabled", _isEnabled);
-            info.AddValue("IsLineRendered", _isLineRendered);
-            info.AddValue("Clocks", _clocks);
-            info.AddValue("CurrentLine", _currentLine);
-            info.AddValue("Delay", _delay);
-            info.AddValue("Mode", _mode);
-            info.AddValue("FrameBuffer", _frameBuffer.Select(c => c.ToArgb()).ToList());
-            info.AddValue("BackgroundPalette", _bgPalette.Select(c => c.ToArgb()).ToList());
-            info.AddValue("SpritePalette", _spritePalette.Select(c => c.ToArgb()).ToList());
         }
 
         private enum Mode

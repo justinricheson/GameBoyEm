@@ -265,6 +265,12 @@ namespace GameBoyEm
             _cartridge = (ICartridge)info.GetValue("Cartridge", typeof(ICartridge));
         }
 
+        public void GetObjectData(SerializationInfo info, StreamingContext context)
+        {
+            info.AddValue("Memory", _memory);
+            info.AddValue("Cartridge", _cartridge);
+        }
+
         public void Reset()
         {
             _memory = new byte[65536];
@@ -343,12 +349,6 @@ namespace GameBoyEm
         {
             WriteByte(address, value.AND(0x00FF).ToByte());
             WriteByte(++address, value.AND(0xFF00).RS(8).ToByte());
-        }
-
-        public void GetObjectData(SerializationInfo info, StreamingContext context)
-        {
-            info.AddValue("Memory", _memory);
-            info.AddValue("Cartridge", _cartridge);
         }
     }
 }

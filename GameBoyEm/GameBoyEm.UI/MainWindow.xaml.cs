@@ -1,5 +1,6 @@
 ﻿using GameBoyEm.UI.ViewModels;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Windows;
@@ -48,7 +49,7 @@ namespace GameBoyEm.UI
 
             window.ShowDialog();
         }
-        
+
         private void UpdateScreen(IList<Color> frameBuffer)
         {
             _bmp.Dispatcher.BeginInvoke((Action)(() =>
@@ -74,11 +75,13 @@ namespace GameBoyEm.UI
         private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
         {
             _viewModel.OnKeyDown(e.Key);
+            e.Handled = true; // Disable keyboard events for all other controls
         }
 
         private void Window_PreviewKeyUp(object sender, KeyEventArgs e)
         {
             _viewModel.OnKeyUp(e.Key);
+            e.Handled = true; // Disable keyboard events for all other controls
         }
     }
 }
