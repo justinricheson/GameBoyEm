@@ -7,9 +7,7 @@ namespace GameBoyEm.Cartridge
     [Serializable]
     public abstract class Cartridge : ICartridge, ISerializable
     {
-        protected const ushort RomBankSize = 16384;
-        protected const ushort TypeAddress = 0x0147;
-        protected const byte RomOnlyType = 0x00;
+        public static readonly ushort BankSize = 16384;
         protected byte[] _rom;
 
         public Cartridge(byte[] rom)
@@ -22,13 +20,6 @@ namespace GameBoyEm.Cartridge
             _rom = (byte[])info.GetValue("Rom", typeof(byte[]));
         }
 
-        public static CartridgeType GetType(byte[] rom)
-        {
-            var type = rom[TypeAddress];
-            return type == RomOnlyType
-                ? CartridgeType.RomOnly
-                : CartridgeType.Unknown;
-        }
         public abstract byte Read(ushort address);
         public abstract void Write(ushort address, byte value);
         public virtual void GetObjectData(SerializationInfo info, StreamingContext context)
@@ -40,6 +31,7 @@ namespace GameBoyEm.Cartridge
     public enum CartridgeType
     {
         Unknown,
-        RomOnly
+        RomOnly,
+        Mbc1
     }
 }
