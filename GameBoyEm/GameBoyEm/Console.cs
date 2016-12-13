@@ -1,5 +1,4 @@
-﻿using Common.Logging;
-using GameBoyEm.Api;
+﻿using GameBoyEm.Api;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -16,17 +15,20 @@ namespace GameBoyEm
         private const double _cycleTime = _cycleBoundary / 4194304d;
         private long _cumulativeCycles;
         private Stopwatch _sw = new Stopwatch();
-        private bool _emulating;
+        private volatile bool _emulating;
+        private volatile bool _paused;
+        private volatile bool _turnedOn;
+        private volatile bool _emitFrames;
         private HashSet<uint> _breakpoints;
 
         public ICpu Cpu { get; }
         public IMmu Mmu { get; }
         public IGpu Gpu { get; }
         public IController Controller { get; }
-        public bool Paused { get; private set; }
-        public bool TurnedOn { get; private set; }
+        public bool Paused { get { return _paused; } }
+        public bool TurnedOn { get { return _turnedOn; } }
         public bool CartridgeLoaded { get; private set; }
-        public bool EmitFrames { get; set; }
+        public bool EmitFrames { get { return _emitFrames; } set { _emitFrames = value; } }
         public EventHandler<DrawScreenEventArgs> OnDrawScreen;
         public EventHandler<BreakpointEventArgs> OnBreakpoint;
 
@@ -36,7 +38,7 @@ namespace GameBoyEm
             Mmu = mmu;
             Gpu = gpu;
             Controller = controller;
-            EmitFrames = true;
+            _emitFrames = true;
             _breakpoints = new HashSet<uint>();
         }
 
@@ -52,10 +54,10 @@ namespace GameBoyEm
             Controller = new Controller(Mmu);
 
             _breakpoints = new HashSet<uint>();
+            _turnedOn = true;
+            _paused = true;
+            _emitFrames = true;
             CartridgeLoaded = true;
-            TurnedOn = true;
-            Paused = true;
-            EmitFrames = true;
         }
 
         public void GetObjectData(SerializationInfo info, StreamingContext context)
@@ -76,7 +78,7 @@ namespace GameBoyEm
 
         public void LoadCartridge(ICartridge cartridge)
         {
-            if (!TurnedOn)
+            if (!_turnedOn)
             {
                 Mmu.LoadCartridge(cartridge);
                 CartridgeLoaded = true;
@@ -85,18 +87,18 @@ namespace GameBoyEm
 
         public void PowerOn()
         {
-            if (!TurnedOn && CartridgeLoaded)
+            if (!_turnedOn && CartridgeLoaded)
             {
-                TurnedOn = true;
+                _turnedOn = true;
                 Task.Run(() => Emulate());
             }
         }
 
         public void PowerOff()
         {
-            if (TurnedOn)
+            if (_turnedOn)
             {
-                TurnedOn = false;
+                _turnedOn = false;
                 Reset();
                 Wait();
             }
@@ -104,26 +106,26 @@ namespace GameBoyEm
 
         public void Pause()
         {
-            if (TurnedOn && !Paused)
+            if (_turnedOn && !_paused)
             {
-                Paused = true;
+                _paused = true;
                 Wait();
             }
         }
 
         public void Resume()
         {
-            if (TurnedOn && Paused)
+            if (_turnedOn && _paused)
             {
-                Paused = false;
+                _paused = false;
                 Task.Run(() => Emulate());
             }
         }
 
         public void Reset()
         {
-            var wasTurnedOn = TurnedOn;
-            TurnedOn = false;
+            var wasTurnedOn = _turnedOn;
+            _turnedOn = false;
             Wait();
 
             Cpu.Reset();
@@ -134,7 +136,7 @@ namespace GameBoyEm
             OnDrawScreen?.Invoke(this,
                 new DrawScreenEventArgs(Gpu.FrameBuffer));
 
-            Paused = false;
+            _paused = false;
 
             if (wasTurnedOn)
             {
@@ -154,7 +156,7 @@ namespace GameBoyEm
 
         public void StepMany(int steps, Action<int> progress)
         {
-            if (TurnedOn && Paused)
+            if (_turnedOn && _paused)
             {
                 for (int i = 0; i < steps; i++)
                 {
@@ -179,7 +181,7 @@ namespace GameBoyEm
             _cumulativeCycles += cycles;
 
             var draw = Gpu.Step(cycles);
-            if (draw && EmitFrames)
+            if (draw && _emitFrames)
             {
                 OnDrawScreen?.Invoke(this,
                     new DrawScreenEventArgs(Gpu.FrameBuffer));
@@ -190,10 +192,9 @@ namespace GameBoyEm
         private void Emulate()
         {
             _emulating = true;
-            _sw.Restart();
             while (true)
             {
-                if (Paused || !TurnedOn)
+                if (_paused || !_turnedOn)
                 {
                     _emulating = false;
                     return;
