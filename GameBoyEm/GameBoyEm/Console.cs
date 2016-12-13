@@ -12,6 +12,8 @@ namespace GameBoyEm
     [Serializable]
     public class Console : ISerializable
     {
+        private const int _cycleBoundary = 100000;
+        private const double _cycleTime = _cycleBoundary / 4194304d;
         private long _cumulativeCycles;
         private Stopwatch _sw = new Stopwatch();
         private bool _emulating;
@@ -199,14 +201,16 @@ namespace GameBoyEm
 
                 Step();
 
-                // TODO this is causing a stutter in release mode
-                //if (_cumulativeCycles >= 4194304)
-                //{
-                //    // Slow down emulation to sync with ~4.194304MHz
-                //    _cumulativeCycles -= 4194304;
-                //    while (_sw.ElapsedTicks < TimeSpan.TicksPerSecond) ;
-                //    _sw.Restart();
-                //}
+                if (_cumulativeCycles >= _cycleBoundary)
+                {
+                    // Slow down emulation to sync with ~4.194304MHz
+                    var expectedTicks = TimeSpan.FromSeconds(_cycleTime).Ticks;
+                    _cumulativeCycles -= _cycleBoundary;
+
+                    _sw.Restart();
+                    while (_sw.ElapsedTicks < expectedTicks) ;
+                    _sw.Stop();
+                }
             }
         }
 
