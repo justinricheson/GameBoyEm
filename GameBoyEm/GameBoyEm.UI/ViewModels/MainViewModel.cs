@@ -121,6 +121,7 @@ namespace GameBoyEm.UI.ViewModels
                 case Key.Down: _console.Controller.DownPressed = true; break;
                 case Key.Left: _console.Controller.LeftPressed = true; break;
                 case Key.Right: _console.Controller.RightPressed = true; break;
+                case Key.Escape: _console.Controller.FastPressed = true; break;
             }
         }
 
@@ -141,6 +142,7 @@ namespace GameBoyEm.UI.ViewModels
                 case Key.Down: _console.Controller.DownPressed = false; break;
                 case Key.Left: _console.Controller.LeftPressed = false; break;
                 case Key.Right: _console.Controller.RightPressed = false; break;
+                case Key.Escape: _console.Controller.FastPressed = false; break;
             }
         }
 

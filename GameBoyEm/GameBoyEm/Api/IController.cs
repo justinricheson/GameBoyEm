@@ -10,6 +10,7 @@
         bool DownPressed { get; set; }
         bool LeftPressed { get; set; }
         bool RightPressed { get; set; }
+        bool FastPressed { get; set; }
         void Step();
     }
 }

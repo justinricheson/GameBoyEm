@@ -18,6 +18,7 @@ namespace GameBoyEm
         public bool DownPressed { get; set; }
         public bool LeftPressed { get; set; }
         public bool RightPressed { get; set; }
+        public bool FastPressed { get; set; }
 
         public Controller(IMmu mmu)
         {

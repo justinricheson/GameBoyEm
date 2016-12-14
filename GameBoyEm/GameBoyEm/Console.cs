@@ -13,6 +13,7 @@ namespace GameBoyEm
     {
         private const int _cycleBoundary = 100000;
         private const double _cycleTime = _cycleBoundary / 4194304d;
+        private double _expectedTicks = TimeSpan.FromSeconds(_cycleTime).Ticks;
         private long _cumulativeCycles;
         private Stopwatch _sw = new Stopwatch();
         private volatile bool _emulating;
@@ -178,7 +179,7 @@ namespace GameBoyEm
             }
 
             var cycles = Cpu.Step();
-            _cumulativeCycles += cycles;
+            _cumulativeCycles += (cycles * 4);
 
             var draw = Gpu.Step(cycles);
             if (draw && _emitFrames)
@@ -192,6 +193,7 @@ namespace GameBoyEm
         private void Emulate()
         {
             _emulating = true;
+            _sw.Restart();
             while (true)
             {
                 if (_paused || !_turnedOn)
@@ -202,15 +204,18 @@ namespace GameBoyEm
 
                 Step();
 
+                if (Controller.FastPressed)
+                {
+                    _cumulativeCycles = 0;
+                    continue;
+                }
                 if (_cumulativeCycles >= _cycleBoundary)
                 {
                     // Slow down emulation to sync with ~4.194304MHz
-                    var expectedTicks = TimeSpan.FromSeconds(_cycleTime).Ticks;
                     _cumulativeCycles -= _cycleBoundary;
 
+                    while (_sw.ElapsedTicks < _expectedTicks) ;
                     _sw.Restart();
-                    while (_sw.ElapsedTicks < expectedTicks) ;
-                    _sw.Stop();
                 }
             }
         }
