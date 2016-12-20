@@ -13,11 +13,22 @@ namespace GameBoyEm.Cartridge
         {
             _banks = banks;
         }
+
         protected Mbc1Cartridge(SerializationInfo info, StreamingContext ctx)
             : base(info, ctx)
         {
-            // TODO
+            _bankIndex = (ushort)info.GetValue("BankIndex", typeof(ushort));
+            _banks = (byte[][])info.GetValue("Banks", typeof(byte[][]));
         }
+
+        public override void GetObjectData(SerializationInfo info, StreamingContext context)
+        {
+            base.GetObjectData(info, context);
+
+            info.AddValue("BankIndex", _bankIndex);
+            info.AddValue("Banks", _banks);
+        }
+
         public override byte Read(ushort address)
         {
             var offsetAddress = address - BankSize; // Skip rom
@@ -46,13 +57,6 @@ namespace GameBoyEm.Cartridge
             {
                 _bankIndex++;
             }
-        }
-
-        public override void GetObjectData(SerializationInfo info, StreamingContext context)
-        {
-            base.GetObjectData(info, context);
-
-            // TODO
         }
     }
 }

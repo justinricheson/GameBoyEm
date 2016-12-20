@@ -91,7 +91,25 @@ namespace GameBoyEm.UI.ViewModels
 
         public MainViewModel()
         {
-            Console = Console.Default();
+            //Console = Console.Default();
+            var mmu = new Mmu();
+            Console = new Console(
+                new Cpu(mmu), mmu,
+                new Gpu(mmu,
+                    // TODO make palettes configurable from UI
+                    //Colors.White,
+                    //Colors.LightGray,
+                    //Colors.DarkGray,
+                    //Colors.Black),
+                    //new Color { R = 0xB8, G = 0xC2, B = 0x66 },
+                    //new Color { R = 0x7B, G = 0x8A, B = 0x32 },
+                    //new Color { R = 0x43, G = 0x59, B = 0x1D },
+                    //new Color { R = 0x13, G = 0x2C, B = 0x13 }),
+                    Colors.GhostWhite,
+                    Colors.LightSlateGray,
+                    Colors.DarkSlateBlue,
+                    Colors.Black),
+                new Controller(mmu));
 
             Title = "GameboyEm";
             OpenCommand = new ActionCommand(Open);
@@ -181,7 +199,7 @@ namespace GameBoyEm.UI.ViewModels
                 DefaultExt = ".state",
                 Filter = "Gameboy State Files (*.state)|*.state"
             };
-            
+
             if (dlg.ShowDialog() == true)
             {
                 try

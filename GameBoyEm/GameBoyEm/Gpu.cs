@@ -26,34 +26,33 @@ namespace GameBoyEm
 
         public IList<Color> FrameBuffer { get { return _frameBuffer; } }
 
-        private Gpu()
+        public Gpu(IMmu mmu, params Color[] palette)
         {
-            _defaultPalette = new List<Color>
+            _mmu = mmu;
+
+            _defaultPalette = new List<Color>()
             {
-                //new Color { R = 0xB8, G = 0xC2, B = 0x66 },
-                //new Color { R = 0x7B, G = 0x8A, B = 0x32 },
-                //new Color { R = 0x43, G = 0x59, B = 0x1D },
-                //new Color { R = 0x13, G = 0x2C, B = 0x13 }
                 Colors.GhostWhite,
                 Colors.LightSlateGray,
                 Colors.DarkSlateBlue,
                 Colors.Black
-                //Colors.White,
-                //Colors.LightGray,
-                //Colors.DarkGray,
-                //Colors.Black
             };
+
+            for (int i = 0; i < 4; i++)
+            {
+                if (i < palette.Length)
+                {
+                    _defaultPalette[i] = palette[i];
+                }
+            }
+
             _bgPalette = _defaultPalette.Take(4).ToList();
             _spritePalette = _defaultPalette.Take(4).ToList();
-        }
 
-        public Gpu(IMmu mmu) : this()
-        {
-            _mmu = mmu;
             Reset();
         }
 
-        protected Gpu(SerializationInfo info, StreamingContext ctx) : this()
+        protected Gpu(SerializationInfo info, StreamingContext ctx)
         {
             _isEnabled = info.GetBoolean("IsEnabled");
             _isLineRendered = info.GetBoolean("IsLineRendered");
@@ -62,6 +61,8 @@ namespace GameBoyEm
             _delay = info.GetInt32("Delay");
             _mode = (Mode)info.GetValue("Mode", typeof(Mode));
             _frameBuffer = ((List<int>)info.GetValue("FrameBuffer", typeof(List<int>)))
+                .Select(i => i.FromArgb()).ToList();
+            _defaultPalette = ((List<int>)info.GetValue("DefaultPalette", typeof(List<int>)))
                 .Select(i => i.FromArgb()).ToList();
             _bgPalette = ((List<int>)info.GetValue("BackgroundPalette", typeof(List<int>)))
                 .Select(i => i.FromArgb()).ToList();
@@ -78,6 +79,7 @@ namespace GameBoyEm
             info.AddValue("Delay", _delay);
             info.AddValue("Mode", _mode);
             info.AddValue("FrameBuffer", _frameBuffer.Select(c => c.ToArgb()).ToList());
+            info.AddValue("DefaultPalette", _defaultPalette.Select(c => c.ToArgb()).ToList());
             info.AddValue("BackgroundPalette", _bgPalette.Select(c => c.ToArgb()).ToList());
             info.AddValue("SpritePalette", _spritePalette.Select(c => c.ToArgb()).ToList());
         }

@@ -20,18 +20,13 @@ namespace GameBoyEm.Cartridge
             _rom = (byte[])info.GetValue("Rom", typeof(byte[]));
         }
 
-        public abstract byte Read(ushort address);
-        public abstract void Write(ushort address, byte value);
         public virtual void GetObjectData(SerializationInfo info, StreamingContext context)
         {
             info.AddValue("Rom", _rom);
         }
-    }
 
-    public enum CartridgeType
-    {
-        Unknown,
-        RomOnly,
-        Mbc1
+        public abstract byte Read(ushort address);
+
+        public abstract void Write(ushort address, byte value);
     }
 }
