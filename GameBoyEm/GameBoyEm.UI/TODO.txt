@@ -1,4 +1,5 @@
-﻿Add more cartridge types
+﻿Pass all Blarg Tests
+Add more cartridge types
 Refactor GPU logic, improve mmu abstraction for gpu registers
 Add icon resources (app and buttons)
 Add hexviewer for memory to debugger
