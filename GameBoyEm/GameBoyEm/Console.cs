@@ -25,6 +25,7 @@ namespace GameBoyEm
         public ICpu Cpu { get; }
         public IMmu Mmu { get; }
         public IGpu Gpu { get; }
+        public ITimer Timer { get; }
         public IController Controller { get; }
         public bool Paused { get { return _paused; } }
         public bool TurnedOn { get { return _turnedOn; } }
@@ -33,11 +34,12 @@ namespace GameBoyEm
         public EventHandler<DrawScreenEventArgs> OnDrawScreen;
         public EventHandler<BreakpointEventArgs> OnBreakpoint;
 
-        public Console(ICpu cpu, IMmu mmu, IGpu gpu, IController controller)
+        public Console(ICpu cpu, IMmu mmu, IGpu gpu, ITimer timer, IController controller)
         {
             Cpu = cpu;
             Mmu = mmu;
             Gpu = gpu;
+            Timer = timer;
             Controller = controller;
             _emitFrames = true;
             _breakpoints = new HashSet<uint>();
@@ -48,10 +50,12 @@ namespace GameBoyEm
             Cpu = (ICpu)info.GetValue("Cpu", typeof(ICpu));
             Mmu = (IMmu)info.GetValue("Mmu", typeof(IMmu));
             Gpu = (IGpu)info.GetValue("Gpu", typeof(IGpu));
+            Timer = (ITimer)info.GetValue("Timer", typeof(ITimer));
 
             // Hack to reset references on deserialize
             (Cpu as Cpu).Mmu = Mmu;
             (Gpu as Gpu).Mmu = Mmu;
+            (Timer as Timer).Mmu = Mmu;
             Controller = new Controller(Mmu);
 
             _breakpoints = new HashSet<uint>();
@@ -66,6 +70,7 @@ namespace GameBoyEm
             info.AddValue("Cpu", Cpu);
             info.AddValue("Mmu", Mmu);
             info.AddValue("Gpu", Gpu);
+            info.AddValue("Timer", Timer);
         }
 
         public static Console Default()
@@ -73,8 +78,9 @@ namespace GameBoyEm
             var mmu = new Mmu();
             var cpu = new Cpu(mmu);
             var gpu = new Gpu(mmu);
+            var timer = new Timer(mmu);
             var controller = new Controller(mmu);
-            return new Console(cpu, mmu, gpu, controller);
+            return new Console(cpu, mmu, gpu, timer, controller);
         }
 
         public void LoadCartridge(ICartridge cartridge)
@@ -179,7 +185,7 @@ namespace GameBoyEm
             }
 
             var cycles = Cpu.Step();
-            _cumulativeCycles += (cycles * 4);
+            _cumulativeCycles += (cycles * 4); // Cpu.Step returns quarter-cycles
 
             var draw = Gpu.Step(cycles);
             if (draw && _emitFrames)
@@ -187,6 +193,7 @@ namespace GameBoyEm
                 OnDrawScreen?.Invoke(this,
                     new DrawScreenEventArgs(Gpu.FrameBuffer));
             }
+            Timer.Step(cycles);
             Controller.Step();
         }
 

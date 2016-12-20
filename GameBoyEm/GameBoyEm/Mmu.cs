@@ -256,7 +256,7 @@ namespace GameBoyEm
 
         public byte LcdcRegister { get { return ReadByte(0xFF40); } }
         public bool LcdEnabled { get { return LcdcRegister.AND(0x80) != 0; } }
-        public bool DisplayBackground {  get { return LcdcRegister.AND(0x01) != 0; } }
+        public bool DisplayBackground { get { return LcdcRegister.AND(0x01) != 0; } }
         public bool DisplaySprites { get { return LcdcRegister.AND(0x02) != 0; } }
         public bool DisplayWindow { get { return LcdcRegister.AND(0x20) != 0; } }
 
@@ -264,6 +264,12 @@ namespace GameBoyEm
         public bool LcdcHblank { get { return LcdcStatRegister.AND(0x08) != 0; } }
         public bool LcdcVblank { get { return LcdcStatRegister.AND(0x10) != 0; } }
         public bool LcdcOam { get { return LcdcStatRegister.AND(0x20) != 0; } }
+
+        public byte DividerRegister
+        {
+            get { return ReadByte(0xFF04); }
+            set { _memory[0xFF04] = value; } // Don't use WriteByte so the value is not reset
+        }
 
         public Mmu()
         {
@@ -342,6 +348,11 @@ namespace GameBoyEm
             {
                 _cartridge.Write(address, value);
                 return;
+            }
+            else if (address == 0xFF04)
+            {
+                // Any write to divide register resets it
+                value = 0;
             }
             else if (address == 0xFF46)
             {

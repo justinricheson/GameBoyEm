@@ -1,5 +1,4 @@
-﻿using Common.Logging;
-using System;
+﻿using System;
 using System.Windows.Input;
 
 namespace GameBoyEm.UI.Commands

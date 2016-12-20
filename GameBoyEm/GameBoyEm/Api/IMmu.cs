@@ -32,6 +32,8 @@
         bool LcdcVblank { get; }
         bool LcdcOam { get; }
 
+        byte DividerRegister { get; set; }
+
         byte ReadByte(ushort address);
         ushort ReadWord(ushort address);
         void WriteByte(ushort address, byte value);

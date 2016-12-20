@@ -109,6 +109,7 @@ namespace GameBoyEm.UI.ViewModels
                     Colors.LightSlateGray,
                     Colors.DarkSlateBlue,
                     Colors.Black),
+                new Timer(mmu),
                 new Controller(mmu));
 
             Title = "GameboyEm";
