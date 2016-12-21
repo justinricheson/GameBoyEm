@@ -4,7 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:GameBoyEm.UI" mc:Ignorable="d"
-        DataContextChanged="Window_DataContextChanged"
+        Loaded="Window_Loaded"
         Title="Debugger" Height="440" Width="850">
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="boolToVisibilityConverter"/>
@@ -66,44 +66,18 @@
 
         <Grid Grid.Column="1">
             <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
                 <RowDefinition />
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
-            <Label Content="CPU History" FontWeight="Bold" />
+            <Grid x:Name="hexboxHost" />
 
-            <DataGrid x:Name="CpuHistory" Grid.Row="1" AutoGenerateColumns="False"
-                ItemsSource="{Binding CpuHistory}"
-                CanUserAddRows="False" CanUserDeleteRows="False"
-                CanUserSortColumns="False" CanUserResizeRows="False"
-                EnableColumnVirtualization="True" EnableRowVirtualization="True">
-                <DataGrid.Columns>
-                    <DataGridTextColumn Header="A" Binding="{Binding A}" IsReadOnly="True" Width="Auto" />
-                    <DataGridTextColumn Header="B" Binding="{Binding B}" IsReadOnly="True" Width="Auto" />
-                    <DataGridTextColumn Header="C" Binding="{Binding C}" IsReadOnly="True" Width="Auto" />
-                    <DataGridTextColumn Header="D" Binding="{Binding D}" IsReadOnly="True" Width="Auto" />
-                    <DataGridTextColumn Header="E" Binding="{Binding E}" IsReadOnly="True" Width="Auto" />
-                    <DataGridTextColumn Header="FC" Binding="{Binding FC}" IsReadOnly="True" Width="Auto" />
-                    <DataGridTextColumn Header="FH" Binding="{Binding FH}" IsReadOnly="True" Width="Auto" />
-                    <DataGridTextColumn Header="FN" Binding="{Binding FN}" IsReadOnly="True" Width="Auto" />
-                    <DataGridTextColumn Header="FZ" Binding="{Binding FZ}" IsReadOnly="True" Width="Auto" />
-                    <DataGridTextColumn Header="H" Binding="{Binding H}" IsReadOnly="True" Width="Auto" />
-                    <DataGridTextColumn Header="L" Binding="{Binding L}" IsReadOnly="True" Width="Auto" />
-                    <DataGridTextColumn Header="SP" Binding="{Binding SP}" IsReadOnly="True" Width="Auto" />
-                    <DataGridTextColumn Header="PC" Binding="{Binding PC}" IsReadOnly="True" Width="Auto" />
-                    <DataGridTextColumn Header="IME" Binding="{Binding IME}" IsReadOnly="True" Width="Auto" />
-                </DataGrid.Columns>
-            </DataGrid>
-
-            <StackPanel Grid.Row="2" Orientation="Horizontal">
-                <Button Content="Clear" Command="{Binding ClearCommand}" Height="30" Width="90" Margin="0,0,10,0" />
+            <StackPanel Grid.Row="1" Orientation="Horizontal">
                 <Button Content="Step" Command="{Binding StepCommand}" Height="30" Width="90" Margin="0,0,10,0" />
                 <Label Content="Number of Steps:" Height="30" Margin="0,0,10,0" />
                 <TextBox Text="{Binding Steps, UpdateSourceTrigger=PropertyChanged}" VerticalContentAlignment="Center" Height="30" Width="90" Margin="0,0,10,0" />
-                <CheckBox Content="Enable CPU History" IsChecked="{Binding EnableCpuHistory}" IsEnabled="{Binding EnableCpuHistoryEnabled}" Height="30" VerticalContentAlignment="Center" />
             </StackPanel>
-            <ProgressBar Minimum="0" Maximum="{Binding ProgressMax}" Value="{Binding ProgressValue}" Grid.Row="2" Visibility="{Binding ProgressVisible, Converter={StaticResource boolToVisibilityConverter}}" />
+            <ProgressBar Grid.Row="1" Minimum="0" Maximum="{Binding ProgressMax}" Value="{Binding ProgressValue}" Visibility="{Binding ProgressVisible, Converter={StaticResource boolToVisibilityConverter}}" />
         </Grid>
 
         <Grid Grid.Column="2">

@@ -1,4 +1,6 @@
-﻿namespace GameBoyEm.Api
+﻿using System;
+
+namespace GameBoyEm.Api
 {
     public interface ICartridge
     {

@@ -1,15 +1,43 @@
-﻿using GameBoyEm.UI.ViewModels;
+﻿using Be.Windows.Forms;
+using GameBoyEm.UI.ViewModels;
+using System.Drawing;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Media;
+using System.Windows.Forms.Integration;
 
 namespace GameBoyEm.UI
 {
     public partial class DebuggerView : Window
     {
-        public DebuggerView()
+        private HexBox _hexBox;
+
+        public DebuggerView(MmuByteProvider mmuByteProvider)
         {
+            _hexBox = new HexBox
+            {
+                AllowDrop = false,
+                LineInfoVisible = true,
+                ColumnInfoVisible = true,
+                UseFixedBytesPerLine = true,
+                VScrollBarVisible = true,
+                BytesPerLine = 16,
+                HexCasing = HexCasing.Lower,
+                ByteCharConverter = new DefaultByteCharConverter(),
+                Font = new Font(
+                    System.Drawing.SystemFonts.MessageBoxFont.FontFamily,
+                    System.Drawing.SystemFonts.MessageBoxFont.Size,
+                    System.Drawing.SystemFonts.MessageBoxFont.Style),
+                ByteProvider = mmuByteProvider
+            };
+
             InitializeComponent();
+        }
+
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            hexboxHost.Children.Add(new WindowsFormsHost
+            {
+                Child = _hexBox
+            });
         }
 
         private void Window_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
@@ -17,21 +45,7 @@ namespace GameBoyEm.UI
             var vm = e.NewValue as DebuggerViewModel;
             if (vm != null)
             {
-                vm.ScrollToBottom = () =>
-                {
-                    if (CpuHistory.Items.Count > 0)
-                    {
-                        var border = VisualTreeHelper.GetChild(CpuHistory, 0) as Decorator;
-                        if (border != null)
-                        {
-                            var scroll = border.Child as ScrollViewer;
-                            if (scroll != null)
-                            {
-                                scroll.ScrollToEnd();
-                            }
-                        }
-                    }
-                };
+                vm.InvalidateHexBox = () => _hexBox.Invalidate();
             }
         }
     }

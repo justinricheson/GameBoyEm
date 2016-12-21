@@ -41,7 +41,7 @@ namespace GameBoyEm.UI
         private void OpenDebuggerWindow(DebuggerViewModel vm)
         {
             vm.Refresh();
-            var window = new DebuggerView
+            var window = new DebuggerView(vm.ByteProvider)
             {
                 DataContext = vm,
                 Owner = this

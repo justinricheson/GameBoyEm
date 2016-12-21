@@ -3,9 +3,7 @@ using GameBoyEm.UI.Commands;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 
@@ -14,18 +12,17 @@ namespace GameBoyEm.UI.ViewModels
     public class DebuggerViewModel : ViewModelBase
     {
         private Console _console;
-        private ICpu _cpu;
         private uint _steps;
         private bool _enableDebugger;
-        private bool _enableCpuHistory;
-        private bool _enableCpuHistoryEnabled;
         private bool _progressVisible;
         private int _progressMax;
         private int _progressValue;
         private ushort? _breakpoint;
+        private MmuByteProvider _mmuByteProvider;
 
+        public Action InvalidateHexBox { get; set; }
+        public MmuByteProvider ByteProvider { get { return _mmuByteProvider; } }
         public CpuStateViewModel Current { get; private set; }
-        public ObservableCollection<CpuStateViewModel> CpuHistory { get; private set; }
         public ObservableCollection<ushort> Breakpoints { get; private set; }
         public int SelectedBreakpointIndex { get; set; }
         public string Breakpoint
@@ -49,36 +46,6 @@ namespace GameBoyEm.UI.ViewModels
                 if (_steps != value)
                 {
                     _steps = value;
-                    EnableCpuHistoryEnabled = _steps <= 1000;
-                    if (!EnableCpuHistoryEnabled)
-                    {
-                        EnableCpuHistory = false;
-                    }
-
-                    Notify();
-                }
-            }
-        }
-        public bool EnableCpuHistory
-        {
-            get { return _enableCpuHistory; }
-            set
-            {
-                if (_enableCpuHistory != value)
-                {
-                    _enableCpuHistory = value;
-                    Notify();
-                }
-            }
-        }
-        public bool EnableCpuHistoryEnabled
-        {
-            get { return _enableCpuHistoryEnabled; }
-            set
-            {
-                if (_enableCpuHistoryEnabled != value)
-                {
-                    _enableCpuHistoryEnabled = value;
                     Notify();
                 }
             }
@@ -131,23 +98,19 @@ namespace GameBoyEm.UI.ViewModels
                 }
             }
         }
-        public ICommand ClearCommand { get; set; }
         public ICommand StepCommand { get; set; }
         public ICommand AddBreakpointCommand { get; set; }
         public ICommand RemoveBreakpointCommand { get; set; }
-        public Action ScrollToBottom { get; set; }
 
         public DebuggerViewModel(Console console)
         {
             _enableDebugger = true;
             _console = console;
-            _cpu = _console.Cpu;
             _console.OnBreakpoint += OnBreakpoint;
+            _mmuByteProvider = new MmuByteProvider(_console.Mmu);
 
             Steps = 1;
-            CpuHistory = new ObservableCollection<CpuStateViewModel>();
             Breakpoints = new ObservableCollection<ushort>();
-            ClearCommand = new ActionCommand(Clear);
             StepCommand = new ActionCommand(Step);
             AddBreakpointCommand = new ActionCommand(AddBreakpoint);
             RemoveBreakpointCommand = new ActionCommand(RemoveBreakpoint);
@@ -156,8 +119,7 @@ namespace GameBoyEm.UI.ViewModels
 
         public void Refresh()
         {
-            Current = new CpuStateViewModel(_cpu);
-            CpuHistory.Clear();
+            Current = new CpuStateViewModel(_console.Cpu);
         }
 
         private void Step()
@@ -171,59 +133,40 @@ namespace GameBoyEm.UI.ViewModels
             {
                 // Avoid creating the thread for small step counts
                 // which slows down the ui for fast clicks
-                EndStep(StartStep(p => p()));
+                StartStep(p => p());
+                EndStep();
             }
             else
             {
                 var t = new Thread(() =>
                 {
-                    var history = StartStep(App.Current.Dispatcher.Invoke);
-                    App.Current.Dispatcher.Invoke(() => { EndStep(history); });
+                    StartStep(App.Current.Dispatcher.Invoke);
+                    App.Current.Dispatcher.Invoke(() => { EndStep(); });
                 });
                 t.Start();
             }
         }
 
-        private IEnumerable<CpuStateViewModel> StartStep(Action<Action> progress)
+        private void StartStep(Action<Action> progress)
         {
-            var history = new List<CpuStateViewModel>();
-
             _console.StepMany((int)Steps, i =>
             {
-                if (EnableCpuHistory)
-                {
-                    history.Add(new CpuStateViewModel(_cpu));
-                }
                 if (i % 100000 == 0)
                 {
                     progress(() => ProgressValue = i);
                 }
             });
-
-            return history;
         }
 
-        private void EndStep(IEnumerable<CpuStateViewModel> history)
+        private void EndStep()
         {
-            if (EnableCpuHistory)
-            {
-                foreach (var state in history)
-                {
-                    CpuHistory.Add(state);
-                };
-            }
-
-            Current = new CpuStateViewModel(_cpu);
-            ScrollToBottom?.Invoke();
+            _mmuByteProvider.InvokeChanged();
+            InvalidateHexBox?.Invoke();
+            Current = new CpuStateViewModel(_console.Cpu);
             NotifyAll();
 
             ProgressVisible = false;
             EnableDebugger = true;
-        }
-
-        private void Clear()
-        {
-            CpuHistory.Clear();
         }
 
         private void AddBreakpoint()

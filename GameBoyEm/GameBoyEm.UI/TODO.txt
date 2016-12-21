@@ -1,6 +1,9 @@
-﻿Pass all Blarg Tests
+﻿Make hexviewer editable
+-Add PC tracking and breakpoint shifting
+
+Pass all Blarg Tests
 Add more cartridge types
 Refactor GPU logic, improve mmu abstraction for gpu registers
 Add icon resources (app and buttons)
-Add hexviewer for memory to debugger
 Add control input simulator
+Profile - improve performance
