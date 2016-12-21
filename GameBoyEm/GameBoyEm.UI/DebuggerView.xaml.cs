@@ -1,5 +1,6 @@
 ﻿using Be.Windows.Forms;
 using GameBoyEm.UI.ViewModels;
+using System;
 using System.Drawing;
 using System.Windows;
 using System.Windows.Forms.Integration;
@@ -14,6 +15,7 @@ namespace GameBoyEm.UI
         {
             _hexBox = new HexBox
             {
+                ReadOnly = false,
                 AllowDrop = false,
                 LineInfoVisible = true,
                 ColumnInfoVisible = true,
@@ -40,12 +42,34 @@ namespace GameBoyEm.UI
             });
         }
 
-        private void Window_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
+        private void Window_Closed(object sender, EventArgs e)
         {
-            var vm = e.NewValue as DebuggerViewModel;
+            var vm = DebuggerWindow.DataContext as DebuggerViewModel;
             if (vm != null)
             {
-                vm.InvalidateHexBox = () => _hexBox.Invalidate();
+                vm.DetachDebugger();
+            }
+        }
+
+        private void Window_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            var vm = DebuggerWindow.DataContext as DebuggerViewModel;
+            if (vm != null)
+            {
+                vm.InvalidateHexBox = () =>
+                {
+                    Application.Current.Dispatcher.Invoke(() =>
+                        _hexBox.Invalidate());
+                };
+                vm.FocusHexBox = pc =>
+                {
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        _hexBox.SelectionStart = pc;
+                        _hexBox.SelectionLength = 1;
+                        _hexBox.Focus();
+                    });
+                };
             }
         }
     }

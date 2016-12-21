@@ -25,7 +25,7 @@ namespace GameBoyEm.UI.ViewModels
         public void InvokeChanged() => Changed?.Invoke(this, EventArgs.Empty);
         public bool HasChanges() => _hasChanges;
         public void ApplyChanges() => _hasChanges = false;
-        public bool SupportsWriteByte() => false;
+        public bool SupportsWriteByte() => true;
         public bool SupportsDeleteBytes() => false;
         public bool SupportsInsertBytes() => false;
 
@@ -35,7 +35,7 @@ namespace GameBoyEm.UI.ViewModels
         }
         public void WriteByte(long index, byte value)
         {
-            throw new NotImplementedException();
+            _mmu.WriteByte((ushort)index, value);
         }
         public void DeleteBytes(long index, long length)
         {

@@ -4,8 +4,10 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:GameBoyEm.UI" mc:Ignorable="d"
-        Loaded="Window_Loaded"
-        Title="Debugger" Height="440" Width="850">
+        DataContextChanged="Window_DataContextChanged"
+        Loaded="Window_Loaded" Closed="Window_Closed"
+        Title="Debugger" Height="440" Width="850"
+        x:Name="DebuggerWindow">
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="boolToVisibilityConverter"/>
     </Window.Resources>
@@ -76,6 +78,7 @@
                 <Button Content="Step" Command="{Binding StepCommand}" Height="30" Width="90" Margin="0,0,10,0" />
                 <Label Content="Number of Steps:" Height="30" Margin="0,0,10,0" />
                 <TextBox Text="{Binding Steps, UpdateSourceTrigger=PropertyChanged}" VerticalContentAlignment="Center" Height="30" Width="90" Margin="0,0,10,0" />
+                <CheckBox Content="Track PC" IsChecked="{Binding TrackPc}" VerticalAlignment="Center" VerticalContentAlignment="Center" />
             </StackPanel>
             <ProgressBar Grid.Row="1" Minimum="0" Maximum="{Binding ProgressMax}" Value="{Binding ProgressValue}" Visibility="{Binding ProgressVisible, Converter={StaticResource boolToVisibilityConverter}}" />
         </Grid>

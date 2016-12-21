@@ -161,12 +161,16 @@ namespace GameBoyEm
             _breakpoints.Remove(pc);
         }
 
-        public void StepMany(int steps, Action<int> progress)
+        public void StepMany(int steps, Action<int> progress, ref bool cancel)
         {
             if (_turnedOn && _paused)
             {
                 for (int i = 0; i < steps; i++)
                 {
+                    if (cancel)
+                    {
+                        return;
+                    }
                     progress(i);
                     Step();
                 }

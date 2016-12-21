@@ -19,7 +19,9 @@ namespace GameBoyEm.UI.ViewModels
         private int _progressValue;
         private ushort? _breakpoint;
         private MmuByteProvider _mmuByteProvider;
+        private bool _cancel;
 
+        public Action<int> FocusHexBox { get; set; }
         public Action InvalidateHexBox { get; set; }
         public MmuByteProvider ByteProvider { get { return _mmuByteProvider; } }
         public CpuStateViewModel Current { get; private set; }
@@ -50,6 +52,8 @@ namespace GameBoyEm.UI.ViewModels
                 }
             }
         }
+        public bool TrackPc { get; set; }
+
         public bool EnableDebugger
         {
             get { return _enableDebugger; }
@@ -120,6 +124,18 @@ namespace GameBoyEm.UI.ViewModels
         public void Refresh()
         {
             Current = new CpuStateViewModel(_console.Cpu);
+            foreach (var breakpoint in Breakpoints)
+            {
+                _console.SetBreakpoint(breakpoint);
+            }
+        }
+
+        public void DetachDebugger()
+        {
+            foreach (var breakpoint in Breakpoints)
+            {
+                _console.UnsetBreakpoint(breakpoint);
+            }
         }
 
         private void Step()
@@ -149,19 +165,24 @@ namespace GameBoyEm.UI.ViewModels
 
         private void StartStep(Action<Action> progress)
         {
+            _cancel = false;
             _console.StepMany((int)Steps, i =>
             {
                 if (i % 100000 == 0)
                 {
                     progress(() => ProgressValue = i);
                 }
-            });
+            }, ref _cancel);
         }
 
         private void EndStep()
         {
             _mmuByteProvider.InvokeChanged();
             InvalidateHexBox?.Invoke();
+            if (TrackPc)
+            {
+                FocusHexBox?.Invoke(_console.Cpu.PC);
+            }
             Current = new CpuStateViewModel(_console.Cpu);
             NotifyAll();
 
@@ -189,17 +210,12 @@ namespace GameBoyEm.UI.ViewModels
 
         private void OnBreakpoint(object sender, BreakpointEventArgs e)
         {
-            // TODO if debugger not open, offer to open
-            // TODO option to pause execution
-            var result = MessageBox.Show($"Remove breakpoint 0x{e.PC:X4}?", "Breakpoint hit",
+            var result = MessageBox.Show($"Pause execution at 0x{e.PC:X4}?", "Breakpoint hit",
                 MessageBoxButton.YesNo, MessageBoxImage.Question);
             if (result == MessageBoxResult.Yes)
             {
-                Application.Current.Dispatcher.Invoke(() =>
-                {
-                    Breakpoints.Remove(e.PC);
-                    _console.UnsetBreakpoint(e.PC);
-                });
+                FocusHexBox?.Invoke(_console.Cpu.PC);
+                _cancel = true;
             }
         }
     }
