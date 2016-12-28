@@ -67,7 +67,7 @@
     <Compile Include="Cartridge\RomOnlyCartridge.cs" />
     <Compile Include="Console.cs" />
     <Compile Include="Controller.cs" />
-    <Compile Include="CpuCycles.cs" />
+    <Compile Include="Cpu.Cycles.cs" />
     <Compile Include="Extensions.cs" />
     <Compile Include="Gpu.cs" />
     <Compile Include="Api\ICartridge.cs" />

@@ -2,9 +2,7 @@
 using GameBoyEm.Api;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.Serialization;
-using static GameBoyEm.CpuCycles;
 
 namespace GameBoyEm
 {
@@ -151,12 +149,10 @@ namespace GameBoyEm
             PC = 0x0100;
         }
 
-        //private ulong _stepCounter = 0;
         public ushort Step()
         {
             var isCb = false;
             ushort cycles = 0;
-            //string operation = "INTERRUPT";
             if (IME && _mmu.InterruptsExist)
             {
                 if (_mmu.VblankInterrupt) { _mmu.VblankInterrupt = false; Interrupt(0x0040); }
@@ -178,45 +174,13 @@ namespace GameBoyEm
                 var ops = isCb ? _cbOps : _ops;
                 ops[op](); // Decode, Execute
 
-                cycles = isCb ? CBCycles.ElementAt(op)
-                    : _conditional ? ConditionalCycles.ElementAt(op)
-                    : Cycles.ElementAt(op);
+                cycles = isCb ? _cbCycles[op]
+                    : _conditional ? _conditionalCycles[op]
+                    : _cycles[op];
                 _conditional = false;
-
-                //operation = $"{op}";
-                //if (State(op, cycles))
-                //{
-                //    string breakhere = "";
-                //}
             }
-
-            //_stepCounter++;
-            //if(_stepCounter > 20000000)
-            //{
-            //    _log.Debug($"OP: {(isCb ? $"{0xCB}" : "")}{operation} - Cycles: {cycles} - State: {ToString()}");
-            //}
 
             return cycles;
         }
-
-        //private bool State(int op, int cycles)
-        //{
-        //    if (op == 251 && cycles == 1)
-        //    {
-        //        if (A == 128 && B == 0 && C == 0 && D == 0
-        //            && E == 216 && F == 128 && H == 151 && L == 255
-        //            && SP == 53247 && PC == 699 && IME)
-        //        {
-        //            return true;
-        //        }
-        //    }
-
-        //    return false;
-        //}
-
-        //public override string ToString()
-        //{
-        //    return $"{A}|{B}|{C}|{D}|{E}|{F}|{H}|{L}|{SP}|{PC}|{(IME ? 1 : 0)}";
-        //}
     }
 }

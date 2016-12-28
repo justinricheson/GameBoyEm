@@ -1,6 +1,4 @@
-﻿using static GameBoyEm.CpuCycles;
-
-namespace GameBoyEm
+﻿namespace GameBoyEm
 {
     public partial class Cpu
     {

@@ -7,6 +7,7 @@ namespace GameBoyEm.Api
         void Reset();
         void LoadCartridge(ICartridge cartridge);
 
+        // Interrupt Register
         bool InterruptsExist { get; }
         bool VblankInterrupt { get; set; }
         bool LcdStatInterrupt { get; set; }
@@ -14,6 +15,7 @@ namespace GameBoyEm.Api
         bool SerialInterrupt { get; set; }
         bool JoyPadInterrupt { get; set; }
 
+        // Controller Register
         bool KeySelector { get; }
         bool DirSelector { get; }
         bool APressed { get; set; }
@@ -25,15 +27,24 @@ namespace GameBoyEm.Api
         bool UpPressed { get; set; }
         bool DownPressed { get; set; }
 
+        // Lcd Control Register
         bool LcdEnabled { get; }
         bool DisplayBackground { get; }
         bool DisplaySprites { get; }
         bool DisplayWindow { get; }
 
+        // LCD Status Register
         bool LcdcHblank { get; }
         bool LcdcVblank { get; }
         bool LcdcOam { get; }
 
+        // LCD Palette Register
+        byte LcdDefaultPalette { get; }
+
+        // LCD Y-Coordinate Register
+        byte LcdCurrentLine { get; set; }
+
+        // Timer Register
         byte DividerRegister { get; set; }
 
         byte ReadByte(ushort address);

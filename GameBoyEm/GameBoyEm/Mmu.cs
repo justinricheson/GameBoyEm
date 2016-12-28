@@ -44,6 +44,7 @@ namespace GameBoyEm
         private byte[] _memory;
         private ICartridge _cartridge;
 
+        // Interrupt Register
         public byte Interrupts
         {
             get
@@ -130,6 +131,7 @@ namespace GameBoyEm
             }
         }
 
+        // Controller Register
         public byte JoypadRegister { get { return ReadByte(0xFF00); } }
         public bool KeySelector { get { return (ReadByte(0xFF00) & 0x20) == 0; } }
         public bool DirSelector { get { return (ReadByte(0xFF00) & 0x10) == 0; } }
@@ -254,17 +256,30 @@ namespace GameBoyEm
             }
         }
 
+        // LCD Control Register
         public byte LcdcRegister { get { return ReadByte(0xFF40); } }
         public bool LcdEnabled { get { return LcdcRegister.AND(0x80) != 0; } }
         public bool DisplayBackground { get { return LcdcRegister.AND(0x01) != 0; } }
         public bool DisplaySprites { get { return LcdcRegister.AND(0x02) != 0; } }
         public bool DisplayWindow { get { return LcdcRegister.AND(0x20) != 0; } }
 
+        // LCD Status Register
         public byte LcdcStatRegister { get { return ReadByte(0xFF41); } }
         public bool LcdcHblank { get { return LcdcStatRegister.AND(0x08) != 0; } }
         public bool LcdcVblank { get { return LcdcStatRegister.AND(0x10) != 0; } }
         public bool LcdcOam { get { return LcdcStatRegister.AND(0x20) != 0; } }
 
+        // LCD Y-Coordinate Register
+        public byte LcdCurrentLine
+        {
+            get { return ReadByte(0xFF44); }
+            set { WriteByte(0xFF44, value); }
+        }
+
+        // LCD Palette Register
+        public byte LcdDefaultPalette { get { return ReadByte(0xFF47); } }
+
+        // Timer Register
         public byte DividerRegister
         {
             get { return ReadByte(0xFF04); }

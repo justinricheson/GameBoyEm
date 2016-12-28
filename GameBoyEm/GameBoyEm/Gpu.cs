@@ -10,11 +10,14 @@ namespace GameBoyEm
     [Serializable]
     public class Gpu : IGpu, ISerializable
     {
+        private const byte _screenWidth = 160;
+        private const byte _screenHeight = 144;
+        private const ushort _screenPixels = _screenWidth * _screenHeight;
+
         private IMmu _mmu;
         private bool _isEnabled;
         private bool _isLineRendered;
         private uint _clocks;
-        private uint _currentLine;
         private int _delay;
         private Mode _mode;
         private List<Color> _frameBuffer;
@@ -57,7 +60,6 @@ namespace GameBoyEm
             _isEnabled = info.GetBoolean("IsEnabled");
             _isLineRendered = info.GetBoolean("IsLineRendered");
             _clocks = info.GetUInt32("Clocks");
-            _currentLine = info.GetUInt32("CurrentLine");
             _delay = info.GetInt32("Delay");
             _mode = (Mode)info.GetValue("Mode", typeof(Mode));
             _frameBuffer = ((List<int>)info.GetValue("FrameBuffer", typeof(List<int>)))
@@ -75,7 +77,6 @@ namespace GameBoyEm
             info.AddValue("IsEnabled", _isEnabled);
             info.AddValue("IsLineRendered", _isLineRendered);
             info.AddValue("Clocks", _clocks);
-            info.AddValue("CurrentLine", _currentLine);
             info.AddValue("Delay", _delay);
             info.AddValue("Mode", _mode);
             info.AddValue("FrameBuffer", _frameBuffer.Select(c => c.ToArgb()).ToList());
@@ -88,16 +89,16 @@ namespace GameBoyEm
         {
             _isEnabled = true;
             _isLineRendered = false;
-            SetLine(144);
+            _mmu.LcdCurrentLine = _screenHeight;
             _clocks = 0;
             ChangeMode(Mode.VBlank);
             _delay = 0;
-            _frameBuffer = Enumerable.Repeat(Colors.White, 160 * 144).ToList();
+            _frameBuffer = Enumerable.Repeat(Colors.White, _screenPixels).ToList();
         }
 
         public bool Step(ushort cycles)
         {
-            if (_mmu.ReadByte(0xFF40).AND(0x80) > 0) // LCD enabled
+            if (_mmu.LcdEnabled)
             {
                 if (!_isEnabled && _delay == 0)
                 {
@@ -120,7 +121,7 @@ namespace GameBoyEm
                         _isEnabled = true;
                         _clocks = (uint)(-_delay);
                         _delay = 0;
-                        SetLine(0);
+                        _mmu.LcdCurrentLine = 0;
                         ChangeMode(Mode.HBlank);
                         UpdateCoincidenceFlag();
                     }
@@ -146,9 +147,9 @@ namespace GameBoyEm
                     if (_clocks >= 51)
                     {
                         _clocks -= 51;
-                        SetLine(_currentLine + 1);
 
-                        if (_currentLine == 144)
+                        var currLine = ++_mmu.LcdCurrentLine;
+                        if (currLine == _screenHeight)
                         {
                             ChangeMode(Mode.VBlank);
                             draw = true;
@@ -174,11 +175,11 @@ namespace GameBoyEm
                     if (_clocks >= 114)
                     {
                         _clocks -= 114;
-                        SetLine(_currentLine + 1);
-                        if (_currentLine > 153)
+                        var currLine = ++_mmu.LcdCurrentLine;
+                        if (currLine > 153)
                         {
                             ChangeMode(Mode.OAM);
-                            SetLine(0);
+                            _mmu.LcdCurrentLine = 0;
 
                             if (_mmu.LcdcOam)
                             {
@@ -196,7 +197,8 @@ namespace GameBoyEm
                     }
                     break;
                 case Mode.VRAM:
-                    if (!_isLineRendered && (_clocks >= (_currentLine > 0 ? 12 : 40)))
+                    if (!_isLineRendered && (_clocks >=
+                        (_mmu.LcdCurrentLine > 0 ? 12 : 40)))
                     {
                         _isLineRendered = true;
                         RenderScanLine();
@@ -240,11 +242,7 @@ namespace GameBoyEm
 
         private void RenderBackground()
         {
-            var palette = _mmu.ReadByte(0xFF47);
-            for (int i = 0; i < 4; ++i) // Reset palette
-            {
-                _bgPalette[i] = _defaultPalette[(palette >> (i * 2)) & 0x3];
-            }
+            SetPalette(_bgPalette, _mmu.LcdDefaultPalette);
 
             var lcdc = _mmu.ReadByte(0xFF40);
             var tileSet = (lcdc.AND(0x10)) > 0 ? 0x8000 : 0x9000;
@@ -253,10 +251,12 @@ namespace GameBoyEm
             var scrollX = _mmu.ReadByte(0xFF43);
             var scrollY = _mmu.ReadByte(0xFF42);
 
+            var currLine = _mmu.LcdCurrentLine;
+
             int num;
-            var tileRow = ((scrollY + _currentLine) % 256) / 8;
-            var inTileY = ((scrollY + _currentLine) % 256) % 8;
-            for (int x = 0; x < 160; ++x)
+            var tileRow = ((scrollY + currLine) % 256) / 8;
+            var inTileY = ((scrollY + currLine) % 256) % 8;
+            for (int x = 0; x < _screenWidth; x++)
             {
                 var tileColumn = ((scrollX + x) % 256) / 8;
                 var inTileX = ((scrollX + x) % 256) % 8;
@@ -271,8 +271,10 @@ namespace GameBoyEm
                     num = (sbyte)(_mmu.ReadByte(tileNumLocation));
                 }
 
-                var f = (int)(_currentLine * 160 + x);
-                _frameBuffer[f] = _bgPalette[ReadTile((ushort)(tileSet + num * 16), (byte)inTileX, (byte)inTileY)];
+                var f = currLine * _screenWidth + x;
+                _frameBuffer[f] = _bgPalette[ReadTile(
+                    (ushort)(tileSet + num * 16),
+                    (byte)inTileX, (byte)inTileY)];
             }
         }
 
@@ -283,34 +285,31 @@ namespace GameBoyEm
 
             // Check if the window is displayed
             if (wndY < 0
-             || wndY >= 144
+             || wndY >= _screenHeight
              || wndX < -7
-             || wndX >= 160)
+             || wndX >= _screenWidth)
             {
                 return;
             }
 
             // Check if the window is on the current line
-            if (wndY > _currentLine)
+            var currLine = _mmu.LcdCurrentLine;
+            if (wndY > currLine)
             {
                 return;
             }
 
-            byte palette = _mmu.ReadByte(0xFF47);
-            for (int i = 0; i < 4; ++i)
-            {
-                _bgPalette[i] = _defaultPalette[(palette >> (i * 2)) & 0x3];
-            }
+            SetPalette(_bgPalette, _mmu.LcdDefaultPalette);
 
             var lcdc = _mmu.ReadByte(0xFF40);
             ushort tileSet = (lcdc & 0x10) > 0 ? (ushort)0x8000 : (ushort)0x9000;
             ushort tileMap = (lcdc & 0x40) > 0 ? (ushort)0x9C00 : (ushort)0x9800;
 
             int num;
-            var tileRow = (ushort)((_currentLine - wndY) / 8);
-            var inTileY = (ushort)(_currentLine - wndY) % 8;
+            var tileRow = (ushort)((currLine - wndY) / 8);
+            var inTileY = (ushort)((currLine - wndY) % 8);
 
-            for (int x = (wndX < 0) ? 0 : wndX; x < 160; ++x)
+            for (int x = (wndX < 0) ? 0 : wndX; x < _screenWidth; ++x)
             {
                 var tileColumn = (ushort)((x - wndX) / 8);
                 var inTileX = (ushort)((x - wndX) % 8);
@@ -326,8 +325,10 @@ namespace GameBoyEm
                     num = (sbyte)_mmu.ReadByte(tileNumLocation);
                 }
 
-                var f = (int)(_currentLine * 160 + x);
-                _frameBuffer[f] = _bgPalette[ReadTile((ushort)(tileSet + num * 16), (byte)inTileX, (byte)inTileY)];
+                var f = currLine * _screenWidth + x;
+                _frameBuffer[f] = _bgPalette[ReadTile(
+                    (ushort)(tileSet + num * 16),
+                    (byte)inTileX, (byte)inTileY)];
             }
         }
 
@@ -346,18 +347,19 @@ namespace GameBoyEm
                 var xCoord = (short)(_mmu.ReadByte((ushort)(currentOAMAddr + 1)) - 0x8);
 
                 // Check if the sprite is not on the screen
-                if (xCoord >= 160
+                if (xCoord >= _screenWidth
                  || xCoord <= -8
-                 || yCoord >= 144
+                 || yCoord >= _screenHeight
                  || yCoord <= -(largeSprites ? 16 : 8))
                 {
                     continue;
                 }
 
-                var inTileY = (byte)(_currentLine - yCoord);
+                var currLine = _mmu.LcdCurrentLine;
+                var inTileY = (byte)(currLine - yCoord);
 
                 // Check if it is not on the current line
-                if (yCoord > (short)_currentLine || inTileY >= (largeSprites ? 16 : 8))
+                if (yCoord > currLine || inTileY >= (largeSprites ? 16 : 8))
                 {
                     continue;
                 }
@@ -366,12 +368,9 @@ namespace GameBoyEm
                 bool priority = (optionsByte & 0x80) == 0;
                 bool yFlip = (optionsByte & 0x40) != 0;
                 bool xFlip = (optionsByte & 0x20) != 0;
-                byte palette = _mmu.ReadByte(optionsByte.AND(0x10) > 0 ? (ushort)0xFF49 : (ushort)0xFF48);
-
-                for (int i = 0; i < 4; ++i)
-                {
-                    _spritePalette[i] = _defaultPalette[(palette >> (i * 2)) & 0x3];
-                }
+                byte palette = _mmu.ReadByte(optionsByte.AND(0x10) > 0
+                    ? (ushort)0xFF49 : (ushort)0xFF48);
+                SetPalette(_spritePalette, palette);
 
                 var spriteNum = _mmu.ReadByte((ushort)(currentOAMAddr + 2));
 
@@ -404,15 +403,20 @@ namespace GameBoyEm
 
                 for (int x = 0; x < 8; ++x)
                 {
-                    if (xCoord + x < 0 || xCoord + x >= 160)
+                    if (xCoord + x < 0 || xCoord + x >= _screenWidth)
                     {
                         continue;
                     }
 
-                    byte pixel = ReadTile(tileAddr, (byte)(xFlip ? (7 - x) : x), inTileY);
-                    if (pixel > 0 && (priority || (_frameBuffer[(int)(_currentLine * 160 + xCoord + x)] == _bgPalette[0])))
+                    byte xx = (byte)(xFlip ? (7 - x) : x);
+                    byte pixel = ReadTile(tileAddr, xx, inTileY);
+                    if (pixel > 0)
                     {
-                        _frameBuffer[(int)(_currentLine * 160 + xCoord + x)] = _spritePalette[pixel];
+                        var i = currLine * _screenWidth + xCoord + x;
+                        if (priority || (_frameBuffer[i] == _bgPalette[0]))
+                        {
+                            _frameBuffer[i] = _spritePalette[pixel];
+                        }
                     }
                 }
             }
@@ -462,7 +466,7 @@ namespace GameBoyEm
         private void Disable()
         {
             Reset();
-            SetLine(0);
+            _mmu.LcdCurrentLine = 0;
             ChangeMode(Mode.HBlank);
             _isEnabled = false;
             ClearFrameBuffer();
@@ -470,16 +474,20 @@ namespace GameBoyEm
 
         private void ClearFrameBuffer()
         {
-            for (int i = 0; i < 160 * 144; ++i)
+            for (int i = 0; i < _frameBuffer.Count; i++)
             {
                 _frameBuffer[i] = Colors.White;
             }
         }
 
-        private void SetLine(uint lineNum)
+        private void SetPalette(List<Color> target, byte palette)
         {
-            _currentLine = lineNum;
-            _mmu.WriteByte(0xFF44, (byte)lineNum);
+            // palette is a byte where each 2 bits
+            // is an index into the default palette
+            target[0] = _defaultPalette[palette & 0x3]; palette >>= 2;
+            target[1] = _defaultPalette[palette & 0x3]; palette >>= 2;
+            target[2] = _defaultPalette[palette & 0x3]; palette >>= 2;
+            target[3] = _defaultPalette[palette & 0x3];
         }
 
         private enum Mode

@@ -1,13 +1,12 @@
 ﻿using System.Collections.Generic;
-using System.Collections.ObjectModel;
 
 namespace GameBoyEm
 {
     /// <summary>
     /// Opcode to cycletime maps
-    /// Note: Maps hold quarter-cycle counts. For total cycle count multiply by 4.
     /// </summary>
-    public static class CpuCycles
+    /// <remarks>Maps hold quarter-cycle counts. For total cycle count multiply by 4</remarks>
+    public partial class Cpu
     {
         private static List<byte> _cycles = new List<byte>
         {
@@ -71,9 +70,5 @@ namespace GameBoyEm
             2, 2, 2, 2, 2, 2, 4, 2, 2, 2, 2, 2, 2, 2, 4, 2,
             2, 2, 2, 2, 2, 2, 4, 2, 2, 2, 2, 2, 2, 2, 4, 2
         };
-
-        public static IReadOnlyCollection<byte> Cycles = new ReadOnlyCollection<byte>(_cycles);
-        public static IReadOnlyCollection<byte> ConditionalCycles = new ReadOnlyCollection<byte>(_conditionalCycles);
-        public static IReadOnlyCollection<byte> CBCycles = new ReadOnlyCollection<byte>(_cbCycles);
     }
 }
