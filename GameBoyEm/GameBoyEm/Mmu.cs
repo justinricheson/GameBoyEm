@@ -264,26 +264,39 @@ namespace GameBoyEm
         public bool DisplayWindow { get { return LcdcRegister.AND(0x20) != 0; } }
 
         // LCD Status Register
-        public byte LcdcStatRegister { get { return ReadByte(0xFF41); } }
+        public byte LcdStatRegister
+        {
+            get { return ReadByte(0xFF41); }
+            set { WriteByte(0xFF41, value); }
+        }
+        public Mode LcdMode
+        {
+            get { return (Mode)LcdStatRegister.AND(0x03); }
+            set
+            {
+                var status = LcdStatRegister.AND(0xFC);
+                LcdStatRegister = status.OR((byte)value);
+            }
+        }
         public bool CoincidenceFlag
         {
-            get { return LcdcStatRegister.AND(0x04) != 0; }
+            get { return LcdStatRegister.AND(0x04) != 0; }
             set
             {
                 if(value)
                 {
-                    WriteByte(0xFF41, LcdcStatRegister.OR(0x04));
+                    WriteByte(0xFF41, LcdStatRegister.OR(0x04));
                 }
                 else
                 {
-                    WriteByte(0xFF41, LcdcStatRegister.AND(0xFB));
+                    WriteByte(0xFF41, LcdStatRegister.AND(0xFB));
                 }
             }
         }
-        public bool LcdcHblank { get { return LcdcStatRegister.AND(0x08) != 0; } }
-        public bool LcdcVblank { get { return LcdcStatRegister.AND(0x10) != 0; } }
-        public bool LcdcOam { get { return LcdcStatRegister.AND(0x20) != 0; } }
-        public bool Coincidence { get { return LcdcStatRegister.AND(0x40) != 0; } }
+        public bool HBlankStatEnabled { get { return LcdStatRegister.AND(0x08) != 0; } }
+        public bool VBlankStatEnabled { get { return LcdStatRegister.AND(0x10) != 0; } }
+        public bool OamStatEnabled { get { return LcdStatRegister.AND(0x20) != 0; } }
+        public bool CoincidenceStatEnabled { get { return LcdStatRegister.AND(0x40) != 0; } }
 
         // LCD Y-Coordinate Register
         public byte LcdCurrentLine

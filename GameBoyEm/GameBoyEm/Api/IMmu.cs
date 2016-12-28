@@ -34,11 +34,12 @@ namespace GameBoyEm.Api
         bool DisplayWindow { get; }
 
         // LCD Status Register
+        Mode LcdMode { get; set; }
         bool CoincidenceFlag { get; set; }
-        bool LcdcHblank { get; }
-        bool LcdcVblank { get; }
-        bool LcdcOam { get; }
-        bool Coincidence { get; }
+        bool HBlankStatEnabled { get; }
+        bool VBlankStatEnabled { get; }
+        bool OamStatEnabled { get; }
+        bool CoincidenceStatEnabled { get; }
 
         // LCD Palette Register
         byte LcdDefaultPalette { get; }
@@ -54,5 +55,13 @@ namespace GameBoyEm.Api
         ushort ReadWord(ushort address);
         void WriteByte(ushort address, byte value);
         void WriteWord(ushort address, ushort value);
+    }
+
+    public enum Mode
+    {
+        HBlank,
+        VBlank,
+        OAM,
+        VRAM
     }
 }

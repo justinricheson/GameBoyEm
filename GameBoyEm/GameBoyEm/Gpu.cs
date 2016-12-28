@@ -19,7 +19,6 @@ namespace GameBoyEm
         private bool _isLineRendered;
         private uint _clocks;
         private int _delay;
-        private Mode _mode;
         private List<Color> _frameBuffer;
         private List<Color> _defaultPalette;
         private List<Color> _bgPalette;
@@ -61,7 +60,6 @@ namespace GameBoyEm
             _isLineRendered = info.GetBoolean("IsLineRendered");
             _clocks = info.GetUInt32("Clocks");
             _delay = info.GetInt32("Delay");
-            _mode = (Mode)info.GetValue("Mode", typeof(Mode));
             _frameBuffer = ((List<int>)info.GetValue("FrameBuffer", typeof(List<int>)))
                 .Select(i => i.FromArgb()).ToList();
             _defaultPalette = ((List<int>)info.GetValue("DefaultPalette", typeof(List<int>)))
@@ -78,7 +76,6 @@ namespace GameBoyEm
             info.AddValue("IsLineRendered", _isLineRendered);
             info.AddValue("Clocks", _clocks);
             info.AddValue("Delay", _delay);
-            info.AddValue("Mode", _mode);
             info.AddValue("FrameBuffer", _frameBuffer.Select(c => c.ToArgb()).ToList());
             info.AddValue("DefaultPalette", _defaultPalette.Select(c => c.ToArgb()).ToList());
             info.AddValue("BackgroundPalette", _bgPalette.Select(c => c.ToArgb()).ToList());
@@ -91,7 +88,7 @@ namespace GameBoyEm
             _isLineRendered = false;
             _mmu.LcdCurrentLine = _screenHeight;
             _clocks = 0;
-            ChangeMode(Mode.VBlank);
+            _mmu.LcdMode = Mode.VBlank;
             _delay = 0;
             _frameBuffer = Enumerable.Repeat(Colors.White, _screenPixels).ToList();
         }
@@ -122,7 +119,7 @@ namespace GameBoyEm
                         _clocks = (uint)(-_delay);
                         _delay = 0;
                         _mmu.LcdCurrentLine = 0;
-                        ChangeMode(Mode.HBlank);
+                        _mmu.LcdMode = Mode.HBlank;
                         UpdateCoincidenceFlag();
                     }
                 }
@@ -146,7 +143,7 @@ namespace GameBoyEm
 
             bool draw = false;
             _clocks += cycles;
-            switch (_mode)
+            switch (_mmu.LcdMode)
             {
                 case Mode.HBlank:
                     if (_clocks >= 51)
@@ -156,10 +153,10 @@ namespace GameBoyEm
                         var currLine = ++_mmu.LcdCurrentLine;
                         if (currLine == _screenHeight)
                         {
-                            ChangeMode(Mode.VBlank);
+                            _mmu.LcdMode = Mode.VBlank;
                             draw = true;
 
-                            if (_mmu.LcdcVblank)
+                            if (_mmu.VBlankStatEnabled)
                             {
                                 _mmu.LcdStatInterrupt = true;
                             }
@@ -168,8 +165,8 @@ namespace GameBoyEm
                         }
                         else
                         {
-                            ChangeMode(Mode.OAM);
-                            if (_mmu.LcdcOam)
+                            _mmu.LcdMode = Mode.OAM;
+                            if (_mmu.OamStatEnabled)
                             {
                                 _mmu.LcdStatInterrupt = true;
                             }
@@ -183,10 +180,10 @@ namespace GameBoyEm
                         var currLine = ++_mmu.LcdCurrentLine;
                         if (currLine > 153)
                         {
-                            ChangeMode(Mode.OAM);
+                            _mmu.LcdMode = Mode.OAM;
                             _mmu.LcdCurrentLine = 0;
 
-                            if (_mmu.LcdcOam)
+                            if (_mmu.OamStatEnabled)
                             {
                                 _mmu.LcdStatInterrupt = true;
                             }
@@ -197,7 +194,7 @@ namespace GameBoyEm
                     if (_clocks >= 20)
                     {
                         _clocks -= 20;
-                        ChangeMode(Mode.VRAM);
+                        _mmu.LcdMode = Mode.VRAM;
                         _isLineRendered = false;
                     }
                     break;
@@ -211,9 +208,9 @@ namespace GameBoyEm
                     if (_clocks >= 43)
                     {
                         _clocks -= 43;
-                        ChangeMode(Mode.HBlank);
+                        _mmu.LcdMode = Mode.HBlank;
 
-                        if (_mmu.LcdcHblank)
+                        if (_mmu.HBlankStatEnabled)
                         {
                             _mmu.LcdStatInterrupt = true;
                         }
@@ -444,19 +441,11 @@ namespace GameBoyEm
 
             if (currLine == currLineCompare)
             {
-                if (_mmu.Coincidence)
+                if (_mmu.CoincidenceStatEnabled)
                 {
                     _mmu.LcdStatInterrupt = true;
                 }
             }
-        }
-
-        private void ChangeMode(Mode mode)
-        {
-            _mode = mode;
-            var status = _mmu.ReadByte(0xFF41).AND(0xFC);
-            status = status.OR((byte)mode);
-            _mmu.WriteByte(0xFF41, status);
         }
 
         private void Enable()
@@ -468,7 +457,7 @@ namespace GameBoyEm
         {
             Reset();
             _mmu.LcdCurrentLine = 0;
-            ChangeMode(Mode.HBlank);
+            _mmu.LcdMode = Mode.HBlank;
             _isEnabled = false;
             ClearFrameBuffer();
         }
@@ -489,14 +478,6 @@ namespace GameBoyEm
             target[1] = _defaultPalette[palette & 0x3]; palette >>= 2;
             target[2] = _defaultPalette[palette & 0x3]; palette >>= 2;
             target[3] = _defaultPalette[palette & 0x3];
-        }
-
-        private enum Mode
-        {
-            HBlank,
-            VBlank,
-            OAM,
-            VRAM
         }
     }
 }
