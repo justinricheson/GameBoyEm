@@ -13,12 +13,23 @@ namespace GameBoyEm
         private const byte _screenWidth = 160;
         private const byte _screenHeight = 144;
         private const ushort _screenPixels = _screenWidth * _screenHeight;
+        private const byte _maxLcdLine = 153;
+        private const uint _frameTime = 17556; // All times are cycles / 4 (CPU returns quarter cycles)
+
+        // Only documentation on this I can find says it should be 1140,
+        // but it's very sluggish at that speed. Reference implementations show 114
+        private const ushort _vblankTime = 114;
+        private const ushort _hblankTime = 51;
+        private const ushort _vramTime = 43;
+        private const ushort _oamTime = 20;
 
         private IMmu _mmu;
         private bool _isEnabled;
         private bool _isLineRendered;
         private uint _clocks;
         private int _delay;
+        private int _frameCounter;
+        private int _frameLimiter = 1; // TODO make configurable
         private List<Color> _frameBuffer;
         private List<Color> _defaultPalette;
         private List<Color> _bgPalette;
@@ -126,9 +137,9 @@ namespace GameBoyEm
                 else
                 {
                     _clocks += cycles;
-                    if (_clocks >= 70224)
+                    if (_clocks >= _frameTime)
                     {
-                        _clocks -= 70224;
+                        _clocks -= _frameTime;
 
                         // Don't think we need this.
                         // Screen is supposed to refresh every 70244
@@ -146,15 +157,14 @@ namespace GameBoyEm
             switch (_mmu.LcdMode)
             {
                 case Mode.HBlank:
-                    if (_clocks >= 51)
+                    if (_clocks >= _hblankTime)
                     {
-                        _clocks -= 51;
+                        _clocks -= _hblankTime;
 
                         var currLine = ++_mmu.LcdCurrentLine;
                         if (currLine == _screenHeight)
                         {
                             _mmu.LcdMode = Mode.VBlank;
-                            draw = true;
 
                             if (_mmu.VBlankStatEnabled)
                             {
@@ -174,12 +184,22 @@ namespace GameBoyEm
                     }
                     break;
                 case Mode.VBlank:
-                    if (_clocks >= 114)
+                    if (_clocks >= _vblankTime)
                     {
-                        _clocks -= 114;
+                        _clocks -= _vblankTime;
                         var currLine = ++_mmu.LcdCurrentLine;
-                        if (currLine > 153)
+                        if (currLine > _maxLcdLine)
                         {
+                            // This is supposed to happen after every hblank
+                            // but, doesn't seem to make a difference visually
+                            // and this is faster
+                            _frameCounter++;
+                            if (_frameCounter == _frameLimiter)
+                            {
+                                _frameCounter = 0;
+                                draw = true;
+                            }
+
                             _mmu.LcdMode = Mode.OAM;
                             _mmu.LcdCurrentLine = 0;
 
@@ -191,9 +211,9 @@ namespace GameBoyEm
                     }
                     break;
                 case Mode.OAM:
-                    if (_clocks >= 20)
+                    if (_clocks >= _oamTime)
                     {
-                        _clocks -= 20;
+                        _clocks -= _oamTime;
                         _mmu.LcdMode = Mode.VRAM;
                         _isLineRendered = false;
                     }
@@ -205,9 +225,9 @@ namespace GameBoyEm
                         _isLineRendered = true;
                         RenderScanLine();
                     }
-                    if (_clocks >= 43)
+                    if (_clocks >= _vramTime)
                     {
-                        _clocks -= 43;
+                        _clocks -= _vramTime;
                         _mmu.LcdMode = Mode.HBlank;
 
                         if (_mmu.HBlankStatEnabled)

@@ -4,3 +4,6 @@ Refactor GPU logic, improve mmu abstraction for gpu registers
 Add icon resources (app and buttons)
 Add control input simulator
 Profile - improve performance
+
+Reduce frame rate (draw frequency as controlled by GPU) when fast forwarding and debugging. Should make it faster
+Possible bug in GPU causing white lines intermittently. Might be bmp canvas, not sure
