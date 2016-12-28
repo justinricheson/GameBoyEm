@@ -41,7 +41,11 @@
 
             // Ref impl only sets FC if carry
             // Docs say to set or unset based on carry/no-carry
-            FC = (a & 256) == 256;
+            // Confirmed by Blarg ROM tests
+            if ((a & 256) == 256)
+            {
+                FC = true;
+            }
             A = (byte)a;
             FZ = A == 0;
         }
@@ -253,8 +257,8 @@
         private void ADDSPN() { SP = Add16_2((sbyte)RBN(), SP); }
 
         // Rotates, Shifts, and Swaps
-        private void RRA() { A = RotateRight(A); }
-        private void RLA() { A = RotateLeft(A); }
+        private void RRA() { A = RotateRight(A, true); }
+        private void RLA() { A = RotateLeft(A, true); }
         private void RRCA() { A = RotateRightC(A, true); }
         private void RLCA() { A = RotateLeftC(A, true); }
         private void CBRRCA() { A = RotateRightC(A); }
@@ -288,7 +292,7 @@
         private void CBRLE() { E = RotateLeft(E); }
         private void CBRLH() { H = RotateLeft(H); }
         private void CBRLL() { L = RotateLeft(L); }
-        private void CBRLHL() { WB(HL, RotateLeft(RB(HL))); }
+        private void CBRLHL() { WB(HL, RotateLeft(RB(HL), false)); }
         private void CBSRAA() { A = ShiftRightMsb(A); }
         private void CBSRAB() { B = ShiftRightMsb(B); }
         private void CBSRAC() { C = ShiftRightMsb(C); }
@@ -355,7 +359,7 @@
         private void RST38() { Reset(56); }
 
         // Push and Pop
-        private void POPAF() { AF = Pop(); }
+        private void POPAF() { AF = Pop().AND(0xFFF0); } // PopAF retains bottom 4 of F
         private void POPBC() { BC = Pop(); }
         private void POPDE() { DE = Pop(); }
         private void POPHL() { HL = Pop(); }
@@ -821,24 +825,24 @@
             FZ = resetFz ? false : r == 0;
             return r;
         }
-        private byte RotateRight(byte value)
+        private byte RotateRight(byte value, bool resetZ = false)
         {
             var lo = value.AND(1);
             var r = value.RS().OR(FC.LS(7));
             FC = lo == 1;
             FH = false;
             FN = false;
-            FZ = r == 0;
+            FZ = resetZ ? false : r == 0;
             return r;
         }
-        private byte RotateLeft(byte value)
+        private byte RotateLeft(byte value, bool resetZ = false)
         {
             var hi = value.AND(128).RS(7);
             var r = value.LS().OR(FC);
             FC = hi == 1;
             FH = false;
             FN = false;
-            FZ = r == 0;
+            FZ = resetZ ? false : r == 0;
             return r;
         }
         private byte ShiftRightMsb(byte value)

@@ -14,14 +14,14 @@ namespace GameBoyEm
         private const byte _screenHeight = 144;
         private const ushort _screenPixels = _screenWidth * _screenHeight;
         private const byte _maxLcdLine = 153;
-        private const uint _frameTime = 17556; // All times are cycles / 4 (CPU returns quarter cycles)
-
+        private const ushort _oamTime = 20;
+        private const ushort _vramTime = 43;
+        private const ushort _hblankTime = 51;
+        private const ushort _vblankTime = 114;
         // Only documentation on this I can find says it should be 1140,
         // but it's very sluggish at that speed. Reference implementations show 114
-        private const ushort _vblankTime = 114;
-        private const ushort _hblankTime = 51;
-        private const ushort _vramTime = 43;
-        private const ushort _oamTime = 20;
+        private const uint _frameTime = 17556; // All times are cycles / 4 (CPU returns quarter cycles)
+        private const byte _enableDelay = 61;
 
         private IMmu _mmu;
         private bool _isEnabled;
@@ -110,12 +110,15 @@ namespace GameBoyEm
             {
                 if (!_isEnabled && _delay == 0)
                 {
-                    Enable();
+                    _delay = _enableDelay;
                 }
             }
             else if (_isEnabled)
             {
-                Disable();
+                Reset();
+                _mmu.LcdCurrentLine = 0;
+                _mmu.LcdMode = Mode.HBlank;
+                _isEnabled = false;
             }
 
             if (!_isEnabled)
@@ -127,7 +130,7 @@ namespace GameBoyEm
                     {
                         Reset();
                         _isEnabled = true;
-                        _clocks = (uint)(-_delay);
+                        _clocks = (uint)-_delay;
                         _delay = 0;
                         _mmu.LcdCurrentLine = 0;
                         _mmu.LcdMode = Mode.HBlank;
@@ -141,10 +144,10 @@ namespace GameBoyEm
                     {
                         _clocks -= _frameTime;
 
-                        // Don't think we need this.
-                        // Screen is supposed to refresh every 70244
+                        // Don't think this is needed.
+                        // Screen is supposed to refresh every _frameTime
                         // clocks but since the ui will hold the old
-                        // image indefinitely. there is no need to redraw
+                        // image indefinitely, there is no need to redraw
                         //return true;
                     }
                 }
@@ -152,8 +155,8 @@ namespace GameBoyEm
                 return false;
             }
 
-            bool draw = false;
             _clocks += cycles;
+            bool draw = false;
             switch (_mmu.LcdMode)
             {
                 case Mode.HBlank:
@@ -306,10 +309,8 @@ namespace GameBoyEm
             short wndX = (short)(_mmu.ReadByte(0xFF4B) - 0x7);
 
             // Check if the window is displayed
-            if (wndY < 0
-             || wndY >= _screenHeight
-             || wndX < -7
-             || wndX >= _screenWidth)
+            if (wndY < 0 || wndY >= _screenHeight
+             || wndX < -7 || wndX >= _screenWidth)
             {
                 return;
             }
@@ -369,10 +370,8 @@ namespace GameBoyEm
                 var xCoord = (short)(_mmu.ReadByte((ushort)(currentOAMAddr + 1)) - 0x8);
 
                 // Check if the sprite is not on the screen
-                if (xCoord >= _screenWidth
-                 || xCoord <= -8
-                 || yCoord >= _screenHeight
-                 || yCoord <= -(largeSprites ? 16 : 8))
+                if (xCoord >= _screenWidth || xCoord <= -8
+                 || yCoord >= _screenHeight || yCoord <= -(largeSprites ? 16 : 8))
                 {
                     continue;
                 }
@@ -465,28 +464,6 @@ namespace GameBoyEm
                 {
                     _mmu.LcdStatInterrupt = true;
                 }
-            }
-        }
-
-        private void Enable()
-        {
-            _delay = 61;
-        }
-
-        private void Disable()
-        {
-            Reset();
-            _mmu.LcdCurrentLine = 0;
-            _mmu.LcdMode = Mode.HBlank;
-            _isEnabled = false;
-            ClearFrameBuffer();
-        }
-
-        private void ClearFrameBuffer()
-        {
-            for (int i = 0; i < _frameBuffer.Count; i++)
-            {
-                _frameBuffer[i] = Colors.White;
             }
         }
 
