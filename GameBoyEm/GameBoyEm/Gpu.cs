@@ -132,7 +132,12 @@ namespace GameBoyEm
                     if (_clocks >= 70224)
                     {
                         _clocks -= 70224;
-                        return true;
+
+                        // Don't think we need this.
+                        // Screen is supposed to refresh every 70244
+                        // clocks but since the ui will hold the old
+                        // image indefinitely. there is no need to redraw
+                        //return true;
                     }
                 }
 
@@ -433,20 +438,16 @@ namespace GameBoyEm
 
         private void UpdateCoincidenceFlag()
         {
-            var status = _mmu.ReadByte(0xFF41);
-            var ly = _mmu.ReadByte(0xFF44);
-            var lyc = _mmu.ReadByte(0xFF45);
-            if (ly == lyc)
+            var currLine = _mmu.LcdCurrentLine;
+            var currLineCompare = _mmu.LcdCurrentLineCompare;
+            _mmu.CoincidenceFlag = currLine == currLineCompare;
+
+            if (currLine == currLineCompare)
             {
-                _mmu.WriteByte(0xFF41, status.OR(0x04));
-                if (status.AND(0x40) > 0) // Coincidence interrupt enabled
+                if (_mmu.Coincidence)
                 {
-                    _mmu.WriteByte(0xFF0F, _mmu.ReadByte(0xFF0F).OR(0x02));
+                    _mmu.LcdStatInterrupt = true;
                 }
-            }
-            else
-            {
-                _mmu.WriteByte(0xFF41, status.AND(0xFB));
             }
         }
 

@@ -34,15 +34,18 @@ namespace GameBoyEm.Api
         bool DisplayWindow { get; }
 
         // LCD Status Register
+        bool CoincidenceFlag { get; set; }
         bool LcdcHblank { get; }
         bool LcdcVblank { get; }
         bool LcdcOam { get; }
+        bool Coincidence { get; }
 
         // LCD Palette Register
         byte LcdDefaultPalette { get; }
 
         // LCD Y-Coordinate Register
         byte LcdCurrentLine { get; set; }
+        byte LcdCurrentLineCompare { get; }
 
         // Timer Register
         byte DividerRegister { get; set; }
