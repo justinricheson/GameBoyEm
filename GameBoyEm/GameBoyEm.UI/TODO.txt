@@ -1,6 +1,9 @@
-﻿Pass all Blarg Tests
+﻿Refactor GPU logic, improve mmu abstraction for gpu registers
+
+Pass all Blarg Tests
+-Passed instruction tests, check if other tests exist
+
 Add more cartridge types
-Refactor GPU logic, improve mmu abstraction for gpu registers
 Add icon resources (app and buttons)
 Add control input simulator
 Profile - improve performance

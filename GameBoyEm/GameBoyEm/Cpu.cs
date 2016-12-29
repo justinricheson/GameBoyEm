@@ -151,35 +151,42 @@ namespace GameBoyEm
 
         public ushort Step()
         {
-            var isCb = false;
-            ushort cycles = 0;
-            if (IME && _mmu.InterruptsExist)
+            if (_mmu.InterruptsExist)
             {
-                if (_mmu.VblankInterrupt) { _mmu.VblankInterrupt = false; Interrupt(0x0040); }
-                else if (_mmu.LcdStatInterrupt) { _mmu.LcdStatInterrupt = false; Interrupt(0x0048); }
-                else if (_mmu.TimerInterrupt) { _mmu.TimerInterrupt = false; Interrupt(0x0050); }
-                else if (_mmu.SerialInterrupt) { _mmu.SerialInterrupt = false; Interrupt(0x0058); }
-                else if (_mmu.JoyPadInterrupt) { _mmu.JoyPadInterrupt = false; Interrupt(0x0060); }
-                cycles = 3;
-            }
-            else
-            {
-                var op = _mmu.ReadByte(PC++); // Fetch
-                if (op == 0xcb)
+                // Timer interrupt should end HALT
+                // Note: Should not trigger interrupt if IME is disabled
+                var isHalt = _mmu.ReadByte(PC) == 0x76;
+                if (isHalt)
                 {
-                    isCb = true;
-                    op = _mmu.ReadByte(PC++);
+                    PC++; // Skip past HALT
                 }
 
-                var ops = isCb ? _cbOps : _ops;
-                ops[op](); // Decode, Execute
-
-                cycles = isCb ? _cbCycles[op]
-                    : _conditional ? _conditionalCycles[op]
-                    : _cycles[op];
-                _conditional = false;
+                if (IME)
+                {
+                    if (_mmu.VblankInterrupt) { _mmu.VblankInterrupt = false; Interrupt(0x0040); }
+                    else if (_mmu.LcdStatInterrupt) { _mmu.LcdStatInterrupt = false; Interrupt(0x0048); }
+                    else if (_mmu.TimerInterrupt) { _mmu.TimerInterrupt = false; Interrupt(0x0050); }
+                    else if (_mmu.SerialInterrupt) { _mmu.SerialInterrupt = false; Interrupt(0x0058); }
+                    else if (_mmu.JoyPadInterrupt) { _mmu.JoyPadInterrupt = false; Interrupt(0x0060); }
+                    return 3;
+                }
             }
 
+            var op = _mmu.ReadByte(PC++); // Fetch
+            var isCb = false;
+            if (op == 0xcb)
+            {
+                isCb = true;
+                op = _mmu.ReadByte(PC++);
+            }
+
+            var ops = isCb ? _cbOps : _ops;
+            ops[op](); // Decode, Execute
+
+            var cycles = isCb ? _cbCycles[op]
+                : _conditional ? _conditionalCycles[op]
+                : _cycles[op];
+            _conditional = false;
             return cycles;
         }
     }

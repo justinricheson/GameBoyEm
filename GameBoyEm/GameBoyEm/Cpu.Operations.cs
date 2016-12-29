@@ -7,7 +7,7 @@
         private void DI() { IME = false; }
         private void EI() { IME = true; }
         private void NOP() { }
-        private void HALT() { }
+        private void HALT() { PC--; } // Continue executing HALT until timer event exits
         private void STOP() { }
         private void DAA()
         {

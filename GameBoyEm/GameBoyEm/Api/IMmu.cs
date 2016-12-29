@@ -48,8 +48,12 @@ namespace GameBoyEm.Api
         byte LcdCurrentLine { get; set; }
         byte LcdCurrentLineCompare { get; }
 
-        // Timer Register
+        // Timer Registers
         byte DividerRegister { get; set; }
+        byte TimerCounter { get; set; }
+        byte TimerModulo { get; }
+        bool TimerEnabled { get; }
+        byte TimerSpeed { get; }
 
         byte ReadByte(ushort address);
         ushort ReadWord(ushort address);

@@ -315,6 +315,15 @@ namespace GameBoyEm
             get { return ReadByte(0xFF04); }
             set { _memory[0xFF04] = value; } // Don't use WriteByte so the value is not reset
         }
+        public byte TimerCounter
+        {
+            get { return ReadByte(0xFF05); }
+            set { WriteByte(0xFF05, value); }
+        }
+        public byte TimerModulo { get { return ReadByte(0xFF06); } }
+        public byte TimerRegister { get { return ReadByte(0xFF07); } }
+        public bool TimerEnabled { get { return TimerRegister.AND(0x04) != 0; } }
+        public byte TimerSpeed { get { return TimerRegister.AND(0x03); } }
 
         public Mmu()
         {
