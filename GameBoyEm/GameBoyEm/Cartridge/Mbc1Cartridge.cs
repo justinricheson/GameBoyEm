@@ -8,6 +8,7 @@ namespace GameBoyEm.Cartridge
     {
         private byte[][] _banks;
         private ushort _bankIndex = 1;
+        private bool _ramEnabled;
 
         public Mbc1Cartridge(byte[] rom, byte[][] banks) : base(rom)
         {
@@ -31,15 +32,26 @@ namespace GameBoyEm.Cartridge
 
         public override byte Read(ushort address)
         {
+            if (address <= 0x3FFF)
+            {
+                return _rom[address];
+            }
             var offsetAddress = address - BankSize; // Skip rom
-            return address <= 0x3FFF
-                ? _rom[address]
-                : _banks[_bankIndex][offsetAddress];
+            return _banks[_bankIndex][offsetAddress];
         }
-
+        
         public override void Write(ushort address, byte value)
         {
-            if (address >= 0x2000 && address <= 0x3FFF)
+            if (address < 0x2000)
+            {
+                var lowerFourBits = value.AND(0x0F);
+                _ramEnabled = lowerFourBits == 0x0A;
+                if(_ramEnabled)
+                {
+                    string wtf = "";
+                }
+            }
+            else if (address >= 0x2000 && address <= 0x3FFF)
             {
                 byte lowerFiveBits = value.AND(0x1F);
                 _bankIndex = _bankIndex.AND(0xE0).OR(lowerFiveBits);
@@ -48,6 +60,10 @@ namespace GameBoyEm.Cartridge
             {
                 byte upperTwoBits = value.AND(0x03);
                 _bankIndex = _bankIndex.AND(0x1F).OR(upperTwoBits.LS(5));
+            }
+            else
+            {
+                string wtf = "";
             }
 
             if (_bankIndex == 0x00

@@ -189,7 +189,7 @@ namespace GameBoyEm
             }
 
             var cycles = Cpu.Step();
-            _cumulativeCycles += (cycles * 4); // Cpu.Step returns quarter-cycles
+            _cumulativeCycles += cycles; //(cycles * 4); // Cpu.Step returns quarter-cycles
 
             var draw = Gpu.Step(cycles);
             if (draw && _emitFrames)
