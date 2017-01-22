@@ -1,10 +1,6 @@
 ﻿using GameBoyEm.Api;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.Serialization;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace GameBoyEm
 {
@@ -14,8 +10,8 @@ namespace GameBoyEm
         private const ushort _divideThreshold = 64;
 
         private IMmu _mmu;
-        private ushort _divideCycles;
-        private ushort _clockCycles;
+        private ushort _timerCycles;
+        private ushort _dividerCycles;
 
         internal IMmu Mmu { set { _mmu = value; } }
 
@@ -26,32 +22,48 @@ namespace GameBoyEm
 
         protected Timer(SerializationInfo info, StreamingContext ctx)
         {
-            _divideCycles = info.GetUInt16("QuarterCycles");
+            _timerCycles = info.GetUInt16("TimerCycles");
+            _dividerCycles = info.GetUInt16("DividerCycles");
         }
 
         public void GetObjectData(SerializationInfo info, StreamingContext context)
         {
-            info.AddValue("QuarterCycles", _divideCycles);
+            info.AddValue("TimerCycles", _timerCycles);
+            info.AddValue("DividerCycles", _dividerCycles);
         }
 
-        public void Step(ushort quarterCycles)
+        private bool _wasTimerEnabled;
+        public void Step(ushort cycles)
         {
-            _divideCycles += quarterCycles;
-            if (_divideCycles >= _divideThreshold)
+            _dividerCycles += cycles;
+            if (_dividerCycles >= _divideThreshold)
             {
                 // This register is incremented at 16384Hz
                 // Since quarterCycles = cycles / 4
                 // _divideThreshold is calculated as:
                 // 4.194304MHz / 16.386KHz = 256
                 // 256 / 4 = 64 = _divideThreshold
-                _divideCycles -= _divideThreshold;
+                _dividerCycles -= _divideThreshold;
                 _mmu.DividerRegister++;
             }
 
-            int threshold = -1;
-            _clockCycles += quarterCycles;
-            if (_mmu.TimerEnabled)
+            // Reset cycles on timer on/off transition
+            var timerEnabled = _mmu.TimerEnabled;
+            if (timerEnabled && !_wasTimerEnabled)
             {
+                _timerCycles = 0;
+                _wasTimerEnabled = true;
+            }
+            else if (!timerEnabled && _wasTimerEnabled)
+            {
+                _wasTimerEnabled = false;
+            }
+
+            if (timerEnabled)
+            {
+                _timerCycles += cycles;
+
+                ushort threshold = 0;
                 switch (_mmu.TimerSpeed)
                 {
                     case 1: threshold = 4; break; // 262.144KHz
@@ -60,7 +72,7 @@ namespace GameBoyEm
                     case 0: threshold = 256; break; // 4096Hz
                 }
 
-                if (_clockCycles >= threshold)
+                if (_timerCycles >= threshold)
                 {
                     var counter = ++_mmu.TimerCounter;
                     if (counter == 0) // Overflow
@@ -68,6 +80,7 @@ namespace GameBoyEm
                         _mmu.TimerCounter = _mmu.TimerModulo;
                         _mmu.TimerInterrupt = true;
                     }
+                    _timerCycles -= threshold;
                 }
             }
         }
