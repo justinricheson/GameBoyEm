@@ -1,12 +1,9 @@
-﻿Refactor GPU logic, improve mmu abstraction for gpu registers
+﻿Pass all Blarg Tests
 
-Pass all Blarg Tests
--Passed instruction tests, check if other tests exist
+Refactor GPU logic, improve mmu abstraction for gpu registers
 
-Add more cartridge types
-Add icon resources (app and buttons)
-Add control input simulator
 Profile - improve performance
 
-Reduce frame rate (draw frequency as controlled by GPU) when fast forwarding and debugging. Should make it faster
+Add more cartridge types
+
 Possible bug in GPU causing white lines intermittently. Might be bmp canvas, not sure

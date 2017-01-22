@@ -11,6 +11,8 @@ namespace GameBoyEm
     [Serializable]
     public class Console : ISerializable
     {
+        private const ushort _fastGpuFrameLimit = 1;
+        private const ushort _slowGpuFrameLimit = 100;
         private const int _cycleBoundary = 100000;
         private const double _cycleTime = _cycleBoundary / 4194304d;
         private double _expectedTicks = TimeSpan.FromSeconds(_cycleTime).Ticks;
@@ -165,14 +167,22 @@ namespace GameBoyEm
         {
             if (_turnedOn && _paused)
             {
-                for (int i = 0; i < steps; i++)
+                try
                 {
-                    if (cancel)
+                    Gpu.FrameLimiter = _slowGpuFrameLimit;
+                    for (int i = 0; i < steps; i++)
                     {
-                        return;
+                        if (cancel)
+                        {
+                            return;
+                        }
+                        progress(i);
+                        Step();
                     }
-                    progress(i);
-                    Step();
+                }
+                finally
+                {
+                    Gpu.FrameLimiter = _fastGpuFrameLimit;
                 }
             }
         }
@@ -217,8 +227,13 @@ namespace GameBoyEm
 
                 if (Controller.FastPressed)
                 {
+                    Gpu.FrameLimiter = _slowGpuFrameLimit;
                     _cumulativeCycles = 0;
                     continue;
+                }
+                else
+                {
+                    Gpu.FrameLimiter = _fastGpuFrameLimit;
                 }
                 if (_cumulativeCycles >= _cycleBoundary)
                 {

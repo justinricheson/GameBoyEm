@@ -29,7 +29,6 @@ namespace GameBoyEm
         private uint _clocks;
         private int _delay;
         private int _frameCounter;
-        private int _frameLimiter = 1; // TODO make configurable
         private List<Color> _frameBuffer;
         private List<Color> _defaultPalette;
         private List<Color> _bgPalette;
@@ -38,6 +37,7 @@ namespace GameBoyEm
         internal IMmu Mmu { set { _mmu = value; } }
 
         public IList<Color> FrameBuffer { get { return _frameBuffer; } }
+        public ushort FrameLimiter { get; set; }
 
         public Gpu(IMmu mmu, params Color[] palette)
         {
@@ -197,7 +197,7 @@ namespace GameBoyEm
                             // but, doesn't seem to make a difference visually
                             // and this is faster
                             _frameCounter++;
-                            if (_frameCounter == _frameLimiter)
+                            if (_frameCounter >= FrameLimiter)
                             {
                                 _frameCounter = 0;
                                 draw = true;

@@ -46,10 +46,6 @@ namespace GameBoyEm.Cartridge
             {
                 var lowerFourBits = value.AND(0x0F);
                 _ramEnabled = lowerFourBits == 0x0A;
-                if(_ramEnabled)
-                {
-                    string wtf = "";
-                }
             }
             else if (address >= 0x2000 && address <= 0x3FFF)
             {
@@ -60,10 +56,6 @@ namespace GameBoyEm.Cartridge
             {
                 byte upperTwoBits = value.AND(0x03);
                 _bankIndex = _bankIndex.AND(0x1F).OR(upperTwoBits.LS(5));
-            }
-            else
-            {
-                string wtf = "";
             }
 
             if (_bankIndex == 0x00
