@@ -359,7 +359,7 @@
         private void RST38() { Reset(56); }
 
         // Push and Pop
-        private void POPAF() { AF = Pop().AND(0xFFF0); } // PopAF retains bottom 4 of F
+        private void POPAF() { AF = Pop().AND(0xFFF0).OR(AF.AND(0x000F)); } // PopAF retains bottom 4 of F
         private void POPBC() { BC = Pop(); }
         private void POPDE() { DE = Pop(); }
         private void POPHL() { HL = Pop(); }

@@ -72,7 +72,7 @@ namespace GameBoyEm
                     case 0: threshold = 256; break; // 4096Hz
                 }
 
-                if (_timerCycles >= threshold)
+                while (_timerCycles >= threshold)
                 {
                     var counter = ++_mmu.TimerCounter;
                     if (counter == 0) // Overflow
