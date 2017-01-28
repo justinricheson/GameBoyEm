@@ -283,7 +283,7 @@ namespace GameBoyEm
             get { return LcdStatRegister.AND(0x04) != 0; }
             set
             {
-                if(value)
+                if (value)
                 {
                     WriteByte(0xFF41, LcdStatRegister.OR(0x04));
                 }
@@ -389,6 +389,10 @@ namespace GameBoyEm
             {
                 return _cartridge.Read(address);
             }
+            else if (address >= 0xA000 && address <= 0xBFFF)
+            {
+                return _cartridge.ReadRam(address);
+            }
             return _memory[address];
         }
         public ushort ReadWord(ushort address)
@@ -402,6 +406,10 @@ namespace GameBoyEm
             {
                 _cartridge.Write(address, value);
                 return;
+            }
+            else if (address >= 0xA000 && address <= 0xBFFF)
+            {
+                _cartridge.WriteRam(address, value);
             }
             else if (address == 0xFF04)
             {

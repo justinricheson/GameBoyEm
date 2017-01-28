@@ -6,28 +6,28 @@ namespace GameBoyEm.Cartridge
     [Serializable]
     public class Mbc1Cartridge : Cartridge
     {
-        private byte[][] _banks;
-        private ushort _bankIndex = 1;
-        private bool _ramEnabled;
+        private byte[][] _romBanks;
+        private ushort _romBankIndex = 1;
 
-        public Mbc1Cartridge(byte[] rom, byte[][] banks) : base(rom)
+        public Mbc1Cartridge(byte[] rom, byte[][] romBanks)
+            : base(rom)
         {
-            _banks = banks;
+            _romBanks = romBanks;
         }
 
         protected Mbc1Cartridge(SerializationInfo info, StreamingContext ctx)
             : base(info, ctx)
         {
-            _bankIndex = (ushort)info.GetValue("BankIndex", typeof(ushort));
-            _banks = (byte[][])info.GetValue("Banks", typeof(byte[][]));
+            _romBankIndex = info.GetUInt16("RomBankIndex");
+            _romBanks = (byte[][])info.GetValue("RomBanks", typeof(byte[][]));
         }
 
         public override void GetObjectData(SerializationInfo info, StreamingContext context)
         {
             base.GetObjectData(info, context);
 
-            info.AddValue("BankIndex", _bankIndex);
-            info.AddValue("Banks", _banks);
+            info.AddValue("RomBankIndex", _romBankIndex);
+            info.AddValue("RomBanks", _romBanks);
         }
 
         public override byte Read(ushort address)
@@ -37,33 +37,29 @@ namespace GameBoyEm.Cartridge
                 return _rom[address];
             }
             var offsetAddress = address - BankSize; // Skip rom
-            return _banks[_bankIndex][offsetAddress];
+            return _romBanks[_romBankIndex][offsetAddress];
         }
         
         public override void Write(ushort address, byte value)
         {
-            if (address < 0x2000)
-            {
-                var lowerFourBits = value.AND(0x0F);
-                _ramEnabled = lowerFourBits == 0x0A;
-            }
-            else if (address >= 0x2000 && address <= 0x3FFF)
+            if (address >= 0x2000 && address <= 0x3FFF)
             {
                 byte lowerFiveBits = value.AND(0x1F);
-                _bankIndex = _bankIndex.AND(0xE0).OR(lowerFiveBits);
+                _romBankIndex = _romBankIndex.AND(0xE0).OR(lowerFiveBits);
             }
             else if (address >= 0x4000 && address <= 0x5FFF)
             {
                 byte upperTwoBits = value.AND(0x03);
-                _bankIndex = _bankIndex.AND(0x1F).OR(upperTwoBits.LS(5));
+                _romBankIndex = _romBankIndex.AND(0x1F).OR(upperTwoBits.LS(5));
             }
 
-            if (_bankIndex == 0x00
-             || _bankIndex == 0x20
-             || _bankIndex == 0x40
-             || _bankIndex == 0x60)
+            // Invalid bank indexes jump to the next index
+            if (_romBankIndex == 0x00
+             || _romBankIndex == 0x20
+             || _romBankIndex == 0x40
+             || _romBankIndex == 0x60)
             {
-                _bankIndex++;
+                _romBankIndex++;
             }
         }
     }

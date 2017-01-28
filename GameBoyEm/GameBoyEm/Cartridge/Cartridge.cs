@@ -1,6 +1,5 @@
 ﻿using GameBoyEm.Api;
 using System;
-using System.Linq;
 using System.Runtime.Serialization;
 
 namespace GameBoyEm.Cartridge
@@ -29,5 +28,10 @@ namespace GameBoyEm.Cartridge
         public abstract byte Read(ushort address);
 
         public abstract void Write(ushort address, byte value);
+
+        // Apparantly some non RAM enabled games read from here (Super Mario Land)
+        // So can't throw an exception. Just return stubbed 0
+        public virtual byte ReadRam(ushort address) => 0;
+        public virtual void WriteRam(ushort address, byte value) { }
     }
 }

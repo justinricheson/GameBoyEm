@@ -64,6 +64,8 @@
     <Compile Include="Cartridge\Cartridge.cs" />
     <Compile Include="Cartridge\CartridgeBuilder.cs" />
     <Compile Include="Cartridge\Mbc1Cartridge.cs" />
+    <Compile Include="Cartridge\Mbc1RamBatteryCartridge.cs" />
+    <Compile Include="Cartridge\Mbc1RamCartridge.cs" />
     <Compile Include="Cartridge\RomOnlyCartridge.cs" />
     <Compile Include="Console.cs" />
     <Compile Include="Controller.cs" />
