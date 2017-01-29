@@ -183,6 +183,7 @@ namespace GameBoyEm
                 finally
                 {
                     Gpu.FrameLimiter = _fastGpuFrameLimit;
+                    _cumulativeCycles = 0;
                 }
             }
         }

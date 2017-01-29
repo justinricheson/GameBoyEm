@@ -29,14 +29,13 @@ namespace GameBoyEm
         private uint _clocks;
         private int _delay;
         private int _frameCounter;
-        private List<Color> _frameBuffer;
         private List<Color> _defaultPalette;
         private List<Color> _bgPalette;
         private List<Color> _spritePalette;
 
         internal IMmu Mmu { set { _mmu = value; } }
 
-        public IList<Color> FrameBuffer { get { return _frameBuffer; } }
+        public IList<Color> FrameBuffer { get; private set; }
         public ushort FrameLimiter { get; set; }
 
         public Gpu(IMmu mmu, params Color[] palette)
@@ -71,13 +70,13 @@ namespace GameBoyEm
             _isLineRendered = info.GetBoolean("IsLineRendered");
             _clocks = info.GetUInt32("Clocks");
             _delay = info.GetInt32("Delay");
-            _frameBuffer = ((List<int>)info.GetValue("FrameBuffer", typeof(List<int>)))
-                .Select(i => i.FromArgb()).ToList();
             _defaultPalette = ((List<int>)info.GetValue("DefaultPalette", typeof(List<int>)))
                 .Select(i => i.FromArgb()).ToList();
             _bgPalette = ((List<int>)info.GetValue("BackgroundPalette", typeof(List<int>)))
                 .Select(i => i.FromArgb()).ToList();
             _spritePalette = ((List<int>)info.GetValue("SpritePalette", typeof(List<int>)))
+                .Select(i => i.FromArgb()).ToList();
+            FrameBuffer = ((List<int>)info.GetValue("FrameBuffer", typeof(List<int>)))
                 .Select(i => i.FromArgb()).ToList();
         }
 
@@ -87,10 +86,10 @@ namespace GameBoyEm
             info.AddValue("IsLineRendered", _isLineRendered);
             info.AddValue("Clocks", _clocks);
             info.AddValue("Delay", _delay);
-            info.AddValue("FrameBuffer", _frameBuffer.Select(c => c.ToArgb()).ToList());
             info.AddValue("DefaultPalette", _defaultPalette.Select(c => c.ToArgb()).ToList());
             info.AddValue("BackgroundPalette", _bgPalette.Select(c => c.ToArgb()).ToList());
             info.AddValue("SpritePalette", _spritePalette.Select(c => c.ToArgb()).ToList());
+            info.AddValue("FrameBuffer", FrameBuffer.Select(c => c.ToArgb()).ToList());
         }
 
         public void Reset()
@@ -101,7 +100,7 @@ namespace GameBoyEm
             _clocks = 0;
             _mmu.LcdMode = Mode.VBlank;
             _delay = 0;
-            _frameBuffer = Enumerable.Repeat(Colors.White, _screenPixels).ToList();
+            FrameBuffer = Enumerable.Repeat(Colors.White, _screenPixels).ToList();
         }
 
         public bool Step(ushort cycles)
@@ -306,7 +305,7 @@ namespace GameBoyEm
 
                 var tileAddress = (ushort)(tileSet + tileNum * 16);
                 var paletteIndex = ReadPaletteIndex(tileAddress, tileX, tileY);
-                _frameBuffer[fbOffset + x] = _bgPalette[paletteIndex];
+                FrameBuffer[fbOffset + x] = _bgPalette[paletteIndex];
             }
         }
 
@@ -356,7 +355,7 @@ namespace GameBoyEm
                 }
 
                 var f = currLine * _screenWidth + x;
-                _frameBuffer[f] = _bgPalette[ReadPaletteIndex(
+                FrameBuffer[f] = _bgPalette[ReadPaletteIndex(
                     (ushort)(tileSet + num * 16),
                     (byte)inTileX, (byte)inTileY)];
             }
@@ -441,9 +440,9 @@ namespace GameBoyEm
                     if (pixel > 0)
                     {
                         var i = currLine * _screenWidth + xCoord + x;
-                        if (priority || (_frameBuffer[i] == _bgPalette[0]))
+                        if (priority || (FrameBuffer[i] == _bgPalette[0]))
                         {
-                            _frameBuffer[i] = _spritePalette[pixel];
+                            FrameBuffer[i] = _spritePalette[pixel];
                         }
                     }
                 }
