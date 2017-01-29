@@ -2,8 +2,6 @@
 
 Refactor GPU logic, improve mmu abstraction for gpu registers
 
-Profile - improve performance
-
 Add more cartridge types
 
 Possible bug in GPU causing white lines intermittently. Might be bmp canvas, not sure
