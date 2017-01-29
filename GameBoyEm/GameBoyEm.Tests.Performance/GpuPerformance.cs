@@ -51,6 +51,5 @@ namespace GameBoyEm.Tests.Performance
             TestContext.WriteLine($"Frames per second: {framesPerSecond.ToString("N")}");
             TestContext.WriteLine($"Speedup factor: {speedupFactor.ToString("N")}");
         }
-
     }
 }
