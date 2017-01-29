@@ -290,6 +290,7 @@ namespace GameBoyEm
             var tileRow = yWrap / 8;
             var tileMapOffset = tileMap + tileRow * 32;
             var fbOffset = currLine * _screenWidth;
+
             for (int x = 0; x < _screenWidth; x++)
             {
                 var xWrap = (scrollX + x) % 256;
