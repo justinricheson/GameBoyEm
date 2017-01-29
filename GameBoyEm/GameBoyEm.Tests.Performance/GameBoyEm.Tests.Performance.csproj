@@ -57,6 +57,7 @@
   </Choose>
   <ItemGroup>
     <Compile Include="CpuPerformance.cs" />
+    <Compile Include="GpuPerformance.cs" />
     <Compile Include="MmuPerformance.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

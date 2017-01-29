@@ -38,6 +38,8 @@ namespace GameBoyEm
         public IList<Color> FrameBuffer { get; private set; }
         public ushort FrameLimiter { get; set; }
 
+        public Gpu(IMmu mmu) : this(mmu, null) { }
+
         public Gpu(IMmu mmu, params Color[] palette)
         {
             _mmu = mmu;
@@ -50,16 +52,20 @@ namespace GameBoyEm
                 Colors.Black
             };
 
-            for (int i = 0; i < 4; i++)
+            if (palette != null)
             {
-                if (i < palette.Length)
+                for (int i = 0; i < 4; i++)
                 {
-                    _defaultPalette[i] = palette[i];
+                    if (i < palette.Length)
+                    {
+                        _defaultPalette[i] = palette[i];
+                    }
                 }
             }
 
             _bgPalette = _defaultPalette.Take(4).ToList();
             _spritePalette = _defaultPalette.Take(4).ToList();
+            FrameLimiter = 1;
 
             Reset();
         }
@@ -78,6 +84,7 @@ namespace GameBoyEm
                 .Select(i => i.FromArgb()).ToList();
             FrameBuffer = ((List<int>)info.GetValue("FrameBuffer", typeof(List<int>)))
                 .Select(i => i.FromArgb()).ToList();
+            FrameLimiter = 1;
         }
 
         public void GetObjectData(SerializationInfo info, StreamingContext context)
