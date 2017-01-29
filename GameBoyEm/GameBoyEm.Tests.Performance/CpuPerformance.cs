@@ -8,9 +8,10 @@ namespace GameBoyEm.Tests.Performance
     [TestClass]
     public class CpuPerformance
     {
-        public TestContext TestContext { get; set; }
+        private const int _boolBias = 1000;
+        private const double _numInstructions = 100000000;
+
         private Random _r = new Random();
-        private int _boolBias = 1000;
         private bool RandomBool() => _r.Next(1, _boolBias + 1) == _boolBias;
         private byte RandomByte()
         {
@@ -18,6 +19,8 @@ namespace GameBoyEm.Tests.Performance
             return (byte)(b == 0x76 ? 0x77 : b); // Never return HALT
         }
         private ushort RandomUShort() => (ushort)((RandomByte() << 8) | RandomByte());
+
+        public TestContext TestContext { get; set; }
 
         [TestMethod]
         public void CpuRandomInstructionBenchmark()
@@ -51,20 +54,18 @@ namespace GameBoyEm.Tests.Performance
 
         private void RunTest(StubIMmu mmu)
         {
-            const double numInstructions = 100000000;
-
             var cpu = new Cpu(mmu);
 
             long cycles = 0;
             var sw = new Stopwatch(); sw.Start();
-            for (int i = 0; i < numInstructions; i++)
+            for (int i = 0; i < _numInstructions; i++)
             {
                 cycles += cpu.Step();
             }
             sw.Stop();
 
             cycles *= 4; // Cpu returns 1/4 cycles
-            var insPerSecond = (decimal)(numInstructions / sw.Elapsed.TotalSeconds);
+            var insPerSecond = (decimal)(_numInstructions / sw.Elapsed.TotalSeconds);
             var cyclesPerSecond = (decimal)(cycles / sw.Elapsed.TotalSeconds);
             var speedupFactor = cyclesPerSecond / 4194304;
             TestContext.WriteLine($"Instructions per second: {insPerSecond.ToString("N")}");
