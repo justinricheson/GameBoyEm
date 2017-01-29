@@ -248,7 +248,8 @@ namespace GameBoyEm
 
         private void RenderScanLine()
         {
-            if (_mmu.LcdEnabled)
+            // Don't render unless this frame will be emitted
+            if ((_frameCounter + 1) >= FrameLimiter && _mmu.LcdEnabled)
             {
                 if (_mmu.DisplayBackground)
                 {
@@ -267,39 +268,44 @@ namespace GameBoyEm
 
         private void RenderBackground()
         {
+            // Note: Performance hotspot
             SetPalette(_bgPalette, _mmu.LcdDefaultPalette);
 
             var lcdc = _mmu.ReadByte(0xFF40);
-            var tileSet = (lcdc.AND(0x10)) > 0 ? 0x8000 : 0x9000;
-            var tileMap = (lcdc.AND(0x08)) > 0 ? 0x9C00 : 0x9800;
 
-            var scrollX = _mmu.ReadByte(0xFF43);
+            // Second tile set starts at 0x8800, but since the map
+            // stores the tile number as a signed byte (-128 - 127)
+            // a 0 value corresponds to 0x9000. Using 0x9000 allows
+            // the tile number to always be added to the tileSet
+            // start address to produce the correct tile address.
+            var tileSet = lcdc.AND(0x10) > 0 ? 0x8000 : 0x9000;
+            var tileMap = lcdc.AND(0x08) > 0 ? 0x9C00 : 0x9800;
+
             var scrollY = _mmu.ReadByte(0xFF42);
+            var scrollX = _mmu.ReadByte(0xFF43);
 
             var currLine = _mmu.LcdCurrentLine;
-
-            int num;
-            var tileRow = ((scrollY + currLine) % 256) / 8;
-            var inTileY = ((scrollY + currLine) % 256) % 8;
+            var yWrap = (scrollY + currLine) % 256;
+            var tileY = (byte)(yWrap % 8);
+            var tileRow = yWrap / 8;
+            var tileMapOffset = tileMap + tileRow * 32;
+            var fbOffset = currLine * _screenWidth;
             for (int x = 0; x < _screenWidth; x++)
             {
-                var tileColumn = ((scrollX + x) % 256) / 8;
-                var inTileX = ((scrollX + x) % 256) % 8;
-                var tileNumLocation = (ushort)(tileMap + tileRow * 32 + tileColumn);
+                var xWrap = (scrollX + x) % 256;
+                var tileX = (byte)(xWrap % 8);
+                var tileColumn = xWrap / 8;
 
-                if (tileSet == 0x8000)
+                var tileNumAddress = (ushort)(tileMapOffset + tileColumn);
+                int tileNum = _mmu.ReadByte(tileNumAddress);
+                if (tileSet == 0x9000)
                 {
-                    num = _mmu.ReadByte(tileNumLocation);
-                }
-                else
-                {
-                    num = (sbyte)(_mmu.ReadByte(tileNumLocation));
+                    tileNum = (sbyte)tileNum;
                 }
 
-                var f = currLine * _screenWidth + x;
-                _frameBuffer[f] = _bgPalette[ReadTile(
-                    (ushort)(tileSet + num * 16),
-                    (byte)inTileX, (byte)inTileY)];
+                var tileAddress = (ushort)(tileSet + tileNum * 16);
+                var paletteIndex = ReadPaletteIndex(tileAddress, tileX, tileY);
+                _frameBuffer[fbOffset + x] = _bgPalette[paletteIndex];
             }
         }
 
@@ -349,7 +355,7 @@ namespace GameBoyEm
                 }
 
                 var f = currLine * _screenWidth + x;
-                _frameBuffer[f] = _bgPalette[ReadTile(
+                _frameBuffer[f] = _bgPalette[ReadPaletteIndex(
                     (ushort)(tileSet + num * 16),
                     (byte)inTileX, (byte)inTileY)];
             }
@@ -430,7 +436,7 @@ namespace GameBoyEm
                     }
 
                     byte xx = (byte)(xFlip ? (7 - x) : x);
-                    byte pixel = ReadTile(tileAddr, xx, inTileY);
+                    byte pixel = ReadPaletteIndex(tileAddr, xx, inTileY);
                     if (pixel > 0)
                     {
                         var i = currLine * _screenWidth + xCoord + x;
@@ -443,7 +449,7 @@ namespace GameBoyEm
             }
         }
 
-        private byte ReadTile(ushort address, byte x, byte y)
+        private byte ReadPaletteIndex(ushort address, byte x, byte y)
         {
             var lo = _mmu.ReadByte((ushort)(address + (y * 2)));
             var hi = _mmu.ReadByte((ushort)(address + (y * 2) + 1));
