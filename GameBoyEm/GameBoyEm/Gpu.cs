@@ -338,33 +338,29 @@ namespace GameBoyEm
             SetPalette(_bgPalette, _mmu.LcdDefaultPalette);
 
             var lcdc = _mmu.ReadByte(0xFF40);
-            ushort tileSet = (lcdc & 0x10) > 0 ? (ushort)0x8000 : (ushort)0x9000;
-            ushort tileMap = (lcdc & 0x40) > 0 ? (ushort)0x9C00 : (ushort)0x9800;
+            var tileSet = lcdc.AND(0x10) > 0 ? 0x8000 : 0x9000;
+            var tileMap = lcdc.AND(0x40) > 0 ? 0x9C00 : 0x9800;
 
-            int num;
+            var tileY = (byte)((currLine - wndY) % 8);
             var tileRow = (ushort)((currLine - wndY) / 8);
-            var inTileY = (ushort)((currLine - wndY) % 8);
+            var tileMapOffset = tileMap + tileRow * 32;
+            var fbOffset = currLine * _screenWidth;
 
             for (int x = (wndX < 0) ? 0 : wndX; x < _screenWidth; ++x)
             {
-                var tileColumn = (ushort)((x - wndX) / 8);
-                var inTileX = (ushort)((x - wndX) % 8);
+                var tileX = (byte)((x - wndX) % 8);
+                var tileColumn = (x - wndX) / 8;
 
-                var tileNumLocation = (ushort)(tileMap + tileRow * 32 + tileColumn);
-
-                if (tileSet == 0x8000)
+                var tileNumAddress = (ushort)(tileMapOffset + tileColumn);
+                int tileNum = _mmu.ReadByte(tileNumAddress);
+                if (tileSet == 0x9000)
                 {
-                    num = _mmu.ReadByte(tileNumLocation);
-                }
-                else
-                {
-                    num = (sbyte)_mmu.ReadByte(tileNumLocation);
+                    tileNum = (sbyte)tileNum;
                 }
 
-                var f = currLine * _screenWidth + x;
-                FrameBuffer[f] = _bgPalette[ReadPaletteIndex(
-                    (ushort)(tileSet + num * 16),
-                    (byte)inTileX, (byte)inTileY)];
+                var tileAddress = (ushort)(tileSet + tileNum * 16);
+                var paletteIndex = ReadPaletteIndex(tileAddress, tileX, tileY);
+                FrameBuffer[fbOffset + x] = _bgPalette[paletteIndex];
             }
         }
 
@@ -372,84 +368,79 @@ namespace GameBoyEm
         {
             bool largeSprites = _mmu.ReadByte(0xFF40).AND(0x4) > 0;
 
-            for (int h = 39; h >= 0; --h) // Respect sprite priority
+            // Respect sprite priority by iterating backwards
+            for (ushort oamAddress = 0xFE9C; oamAddress >= 0xFE00; oamAddress -= 4)
             {
-                var currentOAMAddr = (ushort)(0xFE00 + 0x4 * h);
-
-                // Top left Corner
-                // Byte 0 - Y Position - Vertical position on the screen (minus 16).
-                var yCoord = (short)(_mmu.ReadByte(currentOAMAddr) - 0x10);
-                // Byte 1 - X Position - Horizontal position on the screen (minus 8)
-                var xCoord = (short)(_mmu.ReadByte((ushort)(currentOAMAddr + 1)) - 0x8);
+                var yCoord = (short)(_mmu.ReadByte(oamAddress) - 0x10);
+                var xCoord = (short)(_mmu.ReadByte((ushort)(oamAddress + 1)) - 0x8);
 
                 // Check if the sprite is not on the screen
                 if (xCoord >= _screenWidth || xCoord <= -8
-                 || yCoord >= _screenHeight || yCoord <= -(largeSprites ? 16 : 8))
+                 || yCoord >= _screenHeight || yCoord <= (largeSprites ? -16 : -8))
                 {
                     continue;
                 }
 
                 var currLine = _mmu.LcdCurrentLine;
-                var inTileY = (byte)(currLine - yCoord);
+                var tileY = (byte)(currLine - yCoord);
 
                 // Check if it is not on the current line
-                if (yCoord > currLine || inTileY >= (largeSprites ? 16 : 8))
+                if (yCoord > currLine || tileY >= (largeSprites ? 16 : 8))
                 {
                     continue;
                 }
 
-                var optionsByte = _mmu.ReadByte((ushort)(currentOAMAddr + 3));
-                bool priority = (optionsByte & 0x80) == 0;
-                bool yFlip = (optionsByte & 0x40) != 0;
+                var spriteNum = _mmu.ReadByte((ushort)(oamAddress + 2));
+                var optionsByte = _mmu.ReadByte((ushort)(oamAddress + 3));
                 bool xFlip = (optionsByte & 0x20) != 0;
-                byte palette = _mmu.ReadByte(optionsByte.AND(0x10) > 0
-                    ? (ushort)0xFF49 : (ushort)0xFF48);
+                bool yFlip = (optionsByte & 0x40) != 0;
+                bool priority = (optionsByte & 0x80) == 0;
+                var paletteAddress = optionsByte.AND(0x10) > 0 ? 0xFF49 : 0xFF48;
+                byte palette = _mmu.ReadByte((ushort)paletteAddress);
                 SetPalette(_spritePalette, palette);
 
-                var spriteNum = _mmu.ReadByte((ushort)(currentOAMAddr + 2));
-
-                ushort tileAddr;
+                ushort tileAddress;
                 if (largeSprites)
                 {
                     if (yFlip)
                     {
-                        inTileY = (byte)(15 - inTileY);
+                        tileY = (byte)(15 - tileY);
                     }
-                    if (inTileY < 8)
+                    if (tileY < 8)
                     {
-                        tileAddr = (ushort)(0x8000 + 0x10 * (spriteNum & 0xFE));
+                        tileAddress = (ushort)(0x8000 + 0x10 * (spriteNum & 0xFE));
                     }
                     else
                     {
-                        tileAddr = (ushort)(0x8000 + 0x10 * (spriteNum | 0x01));
-                        inTileY -= 8;
+                        tileAddress = (ushort)(0x8000 + 0x10 * (spriteNum | 0x01));
+                        tileY -= 8;
                     }
                 }
                 else
                 {
                     if (yFlip)
                     {
-                        inTileY = (byte)(7 - inTileY);
+                        tileY = (byte)(7 - tileY);
                     }
 
-                    tileAddr = (ushort)(0x8000 + 0x10 * spriteNum);
+                    tileAddress = (ushort)(0x8000 + 0x10 * spriteNum);
                 }
 
-                for (int x = 0; x < 8; ++x)
+                for (int x = 0; x < 8; x++)
                 {
                     if (xCoord + x < 0 || xCoord + x >= _screenWidth)
                     {
                         continue;
                     }
 
-                    byte xx = (byte)(xFlip ? (7 - x) : x);
-                    byte pixel = ReadPaletteIndex(tileAddr, xx, inTileY);
-                    if (pixel > 0)
+                    byte tileX = (byte)(xFlip ? (7 - x) : x);
+                    byte paletteIndex = ReadPaletteIndex(tileAddress, tileX, tileY);
+                    if (paletteIndex > 0) // 0 is transparent
                     {
                         var i = currLine * _screenWidth + xCoord + x;
                         if (priority || (FrameBuffer[i] == _bgPalette[0]))
                         {
-                            FrameBuffer[i] = _spritePalette[pixel];
+                            FrameBuffer[i] = _spritePalette[paletteIndex];
                         }
                     }
                 }
