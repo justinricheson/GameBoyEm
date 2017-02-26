@@ -13,7 +13,7 @@ namespace GameBoyEm
     {
         private const ushort _fastGpuFrameLimit = 1;
         private const ushort _slowGpuFrameLimit = 10;
-        private const int _cycleBoundary = 100000;
+        private const int _cycleBoundary = 10000;
         private const double _cycleTime = _cycleBoundary / 4194304d;
         private double _expectedTicks = TimeSpan.FromSeconds(_cycleTime).Ticks;
         private long _cumulativeCycles;
